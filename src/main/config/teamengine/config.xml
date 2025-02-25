@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Unpack the *-ctl-scripts.zip archive in the TE_BASE/scripts directory -->
+<!-- Add this entry to TE_BASE/config.xml (//organization/standard) -->
+<organization>
+  <name>OGC</name>
+  <standard>
+    <name>OGC API - Maps</name>
+    <version>
+      <name>${spec-version}</name>
+      <suite>
+        <namespace-uri>http://www.opengis.net/cite/ogcapi-maps-1.0</namespace-uri>
+        <prefix>tns</prefix>
+        <local-name>ets-${ets-code}-${version}</local-name>
+        <title>OGC API - Maps Conformance Test Suite</title>
+        <description>Checks OGC API - Maps implementations for conformance.</description>
+        <BasicConformanceClasses>
+          <conformanceClass>Core</conformanceClass>
+        </BasicConformanceClasses>
+      </suite>
+      <revision>
+        <name>${project.version}</name>
+        <status>Final</status>
+        <sources>
+          <source>ogcapi-maps-1.0/${spec-version}/ctl</source>
+        </sources>
+        <webdir>ogcapi-maps-1.0/${spec-version}/site</webdir>
+      </revision>
+    </version>
+  </standard>
+</organization>
