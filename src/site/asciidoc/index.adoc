@@ -1,0 +1,106 @@
+= OGC API - Maps Conformance Test Suite
+
+== Scope
+
+This executable test suite (ETS) verifies that an OGC API - Maps instance conforms to
+https://docs.ogc.org/is/20-058/20-058.html[OGC API - Maps - Part 1: Core] (OGC 20-058) and related standards.
+Conformance testing is a kind of "black box" testing that examines externally visible characteristics or behaviors of the
+System Under Test (SUT) and is independent of any implementation details.
+
+Several conformance classes are defined in the principal specifications. The ones
+listed below are covered by this test suite:
+
+* Core
+    - The Core specifies requirements that all OGC API - Maps instances have to fulfill.
+* Coordinate Reference Systems by Reference
+    - Optional conformance class to fulfill requirements of https://docs.ogc.org/DRAFTS/20-024.html [OGC API - Maps - Part 2: Geospatial Data] specification.
+
+== Test requirements
+
+The documents listed below stipulate requirements that must be satisfied by a 
+conforming implementation.
+
+1. https://docs.ogc.org/is/20-058/20-058.html [OGC API - Maps - Part 1: Core]
+
+There are some requirements the test suite expects to be satisfied by the service under test:
+
+* General:
+    - The API landing page response must be available in JSON.
+    - The API definition response must be available in OpenAPI 3.0.
+    - The conformance classes response must be available in JSON.
+    - The feature collections metadata response and feature collection metadata responses must be available in JSON.
+    - Feature collections and maps must be available in GeoJSON.
+
+* Coordinate Reference Systems by Reference:
+    - CRS definitions must start with `urn:ogc:def:crs:EPSG` or `http://www.opengis.net/def/crs/EPSG` (Tests of A.2.1. and A.2.2. of Abstract Test Suite).
+
+=== Reserved identifiers
+
+The collection identifier `dUmmYColLection` is reserved and must not be used by a service under test.
+
+== Test suite structure
+
+The test suite definition file (testng.xml) is located in the root package, 
+`ogcapimaps10`. A conformance class corresponds to a &lt;test&gt; element, each
+of which includes a set of test classes that contain the actual test methods. 
+The general structure of the test suite is shown in Table 1.
+
+.Test suite structure
+[cols="2,6a",options=header]
+|===
+|Conformance class
+|Test classes
+
+|Core
+|
+ * org.opengis.cite.ogcapimaps10.conformance.core.general.*
+ * org.opengis.cite.ogcapimaps10.conformance.core.landingpage.*
+ * org.opengis.cite.ogcapimaps10.conformance.core.apidescription.*
+ * org.opengis.cite.ogcapimaps10.conformance.core.conformance.*
+ * org.opengis.cite.ogcapimaps10.conformance.core.collections.*
+ * org.opengis.cite.ogcapimaps10.conformance.crs.discovery.*
+ * org.opengis.cite.ogcapimaps10.conformance.crs.query.*
+
+|===
+
+The Javadoc documentation provides more detailed information about the test 
+methods that constitute the suite.
+
+== Implementation details
+
+* Whenever maps are tested by a single test, the number of maps is limited to one.
+
+* The following limits for tests apply:
+** Paging iterations: 3
+** Number of tested collections, if no limit is specified: 20
+** Number of tested CRSs: 20
+** A limit of 10 is set for all requests to collection items (maps), except if a limit is already set by the test.
+** For tests for correct matched numbers of maps a maximum of 10000 is set. Tests are skipped for collections that contain more maps.
+
+include::how-to-run-the-tests.adoc[]
+
+== Using the REST API
+
+Using the REST API of the TEAM Engine requires some run arguments. These are summarized in Table 2.
+The _Obligation_ descriptor can have the following values: M (mandatory), O (optional), or C (conditional).
+
+.Test run arguments
+[cols="1,1,1,6",options=header]
+|===
+|Name
+|Value domain
+|Obligation
+|Description
+
+|iut
+|URI
+|M
+|A URI that refers to the landing page of the service under test. Ampersand ('&amp;') characters must be percent-encoded as '%26'.
+
+|mapFormat
+|String
+|O
+|The format of the map images to be tested. Default: image/png.
+
+
+|===
