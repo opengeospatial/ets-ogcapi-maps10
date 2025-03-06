@@ -1,6 +1,6 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.query.bboxcrs;
+package org.opengis.cite.ogcapimaps10.conformance.crs.query.bboxcrs;
 
-import static org.opengis.cite.ogcapifeatures10.util.JsonUtils.parseAsString;
+import static org.opengis.cite.ogcapimaps10.util.JsonUtils.parseAsString;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Collections;
@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.opengis.cite.ogcapifeatures10.conformance.CommonFixture;
-import org.opengis.cite.ogcapifeatures10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
+import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 

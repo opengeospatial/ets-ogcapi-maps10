@@ -1,13 +1,13 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.feature;
+package org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.feature;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.opengis.cite.ogcapifeatures10.conformance.CommonFixture;
-import org.opengis.cite.ogcapifeatures10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
+import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;

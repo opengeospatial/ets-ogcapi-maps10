@@ -23,6 +23,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.opengis.cite.ogcapimaps10.OgcApiMaps10;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
 
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;

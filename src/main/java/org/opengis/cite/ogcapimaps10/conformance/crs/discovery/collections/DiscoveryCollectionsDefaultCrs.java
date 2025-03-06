@@ -1,17 +1,17 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.discovery.collections;
+package org.opengis.cite.ogcapimaps10.conformance.crs.discovery.collections;
 
-import static org.opengis.cite.ogcapifeatures10.EtsAssert.assertDefaultCrs;
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.DEFAULT_CRS_CODE;
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.DEFAULT_CRS_WITH_HEIGHT_CODE;
-import static org.opengis.cite.ogcapifeatures10.util.JsonUtils.hasAtLeastOneSpatialFeatureCollection;
+import static org.opengis.cite.ogcapimaps10.EtsAssert.assertDefaultCrs;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.DEFAULT_CRS_CODE;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.DEFAULT_CRS_WITH_HEIGHT_CODE;
+import static org.opengis.cite.ogcapimaps10.util.JsonUtils.hasAtLeastOneSpatialFeatureCollection;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.opengis.cite.ogcapifeatures10.openapi3.TestPoint;
-import org.opengis.cite.ogcapifeatures10.util.JsonUtils;
+import org.opengis.cite.ogcapimaps10.openapi3.TestPoint;
+import org.opengis.cite.ogcapimaps10.util.JsonUtils;
 import org.testng.annotations.Test;
 
 import io.restassured.path.json.JsonPath;

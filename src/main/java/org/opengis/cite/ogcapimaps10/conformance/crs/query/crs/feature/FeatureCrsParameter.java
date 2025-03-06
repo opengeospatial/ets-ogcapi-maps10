@@ -1,17 +1,17 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.feature;
+package org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.feature;
 
 import static io.restassured.http.Method.GET;
-import static org.opengis.cite.ogcapifeatures10.EtsAssert.assertCrsHeader;
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.CRS_PARAMETER;
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.GEOJSON_MIME_TYPE;
-import static org.opengis.cite.ogcapifeatures10.util.JsonUtils.findFeatureUrlForGeoJson;
+import static org.opengis.cite.ogcapimaps10.EtsAssert.assertCrsHeader;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.CRS_PARAMETER;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.GEOJSON_MIME_TYPE;
+import static org.opengis.cite.ogcapimaps10.util.JsonUtils.findFeatureUrlForGeoJson;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
 import org.testng.ITestContext;
 import org.testng.SkipException;
 import org.testng.annotations.DataProvider;

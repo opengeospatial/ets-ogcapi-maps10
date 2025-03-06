@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThat;
 import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.DEFAULT_CRS;
 
 import org.junit.Test;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
 import org.opengis.cite.ogcapimaps10.exception.UnknownCrsException;
 
 /**

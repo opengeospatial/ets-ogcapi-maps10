@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
 
 import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.DEFAULT_CRS;
 import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.DEFAULT_CRS_WITH_HEIGHT;

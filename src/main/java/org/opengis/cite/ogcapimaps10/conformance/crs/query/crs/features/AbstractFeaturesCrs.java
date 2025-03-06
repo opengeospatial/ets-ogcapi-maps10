@@ -1,14 +1,14 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.features;
+package org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.features;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.opengis.cite.ogcapifeatures10.OgcApiFeatures10;
-import org.opengis.cite.ogcapifeatures10.conformance.CommonFixture;
-import org.opengis.cite.ogcapifeatures10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.OgcApiMaps10;
+import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
+import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -85,7 +85,7 @@ public class AbstractFeaturesCrs extends CommonFixture {
 				JsonPath json = collection.getValue();
 				int count = 0;
 				for (CoordinateSystem crs : collectionIdToCrs.get(collectionId)) {
-					if (count >= OgcApiFeatures10.CRS_LIMIT) {
+					if (count >= OgcApiMaps10.CRS_LIMIT) {
 						break;
 					}
 					collectionsData.add(new Object[] { collectionId, json, crs });

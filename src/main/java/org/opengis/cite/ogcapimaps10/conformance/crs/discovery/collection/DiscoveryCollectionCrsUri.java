@@ -1,6 +1,6 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.discovery.collection;
+package org.opengis.cite.ogcapimaps10.conformance.crs.discovery.collection;
 
-import static org.opengis.cite.ogcapifeatures10.EtsAssert.assertValidCrsIdentifier;
+import static org.opengis.cite.ogcapimaps10.EtsAssert.assertValidCrsIdentifier;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.opengis.cite.ogcapifeatures10.OgcApiFeatures10;
-import org.opengis.cite.ogcapifeatures10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.CoordinateSystem;
-import org.opengis.cite.ogcapifeatures10.util.JsonUtils;
+import org.opengis.cite.ogcapimaps10.OgcApiMaps10;
+import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.util.JsonUtils;
 import org.testng.ITestContext;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
@@ -61,7 +61,7 @@ public class DiscoveryCollectionCrsUri {
 				List<CoordinateSystem> crs = parseCrs(collection.getValue());
 				int count = 0;
 				for (CoordinateSystem coordinateSystem : crs) {
-					if (count >= OgcApiFeatures10.CRS_LIMIT) {
+					if (count >= OgcApiMaps10.CRS_LIMIT) {
 						break;
 					}
 					collectionsData.add(new Object[] { collection.getKey(), coordinateSystem });

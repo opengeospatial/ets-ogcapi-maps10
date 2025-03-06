@@ -1,13 +1,13 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.discovery.collections;
+package org.opengis.cite.ogcapimaps10.conformance.crs.discovery.collections;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.opengis.cite.ogcapifeatures10.conformance.CommonDataFixture;
-import org.opengis.cite.ogcapifeatures10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapifeatures10.openapi3.TestPoint;
+import org.opengis.cite.ogcapimaps10.conformance.CommonDataFixture;
+import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.openapi3.TestPoint;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;

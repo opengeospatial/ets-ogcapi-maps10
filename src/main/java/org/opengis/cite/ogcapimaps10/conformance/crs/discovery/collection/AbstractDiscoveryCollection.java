@@ -1,7 +1,7 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.discovery.collection;
+package org.opengis.cite.ogcapimaps10.conformance.crs.discovery.collection;
 
 import io.restassured.path.json.JsonPath;
-import org.opengis.cite.ogcapifeatures10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
 import org.testng.ITestContext;
 import org.testng.annotations.DataProvider;
 

@@ -1,17 +1,17 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.query.bboxcrs;
+package org.opengis.cite.ogcapimaps10.conformance.crs.query.bboxcrs;
 
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.GEOJSON_MIME_TYPE;
-import static org.opengis.cite.ogcapifeatures10.util.JsonUtils.parseSpatialExtent;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.GEOJSON_MIME_TYPE;
+import static org.opengis.cite.ogcapimaps10.util.JsonUtils.parseSpatialExtent;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.CoordinateSystem;
-import org.opengis.cite.ogcapifeatures10.util.BBox;
-import org.opengis.cite.ogcapifeatures10.util.GeometryTransformer;
-import org.opengis.cite.ogcapifeatures10.util.JsonUtils;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.util.BBox;
+import org.opengis.cite.ogcapimaps10.util.GeometryTransformer;
+import org.opengis.cite.ogcapimaps10.util.JsonUtils;
 import org.testng.ITestContext;
 import org.testng.SkipException;
 import org.testng.annotations.DataProvider;

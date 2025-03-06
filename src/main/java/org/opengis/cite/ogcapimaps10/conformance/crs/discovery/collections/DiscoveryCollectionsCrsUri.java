@@ -1,13 +1,13 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.discovery.collections;
+package org.opengis.cite.ogcapimaps10.conformance.crs.discovery.collections;
 
-import static org.opengis.cite.ogcapifeatures10.EtsAssert.assertValidCrsIdentifier;
+import static org.opengis.cite.ogcapimaps10.EtsAssert.assertValidCrsIdentifier;
 
 import java.util.List;
 import java.util.Map;
 
-import org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.CoordinateSystem;
-import org.opengis.cite.ogcapifeatures10.openapi3.TestPoint;
-import org.opengis.cite.ogcapifeatures10.util.JsonUtils;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.openapi3.TestPoint;
+import org.opengis.cite.ogcapimaps10.util.JsonUtils;
 import org.testng.annotations.Test;
 
 import io.restassured.path.json.JsonPath;

@@ -1,8 +1,8 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.discovery.collection;
+package org.opengis.cite.ogcapimaps10.conformance.crs.discovery.collection;
 
 import java.util.List;
 
-import org.opengis.cite.ogcapifeatures10.util.JsonUtils;
+import org.opengis.cite.ogcapimaps10.util.JsonUtils;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 

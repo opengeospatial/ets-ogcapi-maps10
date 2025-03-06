@@ -1,12 +1,12 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs;
+package org.opengis.cite.ogcapimaps10.conformance.crs;
 
-import static org.opengis.cite.ogcapifeatures10.conformance.RequirementClass.CRS;
-import static org.opengis.cite.ogcapifeatures10.conformance.SuiteAttribute.REQUIREMENTCLASSES;
+import static org.opengis.cite.ogcapimaps10.conformance.RequirementClass.CRS;
+import static org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute.REQUIREMENTCLASSES;
 import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
-import org.opengis.cite.ogcapifeatures10.conformance.RequirementClass;
+import org.opengis.cite.ogcapimaps10.conformance.RequirementClass;
 import org.testng.ITestContext;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;

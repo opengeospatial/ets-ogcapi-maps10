@@ -1,3 +1,4 @@
+package org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.feature;
 
 import static net.jadler.Jadler.closeJadler;
 import static net.jadler.Jadler.initJadlerListeningOn;
@@ -17,6 +18,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.locationtech.jts.io.ParseException;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.features.FeaturesCrsParameterInvalidTest;
 import org.testng.ISuite;
 import org.testng.ITestContext;
 

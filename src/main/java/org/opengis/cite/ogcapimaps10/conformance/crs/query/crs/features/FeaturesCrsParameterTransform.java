@@ -1,12 +1,12 @@
-package org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.features;
+package org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.features;
 
 import static io.restassured.http.Method.GET;
-import static org.opengis.cite.ogcapifeatures10.EtsAssert.assertDefaultCrs;
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.CRS_PARAMETER;
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.DEFAULT_CRS_CODE;
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.DEFAULT_CRS_WITH_HEIGHT_CODE;
-import static org.opengis.cite.ogcapifeatures10.OgcApiFeatures10.GEOJSON_MIME_TYPE;
-import static org.opengis.cite.ogcapifeatures10.util.JsonUtils.findFeaturesUrlForGeoJson;
+import static org.opengis.cite.ogcapimaps10.EtsAssert.assertDefaultCrs;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.CRS_PARAMETER;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.DEFAULT_CRS_CODE;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.DEFAULT_CRS_WITH_HEIGHT_CODE;
+import static org.opengis.cite.ogcapimaps10.OgcApiMaps10.GEOJSON_MIME_TYPE;
+import static org.opengis.cite.ogcapimaps10.util.JsonUtils.findFeaturesUrlForGeoJson;
 
 import java.util.List;
 import java.util.Map;
@@ -14,9 +14,9 @@ import java.util.Map;
 import org.apache.commons.collections.map.MultiKeyMap;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
-import org.opengis.cite.ogcapifeatures10.conformance.crs.query.crs.CoordinateSystem;
-import org.opengis.cite.ogcapifeatures10.util.GeometryTransformer;
-import org.opengis.cite.ogcapifeatures10.util.JsonUtils;
+import org.opengis.cite.ogcapimaps10.conformance.crs.query.crs.CoordinateSystem;
+import org.opengis.cite.ogcapimaps10.util.GeometryTransformer;
+import org.opengis.cite.ogcapimaps10.util.JsonUtils;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
