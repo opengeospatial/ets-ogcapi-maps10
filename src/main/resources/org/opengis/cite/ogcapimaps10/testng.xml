@@ -11,13 +11,11 @@
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.LoggingTestListener" />
   </listeners>
 
- <test name="Core">
-  <packages>
-    <package name="org.opengis.cite.ogcapimaps10.conformance.core.MapOperation" />
-  </packages>
-  <classes>
-    <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
-  </classes>
+  <test name="Core">
+   <classes>
+     <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
+     <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapOperation" />
+   </classes>
   </test>
 
 </suite>
