@@ -34,19 +34,19 @@ public class MapOperation extends CommonFixture {
 	@Test(description = "Implements A.1.1.  Abstract Test for Requirement Map Operation (Requirement /req/core/map-op)")
 	public void verifyMapRetrievalOperation() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
-		String apiUrl = rootUri.toString()+ "/collections?f=json";
+		String apiUrl = rootUri.toString() + "/collections?f=json";
 
 		Map<String, Object> data = objectMapper.readValue(new URL(apiUrl), Map.class);
 
 		List<Map<String, Object>> collectionsList = (List<Map<String, Object>>) data.get("collections");
 
 		for (Map<String, Object> collection : collectionsList) {
-			 if (!collection.get("id").equals("mapserver_world_map")) {
-			 continue;
-			 }
-
 			List<Map<String, Object>> collectionLinks = (List<Map<String, Object>>) collection.get("links");
 			Map<String, Object> relMap = findLinkByRel(collectionLinks, "http://www.opengis.net/def/rel/ogc/1.0/map");
+
+			if (relMap == null) {
+				continue;
+			}
 
 			String mapUrl = (String) relMap.get("href");
 			URL url = new URL(mapUrl);
@@ -65,7 +65,9 @@ public class MapOperation extends CommonFixture {
 				}
 			}
 
-			Assert.assertTrue(result, "Test failed: Expected Content-Type to be an image format (image/*), but received: " + contentTypeList);
+			Assert.assertTrue(result,
+					"Test failed: Expected Content-Type to be an image format (image/*), but received: "
+							+ contentTypeList);
 
 		}
 
