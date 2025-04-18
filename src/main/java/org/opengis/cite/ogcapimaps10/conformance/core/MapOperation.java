@@ -3,9 +3,12 @@ package org.opengis.cite.ogcapimaps10.conformance.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
 import org.testng.Assert;
+import org.testng.ITestContext;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +18,16 @@ import java.util.Map;
  *
  */
 public class MapOperation extends CommonFixture {
+
+	protected int noOfCollections = 10;
+
+	@BeforeClass
+	public void initParameters(ITestContext context) {
+		Object param = context.getCurrentXmlTest().getParameter("noOfCollections");
+		if (param != null) {
+			this.noOfCollections = Integer.parseInt(param.toString());
+		}
+	}
 
 	/**
 	 * <pre>
@@ -32,17 +45,18 @@ public class MapOperation extends CommonFixture {
 	 */
 	@Test(description = "Implements A.1.1.  Abstract Test for Requirement Map Operation (Requirement /req/core/map-op)")
 	public void verifyMapRetrievalOperation() throws Exception {
+		ObjectMapper objectMapper = new ObjectMapper();
 		String apiUrl = rootUri.toString() + "/collections";
 		HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
 		connection.setRequestMethod("GET");
 		connection.setRequestProperty("Accept", "application/json");
 
-		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, Object> data = objectMapper.readValue(connection.getInputStream(), Map.class);
-
 		List<Map<String, Object>> collectionsList = (List<Map<String, Object>>) data.get("collections");
 
-		for (Map<String, Object> collection : collectionsList) {
+		int limit = Math.min(noOfCollections, collectionsList.size());
+		for (int i = 0; i < limit; i++) {
+			Map<String, Object> collection = collectionsList.get(i);
 			List<Map<String, Object>> collectionLinks = (List<Map<String, Object>>) collection.get("links");
 			Map<String, Object> relMap = findLinkByRel(collectionLinks, "http://www.opengis.net/def/rel/ogc/1.0/map");
 
@@ -51,10 +65,17 @@ public class MapOperation extends CommonFixture {
 			}
 
 			String mapUrl = (String) relMap.get("href");
-			URL url = new URL(mapUrl);
+			URI uri = new URI(mapUrl);
+			if (!uri.isAbsolute()) {
+				uri = rootUri.resolve(uri);
+			}
+			URL url = uri.toURL();
 
 			HttpURLConnection mapConnection = (HttpURLConnection) url.openConnection();
 			mapConnection.setRequestMethod("GET");
+			mapConnection.setConnectTimeout(5000);
+			mapConnection.setReadTimeout(5000);
+
 
 			// Get response headers
 			Map<String, List<String>> headers = mapConnection.getHeaderFields();
