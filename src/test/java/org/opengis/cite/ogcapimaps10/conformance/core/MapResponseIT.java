@@ -16,7 +16,9 @@ import static org.mockito.Mockito.when;
 public class MapResponseIT {
 
 	private static ITestContext testContext;
+
 	private static ISuite suite;
+
 	private static URI rootUri;
 
 	@BeforeClass

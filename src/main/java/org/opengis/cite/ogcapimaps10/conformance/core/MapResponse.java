@@ -1,18 +1,33 @@
 package org.opengis.cite.ogcapimaps10.conformance.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
 import org.opengis.cite.ogcapimaps10.util.MapUtil;
 import org.testng.Assert;
+import org.testng.ITestContext;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A.1.2. Abstract Test for Requirement Map Response
  */
 public class MapResponse extends CommonFixture {
+
+	protected int noOfCollections = 10;
+
+	@BeforeClass
+	public void initParameters(ITestContext context) {
+		Object param = context.getCurrentXmlTest().getParameter("noOfCollections");
+		if (param != null) {
+			this.noOfCollections = Integer.parseInt(param.toString());
+		}
+	}
 
 	/**
 	 * <pre>
@@ -42,21 +57,47 @@ public class MapResponse extends CommonFixture {
 	 */
 	@Test(description = "Implements A.1.2. Abstract Test for Requirement Map Response (Requirement /req/core/map-response)")
 	public void verifyMapResponse() throws Exception {
-		List<URL> urls = MapUtil.fetchMapUrls(rootUri);
+		ObjectMapper objectMapper = new ObjectMapper();
+		String apiUrl = rootUri.toString() + "/collections";
+		HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
+		connection.setRequestMethod("GET");
+		connection.setRequestProperty("Accept", "application/json");
 
-		for (URL url : urls) {
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestMethod("GET");
+		Map<String, Object> data = objectMapper.readValue(connection.getInputStream(), Map.class);
+		List<Map<String, Object>> collectionsList = (List<Map<String, Object>>) data.get("collections");
 
-			int responseCode = connection.getResponseCode();
+		int limit = Math.min(noOfCollections, collectionsList.size());
+
+		for (int i = 0; i < limit; i++) {
+			Map<String, Object> collection = collectionsList.get(i);
+			List<Map<String, Object>> collectionLinks = (List<Map<String, Object>>) collection.get("links");
+			Map<String, Object> relMap = findLinkByRel(collectionLinks, "http://www.opengis.net/def/rel/ogc/1.0/map");
+
+			if (relMap == null) {
+				continue;
+			}
+
+			String mapUrl = (String) relMap.get("href");
+
+			URI uri = new URI(mapUrl);
+			if (!uri.isAbsolute()) {
+				uri = rootUri.resolve(uri);
+			}
+			URL url = uri.toURL();
+
+			HttpURLConnection mapConnection = (HttpURLConnection) url.openConnection();
+			mapConnection.setRequestMethod("GET");
+
+			int responseCode = mapConnection.getResponseCode();
 			Assert.assertEquals(responseCode, 200, "HTTP response code must be 200");
 
-			String contentCrs = connection.getHeaderField("Content-Crs");
-			String contentBbox = connection.getHeaderField("Content-Bbox");
-			String contentDatetime = connection.getHeaderField("Content-Datetime");
+			String contentCrs = mapConnection.getHeaderField("Content-Crs");
+			String contentBbox = mapConnection.getHeaderField("Content-Bbox");
+			String contentDatetime = mapConnection.getHeaderField("Content-Datetime");
 
 			Assert.assertNotNull(contentBbox, "Content-Bbox header must be present.");
-			Assert.assertEquals(contentBbox.split(",").length, 4, "Content-Bbox must have four comma-separated numbers.");
+			Assert.assertEquals(contentBbox.split(",").length, 4,
+					"Content-Bbox must have four comma-separated numbers.");
 
 			if (contentCrs != null && !contentCrs.equals("https://www.opengis.net/def/crs/OGC/1.3/CRS84")) {
 				Assert.assertTrue(contentCrs.startsWith("http"), "Content-Crs header must be valid URI or CURIE.");
@@ -67,4 +108,18 @@ public class MapResponse extends CommonFixture {
 			}
 		}
 	}
+
+	public static Map<String, Object> findLinkByRel(List<Map<String, Object>> links, String expectedRel) {
+		if (links == null) {
+			return null;
+		}
+		for (Map<String, Object> link : links) {
+			Object rel = link.get("rel");
+			if (expectedRel.equals(rel)) {
+				return link;
+			}
+		}
+		return null;
+	}
+
 }
