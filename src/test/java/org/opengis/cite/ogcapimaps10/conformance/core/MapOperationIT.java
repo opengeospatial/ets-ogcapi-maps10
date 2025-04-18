@@ -16,7 +16,9 @@ import org.testng.ISuite;
 public class MapOperationIT {
 
 	private static ITestContext testContext;
+
 	private static ISuite suite;
+
 	private static URI rootUri;
 
 	@BeforeClass

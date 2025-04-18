@@ -10,7 +10,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-
 /**
  * A.1.1. Abstract Test for Requirement Map Operation
  *
@@ -33,10 +32,13 @@ public class MapOperation extends CommonFixture {
 	 */
 	@Test(description = "Implements A.1.1.  Abstract Test for Requirement Map Operation (Requirement /req/core/map-op)")
 	public void verifyMapRetrievalOperation() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper();
-		String apiUrl = rootUri.toString() + "/collections?f=json";
+		String apiUrl = rootUri.toString() + "/collections";
+		HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
+		connection.setRequestMethod("GET");
+		connection.setRequestProperty("Accept", "application/json");
 
-		Map<String, Object> data = objectMapper.readValue(new URL(apiUrl), Map.class);
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map<String, Object> data = objectMapper.readValue(connection.getInputStream(), Map.class);
 
 		List<Map<String, Object>> collectionsList = (List<Map<String, Object>>) data.get("collections");
 
@@ -51,11 +53,11 @@ public class MapOperation extends CommonFixture {
 			String mapUrl = (String) relMap.get("href");
 			URL url = new URL(mapUrl);
 
-			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestMethod("GET");
+			HttpURLConnection mapConnection = (HttpURLConnection) url.openConnection();
+			mapConnection.setRequestMethod("GET");
 
 			// Get response headers
-			Map<String, List<String>> headers = connection.getHeaderFields();
+			Map<String, List<String>> headers = mapConnection.getHeaderFields();
 			List<String> contentTypeList = headers.get("Content-Type");
 
 			boolean result = false;
