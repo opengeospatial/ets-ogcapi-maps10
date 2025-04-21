@@ -16,6 +16,7 @@
      <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
      <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapOperation" />
      <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapResponse" />
+     <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapConformanceSuccess" />
    </classes>
   </test>
 
