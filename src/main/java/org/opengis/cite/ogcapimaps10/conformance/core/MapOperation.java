@@ -2,6 +2,7 @@ package org.opengis.cite.ogcapimaps10.conformance.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
+import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
 import org.testng.Assert;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
@@ -19,13 +20,16 @@ import java.util.Map;
  */
 public class MapOperation extends CommonFixture {
 
-	protected int noOfCollections = 10;
+	protected int noOfCollections;
 
 	@BeforeClass
 	public void initParameters(ITestContext context) {
-		Object param = context.getCurrentXmlTest().getParameter("noOfCollections");
-		if (param != null) {
-			this.noOfCollections = Integer.parseInt(param.toString());
+		Object noOfCollectionsAttr = context.getSuite().getAttribute(SuiteAttribute.NO_OF_COLLECTIONS.getName());
+		if (noOfCollectionsAttr != null) {
+			this.noOfCollections = (Integer) noOfCollectionsAttr;
+		}
+		else {
+			this.noOfCollections = 10;
 		}
 	}
 
@@ -75,7 +79,6 @@ public class MapOperation extends CommonFixture {
 			mapConnection.setRequestMethod("GET");
 			mapConnection.setConnectTimeout(5000);
 			mapConnection.setReadTimeout(5000);
-
 
 			// Get response headers
 			Map<String, List<String>> headers = mapConnection.getHeaderFields();
