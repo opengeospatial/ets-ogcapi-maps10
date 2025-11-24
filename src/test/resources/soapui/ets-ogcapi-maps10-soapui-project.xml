@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <con:soapui-project id="1476c0be-8f92-4fc1-9925-9543b4950036" activeEnvironment="Default" name="TEAM Engine" resourceRoot="" soapui-version="5.7.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config">
   <con:settings/>
-  <con:testSuite id="c6ce07d7-2e98-4b79-8b92-044b2687a974" name="OGC API - Features 1.0">
+  <con:testSuite id="c6ce07d7-2e98-4b79-8b92-044b2687a974" name="OGC API - Maps 1.0">
     <con:settings/>
     <con:runType>SEQUENTIAL</con:runType>
     <con:testCase id="5a6aeaec-5ec9-4f78-be26-41b105108778" failOnError="false" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="REST" searchProperties="true" timeout="0" wsrmEnabled="false" wsrmVersion="1.0" wsrmAckTo="" amfAuthorisation="false" amfEndpoint="" amfLogin="" amfPassword="">
@@ -29,7 +29,7 @@
           </con:assertion>
           <con:assertion type="Simple Contains" id="22cf9feb-0c51-49a3-9966-0f65761e01b3" name="Contains test suite">
             <con:configuration>
-              <token>OGC API-Features 1.0 Conformance Test Suite</token>
+              <token>OGC API-Maps 1.0 Conformance Test Suite</token>
               <ignoreCase>false</ignoreCase>
               <useRegEx>false</useRegEx>
             </con:configuration>
@@ -52,7 +52,7 @@
           <con:settings>
             <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting>
           </con:settings>
-          <con:endpoint>${#Project#teamengine.endpoint}/rest/suites/ogcapi-features-1.0/</con:endpoint>
+          <con:endpoint>${#Project#teamengine.endpoint}/rest/suites/ogcapi-maps-1.0/</con:endpoint>
           <con:request/>
           <con:assertion type="Valid HTTP Status Codes" id="0b7f5046-5ac7-41d0-829e-17315ac969ba" name="Valid HTTP Status Codes">
             <con:configuration>
@@ -61,7 +61,7 @@
           </con:assertion>
           <con:assertion type="Simple Contains" id="fa99f93d-9a50-47b2-a991-1d999d30e858" name="Contains test suite">
             <con:configuration>
-              <token>OGC API - Features Conformance Test Suite</token>
+              <token>OGC API - Maps Conformance Test Suite</token>
               <ignoreCase>false</ignoreCase>
               <useRegEx>false</useRegEx>
             </con:configuration>
@@ -84,7 +84,7 @@
           <con:settings>
             <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="Accept" value="application/xml" xmlns="http://eviware.com/soapui/config"/></con:setting>
           </con:settings>
-          <con:endpoint>${#Project#teamengine.endpoint}/rest/suites/ogcapi-features-1.0/run</con:endpoint>
+          <con:endpoint>${#Project#teamengine.endpoint}/rest/suites/ogcapi-maps-1.0/run</con:endpoint>
           <con:request/>
           <con:assertion type="Valid HTTP Status Codes" id="0b7f5046-5ac7-41d0-829e-17315ac969ba" name="Valid HTTP Status Codes">
             <con:configuration>
@@ -130,7 +130,7 @@ assert headers != null &amp;&amp; headers[0] != null &amp;&amp; headers[0].index
           <con:settings>
             <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="Accept" value="application/zip" xmlns="http://eviware.com/soapui/config"/></con:setting>
           </con:settings>
-          <con:endpoint>${#Project#teamengine.endpoint}/rest/suites/ogcapi-features-1.0/run</con:endpoint>
+          <con:endpoint>${#Project#teamengine.endpoint}/rest/suites/ogcapi-maps-1.0/run</con:endpoint>
           <con:request/>
           <con:assertion type="Valid HTTP Status Codes" id="0b7f5046-5ac7-41d0-829e-17315ac969ba" name="Valid HTTP Status Codes">
             <con:configuration>
@@ -176,7 +176,7 @@ assert headers != null &amp;&amp; headers[0] != null &amp;&amp; headers[0].index
           <con:settings>
             <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="Accept" value="application/rdf+xml" xmlns="http://eviware.com/soapui/config"/></con:setting>
           </con:settings>
-          <con:endpoint>${#Project#teamengine.endpoint}/rest/suites/ogcapi-features-1.0/run</con:endpoint>
+          <con:endpoint>${#Project#teamengine.endpoint}/rest/suites/ogcapi-maps-1.0/run</con:endpoint>
           <con:request/>
           <con:assertion type="Valid HTTP Status Codes" id="0b7f5046-5ac7-41d0-829e-17315ac969ba" name="Valid HTTP Status Codes">
             <con:configuration>
@@ -272,15 +272,15 @@ declare namespace cite="http://cite.opengeospatial.org/";
     </con:property>
     <con:property>
       <con:name>tests.passed</con:name>
-      <con:value>107</con:value>
+      <con:value>${#Project#tests.passed}</con:value>
     </con:property>
     <con:property>
       <con:name>tests.skipped</con:name>
-      <con:value>0</con:value>
+      <con:value>${#Project#tests.skipped}</con:value>
     </con:property>
     <con:property>
       <con:name>tests.failed</con:name>
-      <con:value>0</con:value>
+      <con:value>${#Project#tests.failed}</con:value>
     </con:property>
     <con:property>
       <con:name>teamengine.user</con:name>
