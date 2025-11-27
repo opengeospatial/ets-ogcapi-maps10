@@ -7,9 +7,9 @@ import org.testng.annotations.Test;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
-
 
 /**
  * A.1.1. Abstract Test for Requirement Map Operation
@@ -49,7 +49,15 @@ public class MapOperation extends CommonFixture {
 			}
 
 			String mapUrl = (String) relMap.get("href");
-			URL url = new URL(mapUrl);
+			if (mapUrl == null || mapUrl.isEmpty()) {
+				continue;
+			}
+
+			URI uri = new URI(mapUrl);
+			if (!uri.isAbsolute()) {
+				uri = rootUri.resolve(uri);
+			}
+			URL url = uri.toURL();
 
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("GET");
