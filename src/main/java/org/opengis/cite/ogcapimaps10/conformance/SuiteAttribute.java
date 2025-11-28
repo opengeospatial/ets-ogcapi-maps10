@@ -24,7 +24,7 @@ public enum SuiteAttribute {
 	/**
 	 * The root URL.
 	 */
-	IUT("instanceUnderTest", URI.class),
+	IUT("iut", URI.class),
 
 	/**
 	 * A File containing the test subject or a description of it.
