@@ -38,4 +38,5 @@ public class MapConformanceSuccessIT {
 
 		conformanceTest.verifyConformanceClassPresence();
 	}
+
 }

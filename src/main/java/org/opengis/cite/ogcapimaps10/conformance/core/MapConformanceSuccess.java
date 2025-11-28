@@ -29,12 +29,21 @@ import java.util.Map;
  */
 public class MapConformanceSuccess extends CommonFixture {
 
+	private static final String REQUIRED_CORE_URI = "https://www.opengis.net/spec/ogcapi-maps-1/1.0/req/core";
+
 	@Test(description = "Implements A.1.3. Abstract Test for Requirement Map Conformance Success (Requirement /req/core/conformance-success)")
 	public void verifyConformanceClassPresence() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
 		String conformanceUrl = rootUri.toString() + "/conformance";
 
-		Map<String, Object> responseMap = objectMapper.readValue(new URL(conformanceUrl), Map.class);
+		URL url = new URL(conformanceUrl);
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setRequestMethod("GET");
+
+		connection.setRequestProperty("Accept", "application/json");
+
+		InputStream responseStream = connection.getInputStream();
+		Map<String, Object> responseMap = objectMapper.readValue(responseStream, Map.class);
 
 		Object conformsToObj = responseMap.get("conformsTo");
 		Assert.assertNotNull(conformsToObj, "'conformsTo' is missing in response.");
@@ -43,7 +52,7 @@ public class MapConformanceSuccess extends CommonFixture {
 
 		boolean found = false;
 		for (Object o : conformsToList) {
-			if (o != null && o.toString().equals("http://www.opengis.net/spec/ogcapi-maps-1/1.0/req/core")) {
+			if (o != null && o.toString().trim().equals(REQUIRED_CORE_URI)) {
 				found = true;
 				break;
 			}
