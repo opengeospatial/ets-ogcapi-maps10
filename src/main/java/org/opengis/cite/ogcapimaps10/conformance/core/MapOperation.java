@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -69,6 +70,10 @@ public class MapOperation extends CommonFixture {
 			}
 
 			String mapUrl = (String) relMap.get("href");
+			if (mapUrl == null || mapUrl.isEmpty()) {
+				continue;
+			}
+
 			URI uri = new URI(mapUrl);
 			if (!uri.isAbsolute()) {
 				uri = rootUri.resolve(uri);
