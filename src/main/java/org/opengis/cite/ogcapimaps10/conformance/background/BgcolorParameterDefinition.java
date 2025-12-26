@@ -27,6 +27,8 @@ interface TestImageValidator {
 			put("WHITE", 0xFFFFFF); // Default white
 			put("NAVY", 0x000080); // Case 2 example
 			put("BLUE", 0x0000FF);
+			put("RED", 0xFF0000);
+			put("LIME", 0x00FF00);
 		}
 	});
 
