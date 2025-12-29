@@ -101,7 +101,11 @@ public class TransparentParameterDefinition extends CommonFixture {
 			List<Map<String, Object>> collectionLinks = (List<Map<String, Object>>) collection.get("links");
 			Map<String, Object> relMap = findLinkByRel(collectionLinks, MAP_REL_TYPE);
 			if (relMap != null && relMap.get("href") != null) {
-				URI uri = URI.create(relMap.get("href").toString());
+				String mapUrl = relMap.get("href").toString();
+				URI uri = new URI(mapUrl);
+				if (!uri.isAbsolute()) {
+					uri = rootUri.resolve(uri);
+				}
 				return uri.toURL().toString() + "?f=" + DEFAULT_FORMAT + "&bbox=" + DEFAULT_BBOX + "&width="
 						+ DEFAULT_WIDTH + "&height=" + DEFAULT_HEIGHT;
 			}
