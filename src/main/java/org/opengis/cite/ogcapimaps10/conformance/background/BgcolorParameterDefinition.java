@@ -312,7 +312,8 @@ public class BgcolorParameterDefinition extends CommonFixture {
 		String baseUrl = getMapBaseUrlTemplate();
 
 		// ----------------------------------------------------
-		// Case 1: Verify that the bgcolor parameter supports a 6-digit hexadecimal RGB value (RRGGBB) as the map background color.
+		// Case 1: Verify that the bgcolor parameter supports a 6-digit hexadecimal RGB
+		// value (RRGGBB) as the map background color.
 		// ----------------------------------------------------
 		// Validate Hexadecimal Color Value
 		String hexColor = "CC00CC"; // Purple
@@ -328,7 +329,8 @@ public class BgcolorParameterDefinition extends CommonFixture {
 				"Assertion 1 Failed: Map background color must be the specified hex value " + hexColor);
 
 		// ----------------------------------------------------
-		// Case 2: Verify that the bgcolor parameter supports W3C web color names and is case-insensitive.
+		// Case 2: Verify that the bgcolor parameter supports W3C web color names and is
+		// case-insensitive.
 		// ----------------------------------------------------
 		System.out.println("\n[Case 2/3] Testing W3C Web Color Names (case-insensitive)");
 
@@ -352,7 +354,8 @@ public class BgcolorParameterDefinition extends CommonFixture {
 		}
 
 		// ----------------------------------------------------
-		// Case 3: Verify that when bgcolor is not specified and transparent is false, the background color defaults to white (0xFFFFFF).
+		// Case 3: Verify that when bgcolor is not specified and transparent is false, the
+		// background color defaults to white (0xFFFFFF).
 		// ----------------------------------------------------
 		// Validate Default White Behavior
 		String defaultColorHex = "FFFFFF"; // Default White
@@ -375,7 +378,8 @@ public class BgcolorParameterDefinition extends CommonFixture {
 				&& expectedStyleColor != null && !expectedStyleColor.isBlank();
 
 		// ----------------------------------------------------
-		// Assertion 3: Verify that when bgcolor is not specified and a style with a background color is requested, the style background color is used.
+		// Assertion 3: Verify that when bgcolor is not specified and a style with a
+		// background color is requested, the style background color is used.
 		// ----------------------------------------------------
 		if (canTestStyleBackground) {
 
@@ -408,7 +412,8 @@ public class BgcolorParameterDefinition extends CommonFixture {
 
 		}
 		// ----------------------------------------------------
-		// Assertion 3/4 (Skipped): Style background test is skipped because required style configuration is not provided.
+		// Assertion 3/4 (Skipped): Style background test is skipped because required
+		// style configuration is not provided.
 		// ----------------------------------------------------
 		else {
 			System.out.println(
