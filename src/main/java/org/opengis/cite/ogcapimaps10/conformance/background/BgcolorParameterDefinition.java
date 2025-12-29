@@ -303,7 +303,7 @@ public class BgcolorParameterDefinition extends CommonFixture {
 	 * </pre>
 	 */
 	@Test(description = "Implements A.3.1. Abstract Test for Requirement bgcolor parameter definition")
-	public void verifyBGColorDefinition() throws Exception {
+	public void verifyBgcolorDefinition() throws Exception {
 
 		System.out.println("--- Starting A.6 BGCOLOR Tests ---");
 
@@ -319,7 +319,7 @@ public class BgcolorParameterDefinition extends CommonFixture {
 		String hexColor = "CC00CC"; // Purple
 
 		String testUrlHex = baseUrl + "&bgcolor=" + hexColor + "&transparent=false";
-		System.out.println("\n[Case 1/3] Testing Hex Color: " + hexColor);
+		System.out.println("\n[Case 1] Testing Hex Color: " + hexColor);
 
 		HttpURLConnection connHex = sendMapRequest(testUrlHex);
 		Assert.assertEquals(connHex.getResponseCode(), 200,
@@ -332,7 +332,7 @@ public class BgcolorParameterDefinition extends CommonFixture {
 		// Case 2: Verify that the bgcolor parameter supports W3C web color names and is
 		// case-insensitive.
 		// ----------------------------------------------------
-		System.out.println("\n[Case 2/3] Testing W3C Web Color Names (case-insensitive)");
+		System.out.println("\n[Case 2] Testing W3C Web Color Names (case-insensitive)");
 
 		String[] w3cColors = { "NAVY", // baseline
 				"NaVy", // mixed case: used to verify case-insensitive color name parsing
@@ -361,7 +361,7 @@ public class BgcolorParameterDefinition extends CommonFixture {
 		String defaultColorHex = "FFFFFF"; // Default White
 
 		String testUrlDefault = baseUrl + "&transparent=false";
-		System.out.println("\n[Case 3/3] Testing Default Color (White): " + defaultColorHex);
+		System.out.println("\n[Case 3] Testing Default Color (White): " + defaultColorHex);
 
 		HttpURLConnection connDefault = sendMapRequest(testUrlDefault);
 		Assert.assertEquals(connDefault.getResponseCode(), 200,
