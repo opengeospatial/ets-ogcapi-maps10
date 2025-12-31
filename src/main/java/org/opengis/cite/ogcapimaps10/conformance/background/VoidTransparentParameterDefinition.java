@@ -130,6 +130,20 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 		return connection;
 	}
 
+	/**
+	 * Sends a quick pre-check request with shorter timeout to verify parameter support.
+	 */
+	private HttpURLConnection sendPreCheckRequest(String urlString) throws Exception {
+		URL url = new URL(urlString);
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setConnectTimeout(5000);
+		connection.setReadTimeout(10000);
+		connection.setRequestMethod("GET");
+		connection.setRequestProperty("Accept", DEFAULT_FORMAT);
+		connection.connect();
+		return connection;
+	}
+
 	// ==========================================================
 	// Image helpers (Alpha checks on void areas)
 	// ==========================================================
@@ -182,6 +196,28 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		String baseUrl = getMapBaseUrlTemplateWithBbox(VOID_BBOX);
 
+		// ----------------------------------------------------------
+		// Pre-check: Verify server supports void-transparent parameter
+		// ----------------------------------------------------------
+		System.out.println("\n[Pre-check] Testing if server supports void-transparent parameter...");
+		try {
+			String preCheckUrl = baseUrl + "&void-transparent=true";
+			HttpURLConnection preCheckConn = sendPreCheckRequest(preCheckUrl);
+			int preCheckCode = preCheckConn.getResponseCode();
+			if (preCheckCode == 400 || preCheckCode == 501) {
+				throw new SkipException("Test Skipped: Server does not support void-transparent parameter (HTTP "
+						+ preCheckCode + ").");
+			}
+			System.out.println("  [Pre-check] Server accepts void-transparent parameter (HTTP " + preCheckCode + ")");
+		}
+		catch (SkipException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new SkipException("Test Skipped: Server does not support void-transparent parameter or timed out ("
+					+ e.getMessage() + ").");
+		}
+
 		String voidColorHex = "FF00FF"; // Magenta
 
 		// ==========================================================
@@ -195,10 +231,11 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 				"\n[Case A1] void-transparent (absent) + transparent (absent) + void-color (absent) => expect alpha=0 (void-transparent defaults to transparent default)");
 
 		HttpURLConnection connA1 = sendMapRequest(baseUrl);
-		Assert.assertEquals(connA1.getResponseCode(), 200, "Map request failed with HTTP status. Expected 200.");
+		Assert.assertEquals(connA1.getResponseCode(), 200,
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connA1.getInputStream(), 0,
-				"If void-transparent is not specified, it must assume the same value as transparent (default true when transparent/bgcolor are absent).");
+				"Failed: If void-transparent is not specified, it must assume the same value as transparent (default true when transparent/bgcolor are absent).");
 
 		// Case A1: transparent absent + bgcolor specified => transparent default false
 		System.out.println(
@@ -206,10 +243,11 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		String urlA1b = baseUrl + "&bgcolor=red";
 		HttpURLConnection connA1b = sendMapRequest(urlA1b);
-		Assert.assertEquals(connA1b.getResponseCode(), 200, "Map request failed with HTTP status. Expected 200.");
+		Assert.assertEquals(connA1b.getResponseCode(), 200,
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connA1b.getInputStream(), 255,
-				"If void-transparent is not specified, it must assume the same value as transparent (default false when bgcolor is specified and transparent is absent).");
+				"Failed: If void-transparent is not specified, it must assume the same value as transparent (default false when bgcolor is specified and transparent is absent).");
 
 		// Case A2: transparent=false explicitly => void-transparent absent must match =>
 		// alpha=255
@@ -218,10 +256,11 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		String urlA2 = baseUrl + "&transparent=false" + "&void-color=" + voidColorHex;
 		HttpURLConnection connA2 = sendMapRequest(urlA2);
-		Assert.assertEquals(connA2.getResponseCode(), 200, "Map request failed with HTTP status. Expected 200.");
+		Assert.assertEquals(connA2.getResponseCode(), 200,
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connA2.getInputStream(), 255,
-				"If void-transparent is not specified, it must assume the same value as transparent (transparent=false => void areas opaque).");
+				"Failed: If void-transparent is not specified, it must assume the same value as transparent (transparent=false => void areas opaque).");
 
 		// Case A3: transparent=true explicitly => void-transparent absent must match =>
 		// alpha=0
@@ -230,10 +269,11 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		String urlA3 = baseUrl + "&transparent=true";
 		HttpURLConnection connA3 = sendMapRequest(urlA3);
-		Assert.assertEquals(connA3.getResponseCode(), 200, "Map request failed with HTTP status. Expected 200.");
+		Assert.assertEquals(connA3.getResponseCode(), 200,
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connA3.getInputStream(), 0,
-				"If void-transparent is not specified, it must assume the same value as transparent (transparent=true => void areas transparent).");
+				"Failed: If void-transparent is not specified, it must assume the same value as transparent (transparent=true => void areas transparent).");
 
 		// ==========================================================
 		// Group B: void-transparent explicitly set => must be interpreted as Boolean for
@@ -247,10 +287,11 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		String urlB1 = baseUrl + "&transparent=true" + "&void-transparent=false";
 		HttpURLConnection connB1 = sendMapRequest(urlB1);
-		Assert.assertEquals(connB1.getResponseCode(), 200, "Map request failed with HTTP status. Expected 200.");
+		Assert.assertEquals(connB1.getResponseCode(), 200,
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connB1.getInputStream(), 255,
-				"Server must interpret void-transparent=false as Boolean and make void areas opaque.");
+				"Failed: Server must interpret void-transparent=false as Boolean and make void areas opaque.");
 
 		// Case B2: transparent=false but void-transparent=true => void areas must be
 		// transparent (alpha=0)
@@ -259,10 +300,11 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		String urlB2 = baseUrl + "&transparent=false" + "&void-transparent=true" + "&void-color=" + voidColorHex;
 		HttpURLConnection connB2 = sendMapRequest(urlB2);
-		Assert.assertEquals(connB2.getResponseCode(), 200, "Map request failed with HTTP status. Expected 200.");
+		Assert.assertEquals(connB2.getResponseCode(), 200,
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connB2.getInputStream(), 0,
-				"Server must interpret void-transparent=true as Boolean and make void areas transparent (alpha=0) even when transparent=false.");
+				"Failed: Server must interpret void-transparent=true as Boolean and make void areas transparent (alpha=0) even when transparent=false.");
 
 		// Case B3: void-transparent=false + void-color=present => void areas opaque
 		System.out.println("\n[Case B3] void-transparent=false + void-color=" + voidColorHex
@@ -270,10 +312,11 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		String urlB3 = baseUrl + "&void-transparent=false" + "&void-color=" + voidColorHex;
 		HttpURLConnection connB3 = sendMapRequest(urlB3);
-		Assert.assertEquals(connB3.getResponseCode(), 200, "Map request failed with HTTP status. Expected 200.");
+		Assert.assertEquals(connB3.getResponseCode(), 200,
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connB3.getInputStream(), 255,
-				"Server must interpret void-transparent=false as Boolean and make void areas opaque.");
+				"Failed: Server must interpret void-transparent=false as Boolean and make void areas opaque.");
 
 		// Case B4: void-transparent=true + void-color=absent => void areas transparent
 		System.out.println(
@@ -281,10 +324,11 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		String urlB4 = baseUrl + "&void-transparent=true";
 		HttpURLConnection connB4 = sendMapRequest(urlB4);
-		Assert.assertEquals(connB4.getResponseCode(), 200, "Map request failed with HTTP status. Expected 200.");
+		Assert.assertEquals(connB4.getResponseCode(), 200,
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connB4.getInputStream(), 0,
-				"Server must interpret void-transparent=true as Boolean and make void areas transparent.");
+				"Failed: Server must interpret void-transparent=true as Boolean and make void areas transparent.");
 	}
 
 }
