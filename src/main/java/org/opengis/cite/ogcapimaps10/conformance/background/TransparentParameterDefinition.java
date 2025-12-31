@@ -192,10 +192,10 @@ public class TransparentParameterDefinition extends CommonFixture {
 
 		HttpURLConnection connCase1 = sendMapRequest(baseUrl);
 		Assert.assertEquals(connCase1.getResponseCode(), 200,
-				"Case 1 Failed: Map request failed with HTTP status. Expected 200.");
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connCase1.getInputStream(), 0,
-				"Assertion 1 Failed: If transparent is not specified and bgcolor is not specified, server must assume transparent=true (background opacity=0).");
+				"Failed: If transparent is not specified and bgcolor is not specified, server must assume transparent=true (background opacity=0).");
 
 		// ==========================================================
 		// Case 2: transparent NOT specified + bgcolor specified
@@ -207,10 +207,10 @@ public class TransparentParameterDefinition extends CommonFixture {
 		String urlCase2 = baseUrl + "&bgcolor=" + testBgColor;
 		HttpURLConnection connCase2 = sendMapRequest(urlCase2);
 		Assert.assertEquals(connCase2.getResponseCode(), 200,
-				"Case 2 Failed: Map request failed with HTTP status. Expected 200.");
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connCase2.getInputStream(), 255,
-				"Assertion 2 Failed: If transparent is not specified and bgcolor is specified, server must assume transparent=false (background opacity=255).");
+				"Failed: If transparent is not specified and bgcolor is specified, server must assume transparent=false (background opacity=255).");
 
 		// ==========================================================
 		// Case 3: transparent=false (with and without bgcolor)
@@ -222,20 +222,20 @@ public class TransparentParameterDefinition extends CommonFixture {
 		String urlCase3a = baseUrl + "&transparent=false";
 		HttpURLConnection connCase3a = sendMapRequest(urlCase3a);
 		Assert.assertEquals(connCase3a.getResponseCode(), 200,
-				"Case 3a Failed: Map request failed with HTTP status. Expected 200.");
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connCase3a.getInputStream(), 255,
-				"Assertion 3 Failed: transparent=false must result in an opaque background (opacity=255).");
+				"Failed: transparent=false must result in an opaque background (opacity=255).");
 
 		System.out.println("\n[Case 3] transparent=false + bgcolor=" + testBgColor + " => expect alpha=255");
 
 		String urlCase3b = baseUrl + "&transparent=false&bgcolor=" + testBgColor;
 		HttpURLConnection connCase3b = sendMapRequest(urlCase3b);
 		Assert.assertEquals(connCase3b.getResponseCode(), 200,
-				"Case 3b Failed: Map request failed with HTTP status. Expected 200.");
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connCase3b.getInputStream(), 255,
-				"Assertion 3 Failed: transparent=false must remain opaque even when bgcolor is specified (opacity=255).");
+				"Failed: transparent=false must remain opaque even when bgcolor is specified (opacity=255).");
 
 		// ==========================================================
 		// Case 4: transparent=true + bgcolor NOT specified
@@ -246,10 +246,10 @@ public class TransparentParameterDefinition extends CommonFixture {
 		String urlCase4 = baseUrl + "&transparent=true";
 		HttpURLConnection connCase4 = sendMapRequest(urlCase4);
 		Assert.assertEquals(connCase4.getResponseCode(), 200,
-				"Case 4 Failed: Map request failed with HTTP status. Expected 200.");
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connCase4.getInputStream(), 0,
-				"Assertion 4 Failed: transparent=true must result in a fully transparent background (opacity=0).");
+				"Failed: transparent=true must result in a fully transparent background (opacity=0).");
 
 		// ==========================================================
 		// Case 5: transparent=true + bgcolor specified
@@ -261,10 +261,10 @@ public class TransparentParameterDefinition extends CommonFixture {
 		String urlCase5 = baseUrl + "&transparent=true&bgcolor=" + testBgColor;
 		HttpURLConnection connCase5 = sendMapRequest(urlCase5);
 		Assert.assertEquals(connCase5.getResponseCode(), 200,
-				"Case 5 Failed: Map request failed with HTTP status. Expected 200.");
+				"Failed: Map request failed with HTTP status. Expected 200.");
 
 		assertCornerAlpha(connCase5.getInputStream(), 0,
-				"Assertion 5 Failed: If transparent=true and bgcolor is specified, server must use opacity=0 for the background.");
+				"Failed: If transparent=true and bgcolor is specified, server must use opacity=0 for the background.");
 	}
 
 }
