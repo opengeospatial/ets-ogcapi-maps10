@@ -224,10 +224,27 @@ public class BgcolorParameterDefinition extends CommonFixture {
 	}
 
 	/**
-	 * Gets the base URL template for the first available /map resource, including f,
-	 * bbox, width, and height parameters.
+	 * Helper class to hold map resource information including collection ID and base URL.
 	 */
-	private String getMapBaseUrlTemplate() throws Exception {
+	private static class MapResourceInfo {
+
+		final String collectionId;
+
+		final String baseUrl;
+
+		MapResourceInfo(String collectionId, String baseUrl) {
+			this.collectionId = collectionId;
+			this.baseUrl = baseUrl;
+		}
+
+	}
+
+	/**
+	 * Gets the base URL template for the first available /map resource, including f,
+	 * bbox, width, and height parameters. Also returns the collection ID for style
+	 * lookup.
+	 */
+	private MapResourceInfo getMapResourceInfo() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
 		String apiUrl = rootUri.toString() + "/collections?f=json";
 
@@ -251,6 +268,7 @@ public class BgcolorParameterDefinition extends CommonFixture {
 			Map<String, Object> relMap = findLinkByRel(collectionLinks, MAP_REL_TYPE);
 
 			if (relMap != null && relMap.containsKey("href")) {
+				String collectionId = (String) collection.get("id");
 				String mapUrl = (String) relMap.get("href");
 				URI uri = new URI(mapUrl);
 
@@ -258,12 +276,116 @@ public class BgcolorParameterDefinition extends CommonFixture {
 					uri = rootUri.resolve(uri);
 				}
 
-				return uri.toURL().toString() + "?f=" + DEFAULT_FORMAT + "&bbox=" + DEFAULT_BBOX + "&width="
+				String baseUrl = uri.toURL().toString() + "?f=" + DEFAULT_FORMAT + "&bbox=" + DEFAULT_BBOX + "&width="
 						+ DEFAULT_WIDTH + "&height=" + DEFAULT_HEIGHT;
+
+				return new MapResourceInfo(collectionId, baseUrl);
 			}
 		}
 		throw new SkipException(
 				"Test Skipped: No map resources found in the collections to verify. Cannot proceed with A.6.");
+	}
+
+	/**
+	 * Gets the first available style ID from the collection's styles endpoint.
+	 * @param collectionId The collection ID to query styles for.
+	 * @return The first style ID, or null if styles endpoint is not available or empty.
+	 */
+	private String getFirstStyleId(String collectionId) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			String stylesUrl = rootUri.toString() + "/collections/" + collectionId + "/styles?f=json";
+
+			HttpURLConnection connection = (HttpURLConnection) new URL(stylesUrl).openConnection();
+			connection.setRequestMethod("GET");
+			connection.setRequestProperty("Accept", "application/json");
+			connection.setConnectTimeout(10000);
+			connection.setReadTimeout(10000);
+
+			if (connection.getResponseCode() != 200) {
+				System.out.println("  [Style Discovery] /styles endpoint returned HTTP " + connection.getResponseCode()
+						+ ", skipping style test.");
+				return null;
+			}
+
+			Map<String, Object> data = objectMapper.readValue(connection.getInputStream(),
+					new TypeReference<Map<String, Object>>() {
+					});
+
+			List<Map<String, Object>> styles = (List<Map<String, Object>>) data.get("styles");
+			if (styles == null || styles.isEmpty()) {
+				System.out.println("  [Style Discovery] No styles found in the response.");
+				return null;
+			}
+
+			String styleId = (String) styles.get(0).get("id");
+			System.out.println("  [Style Discovery] Found style: " + styleId);
+			return styleId;
+		}
+		catch (Exception e) {
+			System.out.println("  [Style Discovery] Failed to retrieve styles: " + e.getMessage());
+			return null;
+		}
+	}
+
+	/**
+	 * Gets the background color defined in a style.
+	 * @param collectionId The collection ID.
+	 * @param styleId The style ID to query.
+	 * @return The background color in hex format (e.g., "AADDCC"), or null if not
+	 * defined.
+	 */
+	private String getStyleBackgroundColor(String collectionId, String styleId) {
+		try {
+			ObjectMapper objectMapper = new ObjectMapper();
+			String styleUrl = rootUri.toString() + "/collections/" + collectionId + "/styles/" + styleId + "?f=json";
+
+			HttpURLConnection connection = (HttpURLConnection) new URL(styleUrl).openConnection();
+			connection.setRequestMethod("GET");
+			connection.setRequestProperty("Accept", "application/json");
+			connection.setConnectTimeout(10000);
+			connection.setReadTimeout(10000);
+
+			if (connection.getResponseCode() != 200) {
+				System.out
+					.println("  [Style Detail] Failed to retrieve style detail: HTTP " + connection.getResponseCode());
+				return null;
+			}
+
+			Map<String, Object> styleData = objectMapper.readValue(connection.getInputStream(),
+					new TypeReference<Map<String, Object>>() {
+					});
+
+			// Parse MapBox GL style format - look for background layer
+			List<Map<String, Object>> layers = (List<Map<String, Object>>) styleData.get("layers");
+			if (layers != null) {
+				for (Map<String, Object> layer : layers) {
+					String type = (String) layer.get("type");
+					if ("background".equals(type)) {
+						Map<String, Object> paint = (Map<String, Object>) layer.get("paint");
+						if (paint != null) {
+							Object bgColor = paint.get("background-color");
+							if (bgColor != null) {
+								String colorStr = bgColor.toString();
+								// Convert #RRGGBB to RRGGBB
+								if (colorStr.startsWith("#")) {
+									colorStr = colorStr.substring(1);
+								}
+								System.out.println("  [Style Detail] Found background-color: " + colorStr);
+								return colorStr;
+							}
+						}
+					}
+				}
+			}
+
+			System.out.println("  [Style Detail] No background-color defined in style.");
+			return null;
+		}
+		catch (Exception e) {
+			System.out.println("  [Style Detail] Failed to parse style: " + e.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -309,7 +431,11 @@ public class BgcolorParameterDefinition extends CommonFixture {
 
 		requireConformance("/conf/core", "/conf/background");
 
-		String baseUrl = getMapBaseUrlTemplate();
+		MapResourceInfo mapInfo = getMapResourceInfo();
+		String baseUrl = mapInfo.baseUrl;
+		String collectionId = mapInfo.collectionId;
+
+		System.out.println("  [Info] Testing collection: " + collectionId);
 
 		// ----------------------------------------------------
 		// Case 1: Verify that the bgcolor parameter supports a 6-digit hexadecimal RGB
@@ -326,7 +452,7 @@ public class BgcolorParameterDefinition extends CommonFixture {
 				"Failed: Hex BGCOLOR request failed with HTTP status. Expected 200.");
 
 		Assert.assertTrue(TestImageValidator.checkPixelColor(connHex.getInputStream(), hexColor),
-				"Assertion 1 Failed: Map background color must be the specified hex value " + hexColor);
+				"Failed: Map background color must be the specified hex value " + hexColor);
 
 		// ----------------------------------------------------
 		// Case 2: Verify that the bgcolor parameter supports W3C web color names and is
@@ -346,78 +472,58 @@ public class BgcolorParameterDefinition extends CommonFixture {
 			HttpURLConnection connWeb = sendMapRequest(testUrlWeb);
 
 			Assert.assertEquals(connWeb.getResponseCode(), 200,
-					"Assertion 2 Failed: W3C color request failed for '" + colorName + "'");
+					"Failed: W3C color request failed for '" + colorName + "'");
 
 			Assert.assertTrue(TestImageValidator.checkPixelColor(connWeb.getInputStream(), colorName),
-					"Assertion 2 Failed: Map background color must match W3C color name (case-insensitive): "
-							+ colorName);
+					"Failed: Map background color must match W3C color name (case-insensitive): " + colorName);
 		}
 
 		// ----------------------------------------------------
-		// Case 3: Verify that when bgcolor is not specified and transparent is false, the
-		// background color defaults to white (0xFFFFFF).
+		// Case 3 & 4: Test style background color or default white
+		// Try to automatically discover style and its background color
 		// ----------------------------------------------------
-		// Validate Default White Behavior
-		String defaultColorHex = "FFFFFF"; // Default White
+		System.out.println("\n[Case 3/4] Testing Style Background Color or Default White");
 
-		String testUrlDefault = baseUrl + "&transparent=false";
-		System.out.println("\n[Case 3] Testing Default Color (White): " + defaultColorHex);
+		String styleId = getFirstStyleId(collectionId);
+		String styleBackgroundColor = null;
 
-		HttpURLConnection connDefault = sendMapRequest(testUrlDefault);
-		Assert.assertEquals(connDefault.getResponseCode(), 200,
-				"Assertion 4 Failed: Default White BGCOLOR request failed with HTTP status. Expected 200.");
-
-		Assert.assertTrue(TestImageValidator.checkPixelColor(connDefault.getInputStream(), defaultColorHex),
-				"Assertion 4 Failed: When BGCOLOR is absent, and TRANSPARENT=FALSE, background must default to "
-						+ defaultColorHex);
-
-		String configuredStyleId = System.getProperty("test.style.id");
-		String expectedStyleColor = System.getProperty("test.style.color");
-
-		boolean canTestStyleBackground = configuredStyleId != null && !configuredStyleId.isBlank()
-				&& expectedStyleColor != null && !expectedStyleColor.isBlank();
-
-		// ----------------------------------------------------
-		// Assertion 3: Verify that when bgcolor is not specified and a style with a
-		// background color is requested, the style background color is used.
-		// ----------------------------------------------------
-		if (canTestStyleBackground) {
-
-			// Validate configured color format; if invalid -> skip only this branch
-			try {
-				TestImageValidator.parseExpectedColor(expectedStyleColor);
-			}
-			catch (IllegalArgumentException e) {
-				System.out.printf("\n[Assertion 3] Style Priority Test: Skipped (Invalid configured color '%s': %s)%n",
-						expectedStyleColor, e.getMessage());
-				canTestStyleBackground = false;
-			}
-
+		if (styleId != null) {
+			styleBackgroundColor = getStyleBackgroundColor(collectionId, styleId);
 		}
 
-		if (canTestStyleBackground) {
-			// WHEN: retrieving a map without bgcolor parameter, but with a configured
-			String testUrlStyle = baseUrl + "&style=" + configuredStyleId + "&transparent=false";
-			System.out.println("\n[Assertion 3/4] Testing Style Priority: style=" + configuredStyleId + " (Expected: "
-					+ expectedStyleColor + ")");
+		if (styleId != null && styleBackgroundColor != null) {
+			// ----------------------------------------------------
+			// Assertion 3: Style has background color defined - use it
+			// ----------------------------------------------------
+			String testUrlStyle = baseUrl + "&style=" + styleId + "&transparent=false";
+			System.out.println("\n[Assertion 3] Testing Style Priority: style=" + styleId + " (Expected: "
+					+ styleBackgroundColor + ")");
 
 			HttpURLConnection connStyle = sendMapRequest(testUrlStyle);
 			Assert.assertEquals(connStyle.getResponseCode(), 200,
-					"Assertion 3 Failed: Style Priority request failed. Expected HTTP 200.");
+					"Failed: Style Priority request failed. Expected HTTP 200.");
 
-			// THEN: assert that background color matches the color defined by the style
-			Assert.assertTrue(TestImageValidator.checkPixelColor(connStyle.getInputStream(), expectedStyleColor),
-					"Assertion 3 Failed: Background color must match the color defined by the requested style: "
-							+ expectedStyleColor);
-
+			Assert.assertTrue(TestImageValidator.checkPixelColor(connStyle.getInputStream(), styleBackgroundColor),
+					"Failed: Background color must match the color defined by the requested style: "
+							+ styleBackgroundColor);
 		}
-		// ----------------------------------------------------
-		// Assertion 3/4 (Skipped): Style background test is skipped because required
-		// style configuration is not provided.
-		// ----------------------------------------------------
 		else {
-			System.out.println(
-					"\n[Assertion 3] Style Priority Test: Skipped (Requires valid 'test.style.id' and 'test.style.color').");
+			// ----------------------------------------------------
+			// Assertion 4: No style or style has no background color - default to white
+			// ----------------------------------------------------
+			String defaultColorHex = "FFFFFF"; // Default White
+
+			String testUrlDefault = baseUrl + "&transparent=false";
+			System.out.println("\n[Assertion 4] Testing Default Color (White): " + defaultColorHex);
+			System.out.println("  (No style with background-color found, testing default white behavior)");
+
+			HttpURLConnection connDefault = sendMapRequest(testUrlDefault);
+			Assert.assertEquals(connDefault.getResponseCode(), 200,
+					"Failed: Default White BGCOLOR request failed with HTTP status. Expected 200.");
+
+			Assert.assertTrue(TestImageValidator.checkPixelColor(connDefault.getInputStream(), defaultColorHex),
+					"Failed: When BGCOLOR is absent and no style background is defined, background must default to "
+							+ defaultColorHex);
 		}
 
 	}
