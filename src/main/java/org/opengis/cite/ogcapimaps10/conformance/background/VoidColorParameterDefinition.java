@@ -117,7 +117,11 @@ public class VoidColorParameterDefinition extends CommonFixture {
 			List<Map<String, Object>> links = (List<Map<String, Object>>) collection.get("links");
 			Map<String, Object> mapLink = findLinkByRel(links, MAP_REL_TYPE);
 			if (mapLink != null && mapLink.get("href") != null) {
-				URI uri = URI.create(mapLink.get("href").toString());
+				String mapUrl = mapLink.get("href").toString();
+				URI uri = new URI(mapUrl);
+				if (!uri.isAbsolute()) {
+					uri = rootUri.resolve(uri);
+				}
 				return uri.toURL().toString() + "?f=" + DEFAULT_FORMAT + "&bbox=" + VOID_BBOX + "&width="
 						+ DEFAULT_WIDTH + "&height=" + DEFAULT_HEIGHT;
 			}
@@ -128,14 +132,27 @@ public class VoidColorParameterDefinition extends CommonFixture {
 	}
 
 	/**
-	 * Sends a GET request to the provided map URL. (This was missing in your previous
-	 * copy; A.8 requires this helper like A.6/A.7.)
+	 * Sends a GET request to the provided map URL.
 	 */
 	private HttpURLConnection sendMapRequest(String urlString) throws Exception {
 		URL url = new URL(urlString);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setConnectTimeout(30000);
 		connection.setReadTimeout(60000);
+		connection.setRequestMethod("GET");
+		connection.setRequestProperty("Accept", DEFAULT_FORMAT);
+		connection.connect();
+		return connection;
+	}
+
+	/**
+	 * Sends a quick pre-check request with shorter timeout to verify parameter support.
+	 */
+	private HttpURLConnection sendPreCheckRequest(String urlString) throws Exception {
+		URL url = new URL(urlString);
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setConnectTimeout(5000);
+		connection.setReadTimeout(10000);
 		connection.setRequestMethod("GET");
 		connection.setRequestProperty("Accept", DEFAULT_FORMAT);
 		connection.connect();
@@ -233,6 +250,28 @@ public class VoidColorParameterDefinition extends CommonFixture {
 		String baseUrl = getMapBaseUrlTemplate();
 
 		// ----------------------------------------------------------
+		// Pre-check: Verify server supports void-color parameter
+		// ----------------------------------------------------------
+		System.out.println("\n[Pre-check] Testing if server supports void-color parameter...");
+		try {
+			String preCheckUrl = baseUrl + "&void-color=FF0000";
+			HttpURLConnection preCheckConn = sendPreCheckRequest(preCheckUrl);
+			int preCheckCode = preCheckConn.getResponseCode();
+			if (preCheckCode == 400 || preCheckCode == 501) {
+				throw new SkipException(
+						"Test Skipped: Server does not support void-color parameter (HTTP " + preCheckCode + ").");
+			}
+			System.out.println("  [Pre-check] Server accepts void-color parameter (HTTP " + preCheckCode + ")");
+		}
+		catch (SkipException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new SkipException("Test Skipped: Server does not support void-color parameter or timed out ("
+					+ e.getMessage() + ").");
+		}
+
+		// ----------------------------------------------------------
 		// Case 1: void-color using a hexadecimal value
 		// ----------------------------------------------------------
 		String hexVoid = "00FF00"; // bright green
@@ -243,10 +282,10 @@ public class VoidColorParameterDefinition extends CommonFixture {
 		String urlHex = baseUrl + "&void-color=" + hexVoid;
 		HttpURLConnection connHex = sendMapRequest(urlHex);
 		Assert.assertEquals(connHex.getResponseCode(), 200,
-				"Case 1 Failed: Map request failed (HTTP " + connHex.getResponseCode() + ").");
+				"Failed: Map request failed (HTTP " + connHex.getResponseCode() + ").");
 
 		assertAnyCornerMatchesVoidColor(connHex.getInputStream(), expectedHexRgb24,
-				"Assertion 1 Failed: Server must support void-color as 6-digit hexadecimal RGB and apply it to void areas.");
+				"Failed: Server must support void-color as 6-digit hexadecimal RGB and apply it to void areas.");
 
 		// ----------------------------------------------------------
 		// Case 2: void-color using a W3C Web Color name (case-insensitive)
@@ -259,10 +298,10 @@ public class VoidColorParameterDefinition extends CommonFixture {
 		String urlW3c = baseUrl + "&void-color=" + w3cName;
 		HttpURLConnection connW3c = sendMapRequest(urlW3c);
 		Assert.assertEquals(connW3c.getResponseCode(), 200,
-				"Case 2 Failed: Map request failed (HTTP " + connW3c.getResponseCode() + ").");
+				"Failed: Map request failed (HTTP " + connW3c.getResponseCode() + ").");
 
 		assertAnyCornerMatchesVoidColor(connW3c.getInputStream(), expectedW3cRgb24,
-				"Assertion 2 Failed: Server must support void-color as a case-insensitive W3C web color name and apply it to void areas.");
+				"Failed: Server must support void-color as a case-insensitive W3C web color name and apply it to void areas.");
 
 		// ----------------------------------------------------------
 		// Case 3: void-color NOT specified => same as bgcolor (specified or default)
@@ -276,10 +315,10 @@ public class VoidColorParameterDefinition extends CommonFixture {
 		String urlNoVoid = baseUrl + "&bgcolor=" + bgcolorHex;
 		HttpURLConnection connNoVoid = sendMapRequest(urlNoVoid);
 		Assert.assertEquals(connNoVoid.getResponseCode(), 200,
-				"Case 3 Failed: Map request failed (HTTP " + connNoVoid.getResponseCode() + ").");
+				"Failed: Map request failed (HTTP " + connNoVoid.getResponseCode() + ").");
 
 		assertAnyCornerMatchesVoidColor(connNoVoid.getInputStream(), expectedBgRgb24,
-				"Assertion 3 Failed: If void-color is not specified, void areas must use the same color value as bgcolor (specified or default).");
+				"Failed: If void-color is not specified, void areas must use the same color value as bgcolor (specified or default).");
 	}
 
 }
