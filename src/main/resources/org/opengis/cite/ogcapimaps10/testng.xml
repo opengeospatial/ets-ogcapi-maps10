@@ -11,4 +11,14 @@
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.LoggingTestListener" />
   </listeners>
 
+  <test name="Background">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.BgcolorParameterDefinition"/>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.TransparentParameterDefinition"/>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.VoidColorParameterDefinition"/>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.VoidTransparentParameterDefinition"/>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.BackgroundMapSuccess"/>
+    </classes>
+  </test>
+
 </suite>
