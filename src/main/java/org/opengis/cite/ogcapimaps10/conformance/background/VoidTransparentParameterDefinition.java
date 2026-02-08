@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -27,15 +29,33 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 	private static final String MAP_REL_TYPE = "http://www.opengis.net/def/rel/ogc/1.0/map";
 
 	/**
-	 * BBOX beyond EPSG:4326 valid latitude range (±90) to force void areas. Corners
-	 * (0,0), (0,h-1), (w-1,0), (w-1,h-1) are likely outside valid area.
+	 * Global extent bbox in CRS84. For interrupted projection CRSs (e.g. Goode
+	 * Homolosine), void areas appear naturally within this extent.
 	 */
-	private static final String VOID_BBOX = "-180,-120,180,120";
+	private static final String GLOBAL_BBOX = "-180,-90,180,90";
+
+	/**
+	 * Known interrupted projection CRSs that produce void areas (parts of the map
+	 * outside the valid area of the projection). Void areas only exist for interrupted
+	 * projections where the map is intentionally "torn"; most standard CRSs (CRS84,
+	 * Mercator, UTM, Lambert, etc.) have a fully valid ℝ² and thus no void.
+	 */
+	private static final List<String> KNOWN_VOID_CRS_IDENTIFIERS = Arrays.asList(
+			// Goode Homolosine (OGC)
+			"[OGC:1534]", "[OGC:153456]",
+			// Goode Homolosine (ESRI)
+			"ESRI:54052", "ESRI:54053",
+			// Interrupted Mollweide / Sinusoidal (ESRI)
+			"ESRI:54011", "ESRI:54048",
+			// HTTP URI variants for OGC CRSs
+			"http://www.opengis.net/def/crs/OGC/1.3/1534", "http://www.opengis.net/def/crs/OGC/1.3/153456",
+			"https://www.opengis.net/def/crs/OGC/1.3/1534", "https://www.opengis.net/def/crs/OGC/1.3/153456");
 
 	private void requireConformance(String... requiredClassSuffixes) throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
 		String conformanceUrl = rootUri.toString() + "/conformance";
 		HttpURLConnection connection = (HttpURLConnection) new URL(conformanceUrl).openConnection();
+		connection.setInstanceFollowRedirects(true);
 		connection.setRequestMethod("GET");
 		connection.setRequestProperty("Accept", "application/json");
 
@@ -66,18 +86,79 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 			return null;
 		for (Map<String, Object> link : links) {
 			Object relVal = link.get("rel");
-			if (relVal != null && rel.equals(relVal.toString())) {
+			if (relVal != null && matchesRelIgnoringScheme(relVal.toString(), rel)) {
 				return link;
 			}
 		}
 		return null;
 	}
 
+	private static boolean matchesRelIgnoringScheme(String actual, String expected) {
+		return normalizeScheme(actual).equals(normalizeScheme(expected));
+	}
+
+	private static String normalizeScheme(String rel) {
+		if (rel.startsWith("https://")) {
+			return "http://" + rel.substring("https://".length());
+		}
+		return rel;
+	}
+
 	/**
-	 * Build a base URL template for a map request using a provided bbox.
+	 * Checks whether the server declares conformance to the CRS requirements class
+	 * (/conf/crs).
 	 */
-	private String getMapBaseUrlTemplateWithBbox(String bbox) throws Exception {
+	private boolean checkConformanceCrs() throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
+		String conformanceUrl = rootUri.toString() + "/conformance";
+
+		HttpURLConnection connection = (HttpURLConnection) new URL(conformanceUrl).openConnection();
+		connection.setInstanceFollowRedirects(true);
+		connection.setRequestMethod("GET");
+		connection.setRequestProperty("Accept", "application/json");
+
+		if (connection.getResponseCode() != 200)
+			return false;
+
+		Map<String, Object> data = objectMapper.readValue(connection.getInputStream(),
+				new TypeReference<Map<String, Object>>() {
+				});
+
+		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"),
+				new TypeReference<List<String>>() {
+				});
+		if (conformsTo == null)
+			return false;
+
+		return conformsTo.stream().anyMatch(s -> s != null && s.endsWith("/conf/crs"));
+	}
+
+	/**
+	 * Checks if a CRS URI matches any known interrupted projection CRS with void areas.
+	 * Returns the original CRS URI if matched, null otherwise.
+	 */
+	private static String findMatchingVoidCrs(String crsUri) {
+		if (crsUri == null)
+			return null;
+		for (String known : KNOWN_VOID_CRS_IDENTIFIERS) {
+			if (crsUri.equalsIgnoreCase(known)) {
+				return crsUri;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns a base URL template for requesting a map in a CRS that has void areas.
+	 * Discovery flow: check storageCrs, then collection "crs" array if /conf/crs is
+	 * supported. Skips if no void-capable CRS found.
+	 */
+	private String getMapBaseUrlTemplate() throws Exception {
+		ObjectMapper objectMapper = new ObjectMapper();
+		boolean supportsCrsClass = checkConformanceCrs();
+
+		System.out.println("  [CRS Discovery] Server supports /conf/crs: " + supportsCrsClass);
+
 		String apiUrl = rootUri.toString() + "/collections?f=json";
 
 		HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
@@ -93,7 +174,7 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 				});
 
 		List<Map<String, Object>> collectionsList = objectMapper.convertValue(data.get("collections"),
-				new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>() {
+				new TypeReference<List<Map<String, Object>>>() {
 				});
 		if (collectionsList == null || collectionsList.isEmpty()) {
 			throw new SkipException("Test Skipped: No collections found.");
@@ -101,22 +182,64 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		for (Map<String, Object> collection : collectionsList) {
 			List<Map<String, Object>> collectionLinks = objectMapper.convertValue(collection.get("links"),
-					new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>() {
+					new TypeReference<List<Map<String, Object>>>() {
 					});
 			Map<String, Object> relMap = findLinkByRel(collectionLinks, MAP_REL_TYPE);
-			if (relMap != null && relMap.get("href") != null) {
-				String mapUrl = relMap.get("href").toString();
-				URI uri = new URI(mapUrl);
-				if (!uri.isAbsolute()) {
-					uri = rootUri.resolve(uri);
-				}
-				return uri.toURL().toString() + "?f=" + DEFAULT_FORMAT + "&bbox=" + bbox + "&width=" + DEFAULT_WIDTH
-						+ "&height=" + DEFAULT_HEIGHT;
+			if (relMap == null || relMap.get("href") == null)
+				continue;
+
+			String voidCrs = null;
+			boolean needsCrsParam = false;
+
+			// Check storageCrs first (native CRS — no crs query param needed)
+			Object storageCrsObj = collection.get("storageCrs");
+			if (storageCrsObj != null) {
+				voidCrs = findMatchingVoidCrs(storageCrsObj.toString());
 			}
+
+			// If native CRS has no void, check the crs array (requires crs query param)
+			if (voidCrs == null && supportsCrsClass) {
+				List<String> crsList = objectMapper.convertValue(collection.get("crs"),
+						new TypeReference<List<String>>() {
+						});
+				if (crsList != null) {
+					for (String crs : crsList) {
+						voidCrs = findMatchingVoidCrs(crs);
+						if (voidCrs != null) {
+							needsCrsParam = true;
+							break;
+						}
+					}
+				}
+			}
+
+			if (voidCrs == null)
+				continue;
+
+			// Found a collection with a void-capable CRS — build URL template
+			String mapUrl = relMap.get("href").toString();
+			URI uri = new URI(mapUrl);
+			if (!uri.isAbsolute()) {
+				uri = rootUri.resolve(uri);
+			}
+
+			String baseUrl = uri.toURL().toString() + "?f=" + DEFAULT_FORMAT + "&bbox=" + GLOBAL_BBOX + "&width="
+					+ DEFAULT_WIDTH + "&height=" + DEFAULT_HEIGHT;
+
+			if (needsCrsParam) {
+				baseUrl += "&crs=" + URLEncoder.encode(voidCrs, "UTF-8");
+			}
+
+			System.out.println("  [CRS Discovery] Using collection: " + collection.get("id"));
+			System.out.println(
+					"  [CRS Discovery] Void-capable CRS: " + voidCrs + " (crs param needed: " + needsCrsParam + ")");
+			return baseUrl;
 		}
 
-		throw new SkipException(
-				"Test Skipped: No map resources found in the collections to verify. Cannot proceed with A.9.");
+		throw new SkipException("Test Skipped: No collection supports a CRS with void areas "
+				+ "(interrupted projections such as Goode Homolosine). "
+				+ "Void-transparent tests require a CRS where parts of the map fall outside "
+				+ "the valid area of the projection. Cannot proceed with A.9.");
 	}
 
 	private HttpURLConnection sendMapRequest(String urlString) throws Exception {
@@ -194,7 +317,7 @@ public class VoidTransparentParameterDefinition extends CommonFixture {
 
 		requireConformance("/conf/core", "/conf/background");
 
-		String baseUrl = getMapBaseUrlTemplateWithBbox(VOID_BBOX);
+		String baseUrl = getMapBaseUrlTemplate();
 
 		// ----------------------------------------------------------
 		// Pre-check: Verify server supports void-transparent parameter
