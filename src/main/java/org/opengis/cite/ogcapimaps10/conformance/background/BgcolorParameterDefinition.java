@@ -191,7 +191,9 @@ public class BgcolorParameterDefinition extends CommonFixture {
 		Map<String, Object> data = objectMapper.readValue(connection.getInputStream(),
 				new TypeReference<Map<String, Object>>() {
 				});
-		List<String> conformsTo = (List<String>) data.getOrDefault("conformsTo", Collections.emptyList());
+		List<String> conformsTo = objectMapper.convertValue(data.getOrDefault("conformsTo", Collections.emptyList()),
+				new TypeReference<List<String>>() {
+				});
 
 		for (String requiredSuffix : requiredClassSuffixes) {
 			boolean ok = false;
@@ -216,11 +218,22 @@ public class BgcolorParameterDefinition extends CommonFixture {
 		}
 		for (Map<String, Object> link : links) {
 			Object rel = link.get("rel");
-			if (expectedRel.equals(rel)) {
+			if (rel != null && matchesRelIgnoringScheme(rel.toString(), expectedRel)) {
 				return link;
 			}
 		}
 		return null;
+	}
+
+	private static boolean matchesRelIgnoringScheme(String actual, String expected) {
+		return normalizeScheme(actual).equals(normalizeScheme(expected));
+	}
+
+	private static String normalizeScheme(String rel) {
+		if (rel.startsWith("https://")) {
+			return "http://" + rel.substring("https://".length());
+		}
+		return rel;
 	}
 
 	/**
@@ -260,10 +273,14 @@ public class BgcolorParameterDefinition extends CommonFixture {
 				new TypeReference<Map<String, Object>>() {
 				});
 
-		List<Map<String, Object>> collectionsList = (List<Map<String, Object>>) data.get("collections");
+		List<Map<String, Object>> collectionsList = objectMapper.convertValue(data.get("collections"),
+				new TypeReference<List<Map<String, Object>>>() {
+				});
 
 		for (Map<String, Object> collection : collectionsList) {
-			List<Map<String, Object>> collectionLinks = (List<Map<String, Object>>) collection.get("links");
+			List<Map<String, Object>> collectionLinks = objectMapper.convertValue(collection.get("links"),
+					new TypeReference<List<Map<String, Object>>>() {
+					});
 
 			Map<String, Object> relMap = findLinkByRel(collectionLinks, MAP_REL_TYPE);
 
@@ -312,7 +329,9 @@ public class BgcolorParameterDefinition extends CommonFixture {
 					new TypeReference<Map<String, Object>>() {
 					});
 
-			List<Map<String, Object>> styles = (List<Map<String, Object>>) data.get("styles");
+			List<Map<String, Object>> styles = objectMapper.convertValue(data.get("styles"),
+					new TypeReference<List<Map<String, Object>>>() {
+					});
 			if (styles == null || styles.isEmpty()) {
 				System.out.println("  [Style Discovery] No styles found in the response.");
 				return null;
@@ -357,12 +376,16 @@ public class BgcolorParameterDefinition extends CommonFixture {
 					});
 
 			// Parse MapBox GL style format - look for background layer
-			List<Map<String, Object>> layers = (List<Map<String, Object>>) styleData.get("layers");
+			List<Map<String, Object>> layers = objectMapper.convertValue(styleData.get("layers"),
+					new TypeReference<List<Map<String, Object>>>() {
+					});
 			if (layers != null) {
 				for (Map<String, Object> layer : layers) {
 					String type = (String) layer.get("type");
 					if ("background".equals(type)) {
-						Map<String, Object> paint = (Map<String, Object>) layer.get("paint");
+						Map<String, Object> paint = objectMapper.convertValue(layer.get("paint"),
+								new TypeReference<Map<String, Object>>() {
+								});
 						if (paint != null) {
 							Object bgColor = paint.get("background-color");
 							if (bgColor != null) {
