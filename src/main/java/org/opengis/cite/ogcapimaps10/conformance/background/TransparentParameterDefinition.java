@@ -47,7 +47,9 @@ public class TransparentParameterDefinition extends CommonFixture {
 				new TypeReference<Map<String, Object>>() {
 				});
 
-		List<String> conformsTo = (List<String>) data.get("conformsTo");
+		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"),
+				new TypeReference<List<String>>() {
+				});
 		if (conformsTo == null) {
 			throw new SkipException("No 'conformsTo' array found in conformance response.");
 		}
@@ -65,11 +67,22 @@ public class TransparentParameterDefinition extends CommonFixture {
 			return null;
 		for (Map<String, Object> link : links) {
 			Object relVal = link.get("rel");
-			if (relVal != null && rel.equals(relVal.toString())) {
+			if (relVal != null && matchesRelIgnoringScheme(relVal.toString(), rel)) {
 				return link;
 			}
 		}
 		return null;
+	}
+
+	private static boolean matchesRelIgnoringScheme(String actual, String expected) {
+		return normalizeScheme(actual).equals(normalizeScheme(expected));
+	}
+
+	private static String normalizeScheme(String rel) {
+		if (rel.startsWith("https://")) {
+			return "http://" + rel.substring("https://".length());
+		}
+		return rel;
 	}
 
 	/**
@@ -92,13 +105,17 @@ public class TransparentParameterDefinition extends CommonFixture {
 				new TypeReference<Map<String, Object>>() {
 				});
 
-		List<Map<String, Object>> collectionsList = (List<Map<String, Object>>) data.get("collections");
+		List<Map<String, Object>> collectionsList = objectMapper.convertValue(data.get("collections"),
+				new TypeReference<List<Map<String, Object>>>() {
+				});
 		if (collectionsList == null || collectionsList.isEmpty()) {
 			throw new SkipException("Test Skipped: No collections found.");
 		}
 
 		for (Map<String, Object> collection : collectionsList) {
-			List<Map<String, Object>> collectionLinks = (List<Map<String, Object>>) collection.get("links");
+			List<Map<String, Object>> collectionLinks = objectMapper.convertValue(collection.get("links"),
+					new TypeReference<List<Map<String, Object>>>() {
+					});
 			Map<String, Object> relMap = findLinkByRel(collectionLinks, MAP_REL_TYPE);
 			if (relMap != null && relMap.get("href") != null) {
 				String mapUrl = relMap.get("href").toString();
