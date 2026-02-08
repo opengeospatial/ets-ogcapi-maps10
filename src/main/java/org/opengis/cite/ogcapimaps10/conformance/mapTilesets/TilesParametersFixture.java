@@ -128,7 +128,7 @@ public class TilesParametersFixture extends CommonFixture {
 		}
 		for (Map<String, Object> link : links) {
 			String rel = (String) link.get("rel");
-			if (REL_TILESETS_MAP.equals(rel)) {
+			if (rel != null && matchesRelIgnoringScheme(rel, REL_TILESETS_MAP)) {
 				return (String) link.get("href");
 			}
 		}
@@ -196,7 +196,8 @@ public class TilesParametersFixture extends CommonFixture {
 			return null;
 		}
 		for (Map<String, Object> link : links) {
-			if (rel.equals(link.get("rel"))) {
+			String linkRel = (String) link.get("rel");
+			if (linkRel != null && matchesRelIgnoringScheme(linkRel, rel)) {
 				return (String) link.get("href");
 			}
 		}
@@ -261,7 +262,8 @@ public class TilesParametersFixture extends CommonFixture {
 					for (Map<String, Object> link : links) {
 						String rel = (String) link.get("rel");
 						String type = (String) link.get("type");
-						if (REL_ITEM.equals(rel) && type != null && type.startsWith("image/")) {
+						if (rel != null && matchesRelIgnoringScheme(rel, REL_ITEM) && type != null
+								&& type.startsWith("image/")) {
 							String href = (String) link.get("href");
 							return resolveUrl(tilesetUrl, href);
 						}
@@ -295,6 +297,17 @@ public class TilesParametersFixture extends CommonFixture {
 	 */
 	protected String getTileMatrixSet() {
 		return tileMatrixSet;
+	}
+
+	private static boolean matchesRelIgnoringScheme(String actual, String expected) {
+		return normalizeScheme(actual).equals(normalizeScheme(expected));
+	}
+
+	private static String normalizeScheme(String rel) {
+		if (rel.startsWith("https://")) {
+			return "http://" + rel.substring("https://".length());
+		}
+		return rel;
 	}
 
 	/**
