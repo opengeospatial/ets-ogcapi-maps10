@@ -170,11 +170,33 @@ public final class InteractiveTestUtils {
 		}
 		for (Map<String, Object> link : links) {
 			String rel = (String) link.get("rel");
-			if (REL_TILESETS_MAP.equals(rel)) {
+			if (rel != null && matchesRelIgnoringScheme(rel, REL_TILESETS_MAP)) {
 				return (String) link.get("href");
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Compares two rel values, treating HTTP and HTTPS as equivalent.
+	 * @param actual The actual rel value from the server.
+	 * @param expected The expected rel value.
+	 * @return true if they match ignoring scheme differences.
+	 */
+	private static boolean matchesRelIgnoringScheme(String actual, String expected) {
+		return normalizeScheme(actual).equals(normalizeScheme(expected));
+	}
+
+	/**
+	 * Normalizes a rel URI by converting https:// to http:// for comparison.
+	 * @param rel The rel URI to normalize.
+	 * @return The normalized rel URI.
+	 */
+	private static String normalizeScheme(String rel) {
+		if (rel.startsWith("https://")) {
+			return "http://" + rel.substring("https://".length());
+		}
+		return rel;
 	}
 
 	/**
@@ -195,6 +217,16 @@ public final class InteractiveTestUtils {
 			return base.resolve(url).toString();
 		}
 		catch (Exception e) {
+			// Fallback for URIs with invalid characters (e.g., template variables {})
+			if (url.startsWith("/")) {
+				try {
+					URI base = URI.create(baseUrl);
+					return base.getScheme() + "://" + base.getAuthority() + url;
+				}
+				catch (Exception ex) {
+					return url;
+				}
+			}
 			return url;
 		}
 	}
@@ -263,12 +295,14 @@ public final class InteractiveTestUtils {
 						String type = (String) link.get("type");
 						if (REL_ITEM.equals(rel) && type != null && type.startsWith("image/")) {
 							String href = (String) link.get("href");
-							String template = resolveUrl(tilesetUrl, href);
-							// Replace template variables with default values
-							return template.replace("{tileMatrixSetId}", matrixSet)
+							// Replace template variables before resolving URL
+							// (curly braces are invalid URI characters and break
+							// URI.resolve)
+							String expanded = href.replace("{tileMatrixSetId}", matrixSet)
 								.replace("{tileMatrix}", "0")
 								.replace("{tileRow}", "0")
 								.replace("{tileCol}", "0");
+							return resolveUrl(tilesetUrl, expanded);
 						}
 					}
 				}
@@ -293,7 +327,8 @@ public final class InteractiveTestUtils {
 			return null;
 		}
 		for (Map<String, Object> link : links) {
-			if (rel.equals(link.get("rel"))) {
+			Object linkRel = link.get("rel");
+			if (linkRel instanceof String && matchesRelIgnoringScheme((String) linkRel, rel)) {
 				return (String) link.get("href");
 			}
 		}

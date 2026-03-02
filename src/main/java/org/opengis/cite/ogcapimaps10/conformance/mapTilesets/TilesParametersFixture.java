@@ -153,6 +153,16 @@ public class TilesParametersFixture extends CommonFixture {
 			return base.resolve(url).toString();
 		}
 		catch (Exception e) {
+			// Fallback for URIs with invalid characters (e.g., template variables {})
+			if (url.startsWith("/")) {
+				try {
+					java.net.URI base = java.net.URI.create(baseUrl);
+					return base.getScheme() + "://" + base.getAuthority() + url;
+				}
+				catch (Exception ex) {
+					return url;
+				}
+			}
 			return url;
 		}
 	}
@@ -196,8 +206,8 @@ public class TilesParametersFixture extends CommonFixture {
 			return null;
 		}
 		for (Map<String, Object> link : links) {
-			String linkRel = (String) link.get("rel");
-			if (linkRel != null && matchesRelIgnoringScheme(linkRel, rel)) {
+			Object linkRel = link.get("rel");
+			if (linkRel instanceof String && matchesRelIgnoringScheme((String) linkRel, rel)) {
 				return (String) link.get("href");
 			}
 		}
@@ -229,12 +239,22 @@ public class TilesParametersFixture extends CommonFixture {
 							}
 						}
 					}
+					// Fallback: use first available tileset and update tileMatrixSet from
+					// its self link URL
 					Map<String, Object> firstTileset = tilesets.get(0);
 					Object linksObj = firstTileset.get("links");
 					List<Map<String, Object>> links = toMapList(linksObj);
 					String selfUrl = findLinkByRel(links, REL_SELF);
 					if (selfUrl != null) {
-						return resolveUrl(tilesetsMapUrl, selfUrl);
+						String resolvedSelfUrl = resolveUrl(tilesetsMapUrl, selfUrl);
+						// Extract TileMatrixSet identifier from self link URL last
+						// segment
+						// e.g. .../map/tiles/WebMercatorQuad -> "WebMercatorQuad"
+						String tmsId = extractLastPathSegment(resolvedSelfUrl);
+						if (tmsId != null) {
+							this.tileMatrixSet = tmsId;
+						}
+						return resolvedSelfUrl;
 					}
 				}
 			}
@@ -297,6 +317,27 @@ public class TilesParametersFixture extends CommonFixture {
 	 */
 	protected String getTileMatrixSet() {
 		return tileMatrixSet;
+	}
+
+	/**
+	 * Extracts the last path segment from a URL. e.g.
+	 * "https://example.com/map/tiles/WebMercatorQuad" -> "WebMercatorQuad"
+	 * @param url The URL to extract from.
+	 * @return The last path segment, or null if not available.
+	 */
+	private static String extractLastPathSegment(String url) {
+		if (url == null || url.isEmpty()) {
+			return null;
+		}
+		String path = url.split("\\?")[0]; // strip query string
+		if (path.endsWith("/")) {
+			path = path.substring(0, path.length() - 1);
+		}
+		int lastSlash = path.lastIndexOf('/');
+		if (lastSlash >= 0 && lastSlash < path.length() - 1) {
+			return path.substring(lastSlash + 1);
+		}
+		return null;
 	}
 
 	private static boolean matchesRelIgnoringScheme(String actual, String expected) {

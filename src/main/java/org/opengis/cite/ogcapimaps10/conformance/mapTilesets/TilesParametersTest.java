@@ -214,6 +214,10 @@ public class TilesParametersTest extends TilesParametersFixture {
 		// Final Assertion
 		// ============================================================
 
+		// Clear binary image data from response logging before assertion.
+		// Binary content in the response stream causes EARL report XML to be truncated.
+		clearMessages();
+
 		if (!errors.isEmpty()) {
 			StringBuilder message = new StringBuilder();
 			message.append("Tiles-parameters verification failed with ").append(errors.size()).append(" error(s):\n");

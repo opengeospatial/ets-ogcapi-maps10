@@ -160,11 +160,22 @@ public class DescLinks extends CommonFixture {
 		}
 		for (Map<String, Object> link : links) {
 			Object rel = link.get("rel");
-			if (expectedRel.equals(rel)) {
+			if (rel instanceof String && matchesRelIgnoringScheme((String) rel, expectedRel)) {
 				return link;
 			}
 		}
 		return null;
+	}
+
+	private static boolean matchesRelIgnoringScheme(String actual, String expected) {
+		return normalizeScheme(actual).equals(normalizeScheme(expected));
+	}
+
+	private static String normalizeScheme(String rel) {
+		if (rel.startsWith("https://")) {
+			return "http://" + rel.substring("https://".length());
+		}
+		return rel;
 	}
 
 }
