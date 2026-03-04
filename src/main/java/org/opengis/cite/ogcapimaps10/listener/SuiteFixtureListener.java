@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -87,6 +88,33 @@ public class SuiteFixtureListener implements ISuiteListener {
 			TestSuiteLogger.log(WARNING, String.format("Could not parse parameter %s: %s. Expected is a valid integer",
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
+
+		// Parse and set PNG interactive test results
+		PngInteractiveTestResult pngInteractiveTestResult = parsePngInteractiveTestResults(params);
+		suite.setAttribute(SuiteAttribute.PNG_INTERACTIVE_TEST_RESULT.getName(), pngInteractiveTestResult);
+	}
+
+	/**
+	 * Parses PNG interactive test results from the test run parameters.
+	 * @param params The test run parameters map.
+	 * @return A PngInteractiveTestResult containing the parsed boolean results.
+	 */
+	private PngInteractiveTestResult parsePngInteractiveTestResults(Map<String, String> params) {
+		boolean enabled = parseBooleanParam(params, TestRunArg.PNG_INTERACTIVE_TESTS_ENABLED);
+		boolean colorsRepresentFeatures = parseBooleanParam(params, TestRunArg.PNG_COLORS_REPRESENT_FEATURES);
+		boolean portrayalConsistent = parseBooleanParam(params, TestRunArg.PNG_PORTRAYAL_CONSISTENT);
+		return new PngInteractiveTestResult(enabled, colorsRepresentFeatures, portrayalConsistent);
+	}
+
+	/**
+	 * Parses a boolean value from the parameters map.
+	 * @param params The parameters map.
+	 * @param arg The TestRunArg key to look up.
+	 * @return The parsed boolean value, or false if not present.
+	 */
+	private boolean parseBooleanParam(Map<String, String> params, TestRunArg arg) {
+		String value = params.get(arg.toString());
+		return value != null && Boolean.parseBoolean(value);
 	}
 
 	/**

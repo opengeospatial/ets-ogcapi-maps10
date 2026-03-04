@@ -5,6 +5,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
+
 import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import jakarta.ws.rs.client.Client;
@@ -78,7 +80,13 @@ public enum SuiteAttribute {
 	 * Collection names assigned to a feature id parsed from resource
 	 * /collections/{name}/items; Added during execution.
 	 */
-	FEATUREIDS("featureIds", Map.class);
+	FEATUREIDS("featureIds", Map.class),
+
+	/**
+	 * Results from interactive tests for PNG content verification. Contains boolean
+	 * results for Part B (color representation) and Part D (portrayal consistency).
+	 */
+	PNG_INTERACTIVE_TEST_RESULT("pngInteractiveTestResult", PngInteractiveTestResult.class);
 
 	private final Class attrType;
 
