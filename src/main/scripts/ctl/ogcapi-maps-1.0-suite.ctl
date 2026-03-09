@@ -4,7 +4,8 @@
              xmlns:tns="http://www.opengis.net/cite/ogcapi-maps-1.0"
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
-             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController">
+             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
+             xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive.xml">
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
@@ -73,6 +74,20 @@
               </div>
             </p>
           </fieldset>
+          <fieldset style="background:#ffffcc; margin-top:10px;">
+            <legend style="font-family:sans-serif; color:#000099; background-color:#F0F8FF;
+                           border-style:solid; border-width:medium; padding:4px">
+              Interactive Tests (A.12 - Collection Selection Response)
+            </legend>
+            <p>
+              <input type="checkbox" id="runInteractiveTests" name="runInteractiveTests" value="true" />
+              <label for="runInteractiveTests">Run interactive test for A.12 Req 12B (collection rendering order)</label>
+            </p>
+            <p style="font-size:0.9em; color:#666;">
+              If enabled, you will be shown two map images with the same collections in reversed order
+              and asked to confirm they look visually different.
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -80,10 +95,33 @@
           </p>
         </ctl:form>
       </xsl:variable>
+
+      <!-- Extract form values needed before building test-run-props -->
+      <xsl:variable name="iut-url" select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+      <xsl:variable name="run-interactive" select="$form-data/values/value[@key='runInteractiveTests'] = 'true'" />
+
+      <!-- Run interactive test for A.12 Req 12B if user opted in -->
+      <xsl:variable name="collections-response-result">
+        <xsl:choose>
+          <xsl:when test="$run-interactive">
+            <ctl:call-function name="interactive:verifyCollectionsResponse">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
-            <xsl:value-of select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+            <xsl:value-of select="$iut-url" />
+          </entry>
+          <entry key="interactive_tests_enabled">
+            <xsl:value-of select="$run-interactive" />
+          </entry>
+          <entry key="collections_response_correct">
+            <xsl:value-of select="$collections-response-result" />
           </entry>
           <entry key="noofcollections">
             <xsl:choose>
