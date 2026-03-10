@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive.xml"
+             xmlns:ctl="http://www.occamlab.com/ctl"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             xmlns:dritu="java:org.opengis.cite.ogcapimaps10.util.interactive.DisplayResolutionInteractiveTestUtils">
+
+  <!--
+    Interactive test function for A.16 display-resolution verification (Req 16).
+
+    Displays two map images side-by-side:
+      Map A - mm-per-pixel=0.28 (standard 90 DPI, default resolution)
+      Map B - mm-per-pixel=0.1  (high-DPI, smaller pixels, more detail expected)
+
+    Asks the user to confirm that the two maps look visually different in
+    detail level or symbology, which verifies that the server correctly
+    interprets the mm-per-pixel parameter.
+  -->
+
+  <ctl:function name="interactive:verifyMmPerPixelInterpretation">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>The test result: "true" if the user confirmed the maps look different, "false" otherwise.</ctl:return>
+    <ctl:description>
+      Interactive test for A.16 (Req 16): Verify that the server correctly interprets
+      the mm-per-pixel parameter by rendering maps at different display resolutions.
+    </ctl:description>
+    <ctl:code>
+
+      <!-- Build Map A: mm-per-pixel=0.28 (default, standard screen) -->
+      <xsl:variable name="map-a-raw">
+        <xsl:value-of select="dritu:buildDefaultResolutionMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Build Map B: mm-per-pixel=0.1 (high-DPI, more detail expected) -->
+      <xsl:variable name="map-b-raw">
+        <xsl:value-of select="dritu:buildHighDpiMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Detect NOT_FOUND sentinel -->
+      <xsl:variable name="not-found" select="starts-with($map-a-raw, 'NOT_FOUND:')" />
+
+      <xsl:variable name="map-a-url">
+        <xsl:choose>
+          <xsl:when test="$not-found">
+            <xsl:value-of select="substring-after($map-a-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-a-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="map-b-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-b-raw, 'NOT_FOUND:')">
+            <xsl:value-of select="substring-after($map-b-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-b-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- Show form and collect user answer -->
+      <xsl:variable name="form-values">
+        <ctl:form width="1000" height="820" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Display Resolution Verification (A.16 - Req 16)</h3>
+          <p>
+            Two maps have been requested using different <strong>mm-per-pixel</strong> values.
+            A smaller mm-per-pixel means each pixel is physically smaller, so the server
+            should render finer detail (more roads, smaller labels, denser symbology).
+          </p>
+          <table style="width:100%; font-size:0.9em; background:#f0f0f0;
+                        border:1px solid #ccc; padding:6px; margin-bottom:10px;">
+            <tr>
+              <td style="width:50%; padding:4px;"><strong>Map A</strong> - mm-per-pixel=0.28 (standard 90 DPI)</td>
+              <td style="width:50%; padding:4px;"><strong>Map B</strong> - mm-per-pixel=0.1 (high-DPI, ~254 DPI)</td>
+            </tr>
+          </table>
+
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
+              [!] Warning: Could not discover a dataset map endpoint automatically.
+              The URLs below may not be valid. Please verify manually.
+            </p>
+          </xsl:if>
+
+          <!-- Side-by-side map previews -->
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <!-- Map A: default resolution -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map A</strong> - standard resolution (mm-per-pixel=0.28)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-a-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map A - standard resolution</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-a-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-a-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+
+              <!-- Map B: high-DPI resolution -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map B</strong> - high-DPI resolution (mm-per-pixel=0.1)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-b-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map B - high-DPI resolution</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-b-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-b-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <hr style="margin-top:16px;" />
+          <p style="margin-top:16px;">
+            <strong>Question:</strong> Do Map A and Map B look <strong>visually different</strong>
+            in detail level or symbology?
+            (e.g. Map B should show finer roads, smaller labels, or denser features than Map A.)
+          </p>
+          <p>
+            <input type="submit" name="submit" value="yes"
+                   style="margin-right:12px; padding:6px 24px;" />
+            <input type="submit" name="submit" value="no"
+                   style="padding:6px 24px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+
+      <!-- Return true/false based on user answer -->
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit'] = 'yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>
