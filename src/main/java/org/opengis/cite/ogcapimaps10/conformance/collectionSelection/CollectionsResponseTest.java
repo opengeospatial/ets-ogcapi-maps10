@@ -92,14 +92,17 @@ public class CollectionsResponseTest extends CommonFixture {
 		// ----------------------------------------------------------------
 
 		// 1. Single collection → HTTP 200
-		int statusSingle = getStatus(mapUrl + "?collections=" + id1);
+		// Raw URL: colons in namespaced IDs (e.g. NaturalEarth:cultural:...) and commas
+		// are valid query-string characters (RFC 3986 sub-delimiters) and must NOT be
+		// encoded.
+		int statusSingle = getStatus(mapUrl + "?collections=" + id1 + "&f=png&width=800&height=400");
 		if (statusSingle != HttpURLConnection.HTTP_OK) {
 			errors.add(String.format("[Req12A/single] Expected HTTP 200 for ?collections=%s but got %d", id1,
 					statusSingle));
 		}
 
 		// 2. Two collections → HTTP 200
-		int statusTwo = getStatus(mapUrl + "?collections=" + id1 + "," + id2);
+		int statusTwo = getStatus(mapUrl + "?collections=" + id1 + "," + id2 + "&f=png&width=800&height=400");
 		if (statusTwo != HttpURLConnection.HTTP_OK) {
 			errors.add(String.format("[Req12A/two] Expected HTTP 200 for ?collections=%s,%s but got %d", id1, id2,
 					statusTwo));
@@ -196,7 +199,11 @@ public class CollectionsResponseTest extends CommonFixture {
 	 */
 	private List<String> findFirstTwoCollectionIds() {
 		try {
-			Map<String, Object> response = fetchJson(rootUri.toString() + "/collections?f=json");
+			String base = rootUri.toString();
+			if (base.endsWith("/")) {
+				base = base.substring(0, base.length() - 1);
+			}
+			Map<String, Object> response = fetchJson(base + "/collections?f=json");
 			if (response == null) {
 				return null;
 			}
@@ -221,8 +228,8 @@ public class CollectionsResponseTest extends CommonFixture {
 			HttpURLConnection conn = (HttpURLConnection) new URL(urlString).openConnection();
 			conn.setRequestMethod("GET");
 			conn.setRequestProperty("Accept", "application/json");
-			conn.setConnectTimeout(5000);
-			conn.setReadTimeout(5000);
+			conn.setConnectTimeout(10000);
+			conn.setReadTimeout(10000);
 			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
 				return OBJECT_MAPPER.readValue(conn.getInputStream(), Map.class);
 			}
@@ -237,8 +244,8 @@ public class CollectionsResponseTest extends CommonFixture {
 		try {
 			HttpURLConnection conn = (HttpURLConnection) new URL(urlString).openConnection();
 			conn.setRequestMethod("GET");
-			conn.setConnectTimeout(5000);
-			conn.setReadTimeout(5000);
+			conn.setConnectTimeout(10000);
+			conn.setReadTimeout(10000);
 			return conn.getResponseCode();
 		}
 		catch (Exception e) {

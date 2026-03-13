@@ -4,8 +4,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -75,7 +73,12 @@ public final class InteractiveTestUtils {
 		}
 
 		String collections = reversed ? ids.get(1) + "," + ids.get(0) : ids.get(0) + "," + ids.get(1);
-		return appendParam(mapUrl, "collections", collections) + "&f=png";
+		// Raw concatenation: colons in namespaced IDs (e.g. NaturalEarth:cultural:...)
+		// and
+		// commas between IDs are valid query-string characters and must NOT be
+		// percent-encoded.
+		String separator = mapUrl.contains("?") ? "&" : "?";
+		return mapUrl + separator + "collections=" + collections + "&f=png&width=800&height=400";
 	}
 
 	/**
@@ -174,11 +177,6 @@ public final class InteractiveTestUtils {
 		catch (Exception e) {
 			return url;
 		}
-	}
-
-	private static String appendParam(String url, String param, String value) {
-		String separator = url.contains("?") ? "&" : "?";
-		return url + separator + param + "=" + URLEncoder.encode(value, StandardCharsets.UTF_8);
 	}
 
 	private static boolean matchesRelIgnoringScheme(String actual, String expected) {
