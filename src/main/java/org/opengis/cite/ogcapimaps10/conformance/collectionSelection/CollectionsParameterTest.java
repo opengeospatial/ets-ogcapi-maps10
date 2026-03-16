@@ -111,6 +111,21 @@ public class CollectionsParameterTest extends CommonFixture {
 			}
 		}
 
+		// --- Assertion D: Full local URL form accepted [Req11/full-url-id] ---
+		// The spec allows collection IDs to be expressed as full local resource URLs,
+		// e.g.
+		// https://server/ogcapi/collections/NaturalEarth:cultural:ne_10m_admin_0_countries
+		// Colons in the path segment and in the query value are both valid and unencoded.
+		String base = landingPageUrl.endsWith("/") ? landingPageUrl.substring(0, landingPageUrl.length() - 1)
+				: landingPageUrl;
+		String fullUrlId1 = base + "/collections/" + id1;
+		String fullUrlSingleUrl = mapUrl + "?collections=" + fullUrlId1 + "&f=png&width=800&height=400";
+		int statusFullUrl = getStatusRaw(fullUrlSingleUrl);
+		if (statusFullUrl != 200) {
+			errors.add("[Req11/full-url-id] Expected HTTP 200 for full URL form collections='" + fullUrlId1
+					+ "' but got HTTP " + statusFullUrl + ".");
+		}
+
 		clearMessages();
 		if (!errors.isEmpty()) {
 			throw new AssertionError("A.11 verifyCollectionsParameter failed:\n" + String.join("\n", errors));
