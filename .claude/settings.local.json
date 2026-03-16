@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn compile:*)",
+      "Bash(dir src\\\\main\\\\java\\\\org\\\\opengis\\\\cite\\\\ogcapimaps10\\\\conformance\\\\collectionSelection:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

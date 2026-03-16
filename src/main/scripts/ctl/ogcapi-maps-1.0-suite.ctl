@@ -5,7 +5,7 @@
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
              xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
-             xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive.xml">
+             xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-mm-per-pixel.xml">
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
