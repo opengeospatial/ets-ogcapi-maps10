@@ -98,21 +98,37 @@ public class MmPerPixelDefinitionTest extends CommonFixture {
 
 		// --- Assertion 3: Default 0.28 mm/pixel assumed when omitted
 		// [Req16/default-assumed] ---
+		// Automated pre-check: server must at least return HTTP 200 without the
+		// parameter.
 		int statusDefault = getStatusNoParam(mapUrl);
 		if (statusDefault != 200) {
 			errors.add("[Req16/default-assumed] Expected HTTP 200 for a map request without the " + PARAM_MM_PER_PIXEL
 					+ " parameter (server should assume default 0.28 mm/pixel) but got HTTP " + statusDefault + ".");
 		}
 
-		// --- Assertion: server interprets mm-per-pixel correctly [Req16/interprets] ---
 		DisplayResolutionInteractiveTestResult interactiveResult = (DisplayResolutionInteractiveTestResult) context
 			.getSuite()
 			.getAttribute(SuiteAttribute.DISPLAY_RESOLUTION_INTERACTIVE_TEST_RESULT.getName());
+
+		// --- Assertion 4: server interprets mm-per-pixel correctly [Req16/interprets]
+		// ---
 		if (interactiveResult != null && interactiveResult.isEnabled()) {
 			if (!interactiveResult.isMmPerPixelCorrect()) {
 				errors.add("[Req16/interprets] Interactive verification failed: the two maps rendered at "
 						+ "mm-per-pixel=0.28 and mm-per-pixel=0.1 were reported as NOT visually different. "
 						+ "The server does not appear to correctly interpret the mm-per-pixel parameter.");
+			}
+		}
+
+		// --- Assertion 5: server assumes 0.28 mm/pixel as default
+		// [Req16/default-assumed] ---
+		// Interactive check: map without mm-per-pixel must look identical to map with
+		// mm-per-pixel=0.28, confirming the server uses 0.28 as its default assumption.
+		if (interactiveResult != null && interactiveResult.isEnabled()) {
+			if (!interactiveResult.isMmPerPixelDefaultCorrect()) {
+				errors.add("[Req16/default-assumed] Interactive verification failed: the map rendered without "
+						+ "the mm-per-pixel parameter was reported as NOT looking the same as the map with "
+						+ "mm-per-pixel=0.28. The server does not appear to assume 0.28 mm/pixel by default.");
 			}
 		}
 
@@ -198,6 +214,11 @@ public class MmPerPixelDefinitionTest extends CommonFixture {
 	/**
 	 * Checks whether the OpenAPI document declares a {@code mm-per-pixel} query parameter
 	 * in any GET operation path.
+	 *
+	 * <p>
+	 * Parameters may be defined inline or via {@code $ref} (e.g. {@code {"$ref":
+	 * "#/components/parameters/mm-per-pixel"}}). Both forms are resolved before checking
+	 * the parameter name.
 	 * @param apiUrl the URL of the OpenAPI document
 	 * @return true if the parameter is declared, false otherwise
 	 */
@@ -209,6 +230,17 @@ public class MmPerPixelDefinitionTest extends CommonFixture {
 				return false;
 			}
 			JsonPath json = response.jsonPath();
+
+			// Load reusable parameter definitions from components/parameters
+			Map<String, Object> componentParams = new java.util.LinkedHashMap<>();
+			Map<String, Object> components = json.getMap("components");
+			if (components != null) {
+				Object cp = components.get("parameters");
+				if (cp instanceof Map) {
+					componentParams.putAll((Map<String, Object>) cp);
+				}
+			}
+
 			Map<String, Object> paths = json.getMap("paths");
 			if (paths == null) {
 				return false;
@@ -229,8 +261,10 @@ public class MmPerPixelDefinitionTest extends CommonFixture {
 					if (!(param instanceof Map)) {
 						continue;
 					}
-					Object name = ((Map<String, Object>) param).get("name");
-					if (PARAM_MM_PER_PIXEL.equals(name)) {
+					// Resolve $ref before checking — e.g. {"$ref":
+					// "#/components/parameters/mm-per-pixel"}
+					Map<String, Object> resolved = resolveParamRef((Map<String, Object>) param, componentParams);
+					if (PARAM_MM_PER_PIXEL.equals(resolved.get("name"))) {
 						return true;
 					}
 				}
@@ -241,6 +275,33 @@ public class MmPerPixelDefinitionTest extends CommonFixture {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Resolves a parameter object that may be an inline definition or a {@code $ref}
+	 * pointing to {@code #/components/parameters/{name}}.
+	 * @param param the raw parameter map from the OAS paths section
+	 * @param componentParams the map of named parameters from
+	 * {@code components/parameters}
+	 * @return the resolved parameter map, or the original if no {@code $ref} is present
+	 * or resolution fails
+	 */
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> resolveParamRef(Map<String, Object> param, Map<String, Object> componentParams) {
+		String ref = (String) param.get("$ref");
+		if (ref == null) {
+			return param;
+		}
+		// "#/components/parameters/mm-per-pixel" → key "mm-per-pixel"
+		String prefix = "#/components/parameters/";
+		if (ref.startsWith(prefix)) {
+			String key = ref.substring(prefix.length());
+			Map<String, Object> resolved = (Map<String, Object>) componentParams.get(key);
+			if (resolved != null) {
+				return resolved;
+			}
+		}
+		return param;
 	}
 
 	/**

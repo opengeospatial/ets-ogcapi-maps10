@@ -54,6 +54,22 @@ public final class DisplayResolutionInteractiveTestUtils {
 	}
 
 	/**
+	 * Builds a map URL with no {@code mm-per-pixel} parameter, relying on the server's
+	 * default assumption of 0.28 mm/pixel.
+	 * @param landingPageUrl the API landing page URL
+	 * @return the map URL without mm-per-pixel, or a NOT_FOUND: prefixed string if the
+	 * map endpoint cannot be resolved
+	 */
+	public static String buildNoParamMapUrl(String landingPageUrl) {
+		String mapUrl = findMapUrl(landingPageUrl);
+		if (mapUrl == null) {
+			return NOT_FOUND_PREFIX + landingPageUrl + "/map";
+		}
+		String separator = mapUrl.contains("?") ? "&" : "?";
+		return mapUrl + separator + "f=png";
+	}
+
+	/**
 	 * Builds a map URL with a high-DPI display resolution ({@code mm-per-pixel=0.1}).
 	 * This should produce a map with finer detail than the default resolution.
 	 * @param landingPageUrl the API landing page URL

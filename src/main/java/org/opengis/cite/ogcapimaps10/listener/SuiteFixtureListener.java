@@ -104,7 +104,8 @@ public class SuiteFixtureListener implements ISuiteListener {
 			Map<String, String> params) {
 		boolean enabled = parseBooleanParam(params, TestRunArg.DISPLAY_RESOLUTION_INTERACTIVE_ENABLED);
 		boolean mmPerPixelCorrect = parseBooleanParam(params, TestRunArg.MM_PER_PIXEL_CORRECT);
-		return new DisplayResolutionInteractiveTestResult(enabled, mmPerPixelCorrect);
+		boolean mmPerPixelDefaultCorrect = parseBooleanParam(params, TestRunArg.MM_PER_PIXEL_DEFAULT_CORRECT);
+		return new DisplayResolutionInteractiveTestResult(enabled, mmPerPixelCorrect, mmPerPixelDefaultCorrect);
 	}
 
 	/**

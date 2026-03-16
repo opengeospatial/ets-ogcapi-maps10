@@ -115,6 +115,18 @@
         </xsl:choose>
       </xsl:variable>
 
+      <!-- Run interactive default assumption verification if enabled -->
+      <xsl:variable name="mm-per-pixel-default-result">
+        <xsl:choose>
+          <xsl:when test="$run-display-resolution-interactive">
+            <ctl:call-function name="interactive:verifyMmPerPixelDefault">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
@@ -133,6 +145,9 @@
           </entry>
           <entry key="mm_per_pixel_correct">
             <xsl:value-of select="$mm-per-pixel-result" />
+          </entry>
+          <entry key="mm_per_pixel_default_correct">
+            <xsl:value-of select="$mm-per-pixel-default-result" />
           </entry>
         </properties>
       </xsl:variable>

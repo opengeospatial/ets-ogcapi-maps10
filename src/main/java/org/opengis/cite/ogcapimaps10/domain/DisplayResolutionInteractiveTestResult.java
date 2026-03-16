@@ -11,15 +11,21 @@ public class DisplayResolutionInteractiveTestResult {
 
 	private final boolean mmPerPixelCorrect;
 
+	private final boolean mmPerPixelDefaultCorrect;
+
 	/**
 	 * Constructs a new result object.
 	 * @param enabled whether the interactive tests were enabled by the user
-	 * @param mmPerPixelCorrect whether the user confirmed that the two maps (rendered at
-	 * different mm-per-pixel values) look visually different
+	 * @param mmPerPixelCorrect whether the user confirmed that maps at different
+	 * mm-per-pixel values look visually different
+	 * @param mmPerPixelDefaultCorrect whether the user confirmed that a map without the
+	 * mm-per-pixel parameter looks the same as a map with mm-per-pixel=0.28
 	 */
-	public DisplayResolutionInteractiveTestResult(boolean enabled, boolean mmPerPixelCorrect) {
+	public DisplayResolutionInteractiveTestResult(boolean enabled, boolean mmPerPixelCorrect,
+			boolean mmPerPixelDefaultCorrect) {
 		this.enabled = enabled;
 		this.mmPerPixelCorrect = mmPerPixelCorrect;
+		this.mmPerPixelDefaultCorrect = mmPerPixelDefaultCorrect;
 	}
 
 	/**
@@ -36,6 +42,16 @@ public class DisplayResolutionInteractiveTestResult {
 	 */
 	public boolean isMmPerPixelCorrect() {
 		return mmPerPixelCorrect;
+	}
+
+	/**
+	 * Returns whether the user confirmed that the server assumes 0.28 mm/pixel by
+	 * default.
+	 * @return true if the user confirmed that the map without mm-per-pixel looks the same
+	 * as the map with mm-per-pixel=0.28
+	 */
+	public boolean isMmPerPixelDefaultCorrect() {
+		return mmPerPixelDefaultCorrect;
 	}
 
 }
