@@ -7,13 +7,17 @@
   <!--
     Interactive test function for A.16 display-resolution verification (Req 16).
 
-    Displays two map images side-by-side:
-      Map A - mm-per-pixel=0.28 (standard 90 DPI, default resolution)
-      Map B - mm-per-pixel=0.1  (high-DPI, smaller pixels, more detail expected)
+    Displays two map images side-by-side using a fixed scale-denominator and dimensions
+    so that the server computes the bbox from those parameters (Effect 1):
+      Map A - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.28
+      Map B - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.14
 
-    Asks the user to confirm that the two maps look visually different in
-    detail level or symbology, which verifies that the server correctly
-    interprets the mm-per-pixel parameter.
+    Halving mm-per-pixel from 0.28 to 0.14 halves the physical pixel size, which halves
+    the computed bbox extent at the same scale. Map B should therefore show a zoomed-in
+    view covering half the area of Map A.
+
+    Asks the user to confirm that the two maps look visually different (different spatial
+    extents / zoom levels), which verifies that the server correctly interprets mm-per-pixel.
   -->
 
   <ctl:function name="interactive:verifyMmPerPixelInterpretation">
@@ -68,8 +72,8 @@
           <table style="width:100%; font-size:0.9em; background:#f0f0f0;
                         border:1px solid #ccc; padding:6px; margin-bottom:10px;">
             <tr>
-              <td style="width:50%; padding:4px;"><strong>Map A</strong> - mm-per-pixel=0.28 (standard 90 DPI)</td>
-              <td style="width:50%; padding:4px;"><strong>Map B</strong> - mm-per-pixel=0.1 (high-DPI, ~254 DPI)</td>
+              <td style="width:50%; padding:4px;"><strong>Map A</strong> - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.28</td>
+              <td style="width:50%; padding:4px;"><strong>Map B</strong> - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.14</td>
             </tr>
           </table>
 
@@ -83,9 +87,9 @@
           <!-- Side-by-side map previews -->
           <table style="width:100%; border-collapse:collapse;">
             <tr>
-              <!-- Map A: default resolution -->
+              <!-- Map A: mm-per-pixel=0.28 with scale-denominator -->
               <td style="width:50%; padding:8px; vertical-align:top;">
-                <p><strong>Map A</strong> - standard resolution (mm-per-pixel=0.28)</p>
+                <p><strong>Map A</strong> - mm-per-pixel=0.28 (scale-denominator=40000000, 1024x512)</p>
                 <p style="font-size:0.85em; word-break:break-all;">
                   <xsl:element name="a">
                     <xsl:attribute name="href"><xsl:value-of select="$map-a-url" /></xsl:attribute>
@@ -107,9 +111,9 @@
                 </div>
               </td>
 
-              <!-- Map B: high-DPI resolution -->
+              <!-- Map B: mm-per-pixel=0.14 with scale-denominator (zoomed in) -->
               <td style="width:50%; padding:8px; vertical-align:top;">
-                <p><strong>Map B</strong> - high-DPI resolution (mm-per-pixel=0.1)</p>
+                <p><strong>Map B</strong> - mm-per-pixel=0.14 (scale-denominator=40000000, 1024x512)</p>
                 <p style="font-size:0.85em; word-break:break-all;">
                   <xsl:element name="a">
                     <xsl:attribute name="href"><xsl:value-of select="$map-b-url" /></xsl:attribute>
@@ -135,9 +139,10 @@
 
           <hr style="margin-top:16px;" />
           <p style="margin-top:16px;">
-            <strong>Question:</strong> Do Map A and Map B look <strong>visually different</strong>
-            in detail level or symbology?
-            (e.g. Map B should show finer roads, smaller labels, or denser features than Map A.)
+            <strong>Question:</strong> Do Map A and Map B look <strong>visually different</strong>?
+            (Map B uses mm-per-pixel=0.14, half of Map A's 0.28. At the same scale-denominator
+            and dimensions, Map B should cover half the spatial extent of Map A - appearing
+            zoomed in to a smaller area.)
           </p>
           <p>
             <input type="submit" name="submit" value="yes"
@@ -227,8 +232,8 @@
           <table style="width:100%; font-size:0.9em; background:#f0f0f0;
                         border:1px solid #ccc; padding:6px; margin-bottom:10px;">
             <tr>
-              <td style="width:50%; padding:4px;"><strong>Map A</strong> - no mm-per-pixel parameter (default assumed)</td>
-              <td style="width:50%; padding:4px;"><strong>Map B</strong> - mm-per-pixel=0.28 (explicit standard)</td>
+              <td style="width:50%; padding:4px;"><strong>Map A</strong> - scale-denominator=40000000, width=1024, height=512, no mm-per-pixel</td>
+              <td style="width:50%; padding:4px;"><strong>Map B</strong> - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.28</td>
             </tr>
           </table>
 
@@ -244,7 +249,7 @@
             <tr>
               <!-- Map A: no mm-per-pixel -->
               <td style="width:50%; padding:8px; vertical-align:top;">
-                <p><strong>Map A</strong> - no mm-per-pixel (server default)</p>
+                <p><strong>Map A</strong> - no mm-per-pixel (server default, scale-denominator=40000000, 1024x512)</p>
                 <p style="font-size:0.85em; word-break:break-all;">
                   <xsl:element name="a">
                     <xsl:attribute name="href"><xsl:value-of select="$map-a-url" /></xsl:attribute>
@@ -268,7 +273,7 @@
 
               <!-- Map B: mm-per-pixel=0.28 -->
               <td style="width:50%; padding:8px; vertical-align:top;">
-                <p><strong>Map B</strong> - mm-per-pixel=0.28 (explicit default)</p>
+                <p><strong>Map B</strong> - mm-per-pixel=0.28 (explicit, scale-denominator=40000000, 1024x512)</p>
                 <p style="font-size:0.85em; word-break:break-all;">
                   <xsl:element name="a">
                     <xsl:attribute name="href"><xsl:value-of select="$map-b-url" /></xsl:attribute>

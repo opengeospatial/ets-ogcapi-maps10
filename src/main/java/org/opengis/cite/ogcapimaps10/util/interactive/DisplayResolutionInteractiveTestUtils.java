@@ -39,10 +39,19 @@ public final class DisplayResolutionInteractiveTestUtils {
 	}
 
 	/**
-	 * Builds a map URL with the default display resolution ({@code mm-per-pixel=0.28}).
+	 * Builds a map URL with the standard display resolution ({@code mm-per-pixel=0.28}),
+	 * combined with a fixed scale denominator and dimensions so that the server computes
+	 * the bbox from those parameters.
+	 *
+	 * <p>
+	 * Using {@code scale-denominator} together with {@code mm-per-pixel} triggers Effect
+	 * 1 (bbox-to-dimensions mapping): the server derives the spatial extent from the
+	 * scale and pixel size. Changing {@code mm-per-pixel} while keeping
+	 * {@code scale-denominator} and dimensions fixed produces a visually different bbox,
+	 * making the difference observable.
 	 * @param landingPageUrl the API landing page URL
-	 * @return the map URL with default resolution, or a NOT_FOUND: prefixed string if the
-	 * map endpoint cannot be resolved
+	 * @return the map URL with standard resolution, or a NOT_FOUND: prefixed string if
+	 * the map endpoint cannot be resolved
 	 */
 	public static String buildDefaultResolutionMapUrl(String landingPageUrl) {
 		String mapUrl = findMapUrl(landingPageUrl);
@@ -50,12 +59,18 @@ public final class DisplayResolutionInteractiveTestUtils {
 			return NOT_FOUND_PREFIX + landingPageUrl + "/map";
 		}
 		String separator = mapUrl.contains("?") ? "&" : "?";
-		return mapUrl + separator + "f=png&mm-per-pixel=0.28";
+		return mapUrl + separator + "scale-denominator=40000000&width=1024&height=512&f=png&mm-per-pixel=0.28";
 	}
 
 	/**
 	 * Builds a map URL with no {@code mm-per-pixel} parameter, relying on the server's
-	 * default assumption of 0.28 mm/pixel.
+	 * default assumption of 0.28 mm/pixel. Includes the same fixed scale denominator and
+	 * dimensions as {@link #buildDefaultResolutionMapUrl} so that both maps are
+	 * comparable.
+	 *
+	 * <p>
+	 * If the server correctly assumes 0.28 mm/pixel by default, this map should look
+	 * identical to the one produced by {@link #buildDefaultResolutionMapUrl}.
 	 * @param landingPageUrl the API landing page URL
 	 * @return the map URL without mm-per-pixel, or a NOT_FOUND: prefixed string if the
 	 * map endpoint cannot be resolved
@@ -66,15 +81,17 @@ public final class DisplayResolutionInteractiveTestUtils {
 			return NOT_FOUND_PREFIX + landingPageUrl + "/map";
 		}
 		String separator = mapUrl.contains("?") ? "&" : "?";
-		return mapUrl + separator + "f=png";
+		return mapUrl + separator + "scale-denominator=40000000&width=1024&height=512&f=png";
 	}
 
 	/**
-	 * Builds a map URL with a high-DPI display resolution ({@code mm-per-pixel=0.1}).
-	 * This should produce a map with finer detail than the default resolution.
+	 * Builds a map URL with a halved display resolution ({@code mm-per-pixel=0.14}).
+	 * Halving {@code mm-per-pixel} relative to the standard 0.28 halves the physical
+	 * pixel size, which — at the same {@code scale-denominator} and dimensions — halves
+	 * the computed bbox extent, producing a visually zoomed-in map.
 	 * @param landingPageUrl the API landing page URL
-	 * @return the map URL with high-DPI resolution, or a NOT_FOUND: prefixed string if
-	 * the map endpoint cannot be resolved
+	 * @return the map URL with halved resolution, or a NOT_FOUND: prefixed string if the
+	 * map endpoint cannot be resolved
 	 */
 	public static String buildHighDpiMapUrl(String landingPageUrl) {
 		String mapUrl = findMapUrl(landingPageUrl);
@@ -82,7 +99,7 @@ public final class DisplayResolutionInteractiveTestUtils {
 			return NOT_FOUND_PREFIX + landingPageUrl + "/map";
 		}
 		String separator = mapUrl.contains("?") ? "&" : "?";
-		return mapUrl + separator + "f=png&mm-per-pixel=0.1";
+		return mapUrl + separator + "scale-denominator=40000000&width=1024&height=512&f=png&mm-per-pixel=0.14";
 	}
 
 	// -------------------------------------------------------------------------
