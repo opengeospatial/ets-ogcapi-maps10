@@ -15,7 +15,18 @@ public enum TestRunArg {
 	 * The number of collections to test (a value less or equal to 0 means all
 	 * collections).
 	 */
-	NOOFCOLLECTIONS;
+	NOOFCOLLECTIONS,
+
+	/**
+	 * Whether interactive map-success tests are enabled (true/false).
+	 */
+	MAP_SUCCESS_INTERACTIVE_ENABLED,
+
+	/**
+	 * Whether the user confirmed that the map rendered with mm-per-pixel=0.14 looks
+	 * visually different from the map rendered with mm-per-pixel=0.28 (true/false).
+	 */
+	MAP_SUCCESS_CORRECT;
 
 	/** {@inheritDoc} */
 	@Override
