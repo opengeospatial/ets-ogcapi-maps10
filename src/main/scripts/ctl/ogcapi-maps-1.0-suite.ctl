@@ -4,7 +4,8 @@
              xmlns:tns="http://www.opengis.net/cite/ogcapi-maps-1.0"
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
-             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController">
+             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
+             xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-width.xml">
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
@@ -73,6 +74,24 @@
               </div>
             </p>
           </fieldset>
+          <fieldset style="background:#ffffcc">
+            <legend style="font-family: sans-serif; color: #000099;
+                           background-color:#F0F8FF; border-style: solid;
+                           border-width: medium; padding:4px">Interactive Tests (A.13 Default Width)
+            </legend>
+            <p>
+              <input type="checkbox" id="runWidthInteractiveTests"
+                     name="runWidthInteractiveTests" value="true" />
+              <label for="runWidthInteractiveTests">
+                Enable interactive visual verification for default width behaviour (A.13, Req 13/H)
+              </label>
+            </p>
+            <p style="font-size:0.9em; color:#555;">
+              When enabled, you will be shown two map images - one with explicit
+              dimensions (width=1024, height=512) and one without any dimensions - and
+              asked to confirm that the server chose appropriate default dimensions.
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -80,10 +99,27 @@
           </p>
         </ctl:form>
       </xsl:variable>
+      <xsl:variable name="iut-url"
+                    select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+      <xsl:variable name="run-width-interactive"
+                    select="$form-data/values/value[@key='runWidthInteractiveTests'] = 'true'" />
+
+      <!-- Run interactive default-width verification if enabled -->
+      <xsl:variable name="width-default-result">
+        <xsl:choose>
+          <xsl:when test="$run-width-interactive">
+            <ctl:call-function name="interactive:verifyWidthDefault">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
-            <xsl:value-of select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+            <xsl:value-of select="$iut-url" />
           </entry>
           <entry key="noofcollections">
             <xsl:choose>
@@ -92,6 +128,12 @@
                 <xsl:value-of select="$form-data/values/value[@key='noOfCollections']" />
               </xsl:otherwise>
             </xsl:choose>
+          </entry>
+          <entry key="scaling_width_interactive_enabled">
+            <xsl:value-of select="$run-width-interactive" />
+          </entry>
+          <entry key="scaling_width_default_appropriate">
+            <xsl:value-of select="$width-default-result" />
           </entry>
         </properties>
       </xsl:variable>

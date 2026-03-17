@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-width.xml"
+             xmlns:ctl="http://www.occamlab.com/ctl"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             xmlns:witu="java:org.opengis.cite.ogcapimaps10.util.interactive.WidthInteractiveTestUtils">
+
+  <!--
+    Interactive test function for A.13 width-definition verification (Req 13/H).
+
+    Displays two map images side-by-side using a fixed scale-denominator:
+      Map A - scale-denominator=40000000, width=1024, height=512 (explicit dimensions)
+      Map B - scale-denominator=40000000, no width or height (server chooses defaults)
+
+    With a fixed scale-denominator and no bbox, the server must compute the spatial
+    extent from the scale and dimensions. Map A uses explicit dimensions. Map B omits
+    width and height entirely, so the server must choose appropriate default values.
+
+    Asks the user to confirm that Map B appears to be rendered at a reasonable scale
+    and resolution, which verifies that the server correctly computes default dimensions
+    when the width parameter is omitted (Req 13/H).
+  -->
+
+  <ctl:function name="interactive:verifyWidthDefault">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>The test result: "true" if the user confirmed Map B has appropriate default dimensions, "false" otherwise.</ctl:return>
+    <ctl:description>
+      Interactive test for A.13 (Req 13/H): Verify that the server uses an appropriate
+      default width when the width parameter is omitted from a map request.
+    </ctl:description>
+    <ctl:code>
+
+      <!-- Build Map A: explicit width=1024, height=512 with scale-denominator (reference) -->
+      <xsl:variable name="map-a-raw">
+        <xsl:value-of select="witu:buildExplicitWidthMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Build Map B: no width or height - server must choose appropriate defaults -->
+      <xsl:variable name="map-b-raw">
+        <xsl:value-of select="witu:buildDefaultWidthMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Detect NOT_FOUND sentinel -->
+      <xsl:variable name="not-found" select="starts-with($map-a-raw, 'NOT_FOUND:')" />
+
+      <xsl:variable name="map-a-url">
+        <xsl:choose>
+          <xsl:when test="$not-found">
+            <xsl:value-of select="substring-after($map-a-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-a-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="map-b-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-b-raw, 'NOT_FOUND:')">
+            <xsl:value-of select="substring-after($map-b-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-b-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- Show form and collect user answer -->
+      <xsl:variable name="form-values">
+        <ctl:form width="1000" height="820" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Scaling Width Default Verification (A.13 - Req 13/H)</h3>
+          <p>
+            Two maps have been requested using a fixed <strong>scale-denominator=40000000</strong>.
+            Map A includes explicit dimensions (width=1024, height=512). Map B omits
+            <strong>width</strong> and <strong>height</strong> entirely - the server must
+            choose appropriate default dimensions reflecting the requested scale.
+          </p>
+          <table style="width:100%; font-size:0.9em; background:#f0f0f0;
+                        border:1px solid #ccc; padding:6px; margin-bottom:10px;">
+            <tr>
+              <td style="width:50%; padding:4px;"><strong>Map A</strong> - scale-denominator=40000000, width=1024, height=512</td>
+              <td style="width:50%; padding:4px;"><strong>Map B</strong> - scale-denominator=40000000, no width or height specified</td>
+            </tr>
+          </table>
+
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
+              [!] Warning: Could not discover a dataset map endpoint automatically.
+              The URLs below may not be valid. Please verify manually.
+            </p>
+          </xsl:if>
+
+          <!-- Side-by-side map previews -->
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <!-- Map A: explicit width=1024, height=512 -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map A</strong> - Explicit dimensions (width=1024, height=512, scale-denominator=40000000)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-a-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map A - explicit width=1024, height=512</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-a-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-a-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+
+              <!-- Map B: no width or height (server chooses defaults) -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map B</strong> - Default dimensions (scale-denominator=40000000, no width or height)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-b-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map B - no width or height, server uses defaults</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-b-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-b-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <hr style="margin-top:16px;" />
+          <p style="margin-top:16px;">
+            <strong>Question:</strong> Does Map B appear to be rendered at a
+            <strong>reasonable scale and resolution</strong> consistent with the scale
+            denominator? The server should have chosen sensible default dimensions when
+            width and height were omitted.
+          </p>
+          <p>
+            <input type="submit" name="submit" value="yes"
+                   style="margin-right:12px; padding:6px 24px;" />
+            <input type="submit" name="submit" value="no"
+                   style="padding:6px 24px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+
+      <!-- Return true/false based on user answer -->
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit'] = 'yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>

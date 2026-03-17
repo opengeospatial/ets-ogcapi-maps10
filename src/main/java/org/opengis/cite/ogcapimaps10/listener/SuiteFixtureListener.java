@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.domain.ScalingWidthInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -87,6 +88,26 @@ public class SuiteFixtureListener implements ISuiteListener {
 			TestSuiteLogger.log(WARNING, String.format("Could not parse parameter %s: %s. Expected is a valid integer",
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
+		parseScalingWidthInteractiveResults(suite);
+	}
+
+	/**
+	 * Parses the interactive test parameters for A.13 default width verification (Req
+	 * 13/H) and stores the result as a suite attribute.
+	 * @param suite the TestNG suite instance
+	 */
+	private void parseScalingWidthInteractiveResults(ISuite suite) {
+		Map<String, String> params = suite.getXmlSuite().getParameters();
+		String enabledStr = params.get(TestRunArg.SCALING_WIDTH_INTERACTIVE_ENABLED.toString());
+		boolean enabled = "true".equalsIgnoreCase(enabledStr);
+		boolean widthDefaultAppropriate = false;
+		if (enabled) {
+			String appropriateStr = params.get(TestRunArg.SCALING_WIDTH_DEFAULT_APPROPRIATE.toString());
+			widthDefaultAppropriate = "true".equalsIgnoreCase(appropriateStr);
+		}
+		ScalingWidthInteractiveTestResult result = new ScalingWidthInteractiveTestResult(enabled,
+				widthDefaultAppropriate);
+		suite.setAttribute(SuiteAttribute.SCALING_WIDTH_INTERACTIVE_TEST_RESULT.getName(), result);
 	}
 
 	/**

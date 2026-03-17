@@ -15,7 +15,19 @@ public enum TestRunArg {
 	 * The number of collections to test (a value less or equal to 0 means all
 	 * collections).
 	 */
-	NOOFCOLLECTIONS;
+	NOOFCOLLECTIONS,
+
+	/**
+	 * Whether the interactive verification for A.13 default width (Req 13/H) was enabled
+	 * by the tester.
+	 */
+	SCALING_WIDTH_INTERACTIVE_ENABLED,
+
+	/**
+	 * Whether the tester confirmed that the server uses an appropriate default width when
+	 * the width parameter is omitted (Req 13/H).
+	 */
+	SCALING_WIDTH_DEFAULT_APPROPRIATE;
 
 	/** {@inheritDoc} */
 	@Override
