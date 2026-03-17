@@ -1,42 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ctl:package xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-width.xml"
+<ctl:package xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-height.xml"
              xmlns:ctl="http://www.occamlab.com/ctl"
              xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-             xmlns:witu="java:org.opengis.cite.ogcapimaps10.util.interactive.WidthInteractiveTestUtils">
+             xmlns:hitu="java:org.opengis.cite.ogcapimaps10.util.interactive.HeightInteractiveTestUtils">
 
   <!--
-    Interactive test function for A.13 width-definition verification (Req 13/H).
+    Interactive test function for A.14 height-definition verification (Req 14/H).
 
-    Displays two map images side-by-side using a fixed scale-denominator:
-      Map A - scale-denominator=40000000, width=1024, height=512 (explicit dimensions)
-      Map B - scale-denominator=40000000, no width or height (server chooses defaults)
+    Displays two map images side-by-side using a fixed scale-denominator and
+    an explicit width=1024:
+      Map A - scale-denominator=40000000, width=1024, height=512 (explicit height)
+      Map B - scale-denominator=40000000, width=1024, no height (server chooses default)
 
-    With a fixed scale-denominator and no bbox, the server must compute the spatial
-    extent from the scale and dimensions. Map A uses explicit dimensions. Map B omits
-    width and height entirely, so the server must choose appropriate default values.
+    With a fixed scale-denominator and an explicit width but no height, the server must
+    compute an appropriate default height. Map A uses explicit dimensions for reference.
+    Map B omits height entirely, so the server must choose an appropriate default value.
 
     Asks the user to confirm that Map B appears to be rendered at a reasonable scale
-    and resolution, which verifies that the server correctly computes default dimensions
-    when the width parameter is omitted (Req 13/H).
+    and resolution, which verifies that the server correctly computes a default height
+    when the height parameter is omitted (Req 14/H).
   -->
 
-  <ctl:function name="interactive:verifyWidthDefault">
+  <ctl:function name="interactive:verifyHeightDefault">
     <ctl:param name="iut.url">The API landing page URL.</ctl:param>
-    <ctl:return>The test result: "true" if the user confirmed Map B has appropriate default dimensions, "false" otherwise.</ctl:return>
+    <ctl:return>The test result: "true" if the user confirmed Map B has appropriate default height, "false" otherwise.</ctl:return>
     <ctl:description>
-      Interactive test for A.13 (Req 13/H): Verify that the server uses an appropriate
-      default width when the width parameter is omitted from a map request.
+      Interactive test for A.14 (Req 14/H): Verify that the server uses an appropriate
+      default height when the height parameter is omitted from a map request.
     </ctl:description>
     <ctl:code>
 
       <!-- Build Map A: explicit width=1024, height=512 with scale-denominator (reference) -->
       <xsl:variable name="map-a-raw">
-        <xsl:value-of select="witu:buildExplicitWidthMapUrl($iut.url)" />
+        <xsl:value-of select="hitu:buildExplicitHeightMapUrl($iut.url)" />
       </xsl:variable>
 
-      <!-- Build Map B: no width or height - server must choose appropriate defaults -->
+      <!-- Build Map B: explicit width=1024, no height - server must choose appropriate default -->
       <xsl:variable name="map-b-raw">
-        <xsl:value-of select="witu:buildDefaultWidthMapUrl($iut.url)" />
+        <xsl:value-of select="hitu:buildDefaultHeightMapUrl($iut.url)" />
       </xsl:variable>
 
       <!-- Detect NOT_FOUND sentinel -->
@@ -63,18 +64,18 @@
       <!-- Show form and collect user answer -->
       <xsl:variable name="form-values">
         <ctl:form width="1000" height="820" xmlns="http://www.w3.org/1999/xhtml">
-          <h3>Scaling Width Default Verification (A.13 - Req 13/H)</h3>
+          <h3>Scaling Height Default Verification (A.14 - Req 14/H)</h3>
           <p>
-            Two maps have been requested using a fixed <strong>scale-denominator=40000000</strong>.
-            Map A includes explicit dimensions (width=1024, height=512). Map B omits
-            <strong>width</strong> and <strong>height</strong> entirely - the server must
-            choose appropriate default dimensions reflecting the requested scale.
+            Two maps have been requested using a fixed <strong>scale-denominator=40000000</strong>
+            and explicit <strong>width=1024</strong>. Map A includes an explicit
+            <strong>height=512</strong>. Map B omits <strong>height</strong> entirely -
+            the server must choose an appropriate default height reflecting the requested scale.
           </p>
           <table style="width:100%; font-size:0.9em; background:#f0f0f0;
                         border:1px solid #ccc; padding:6px; margin-bottom:10px;">
             <tr>
               <td style="width:50%; padding:4px;"><strong>Map A</strong> - scale-denominator=40000000, width=1024, height=512</td>
-              <td style="width:50%; padding:4px;"><strong>Map B</strong> - scale-denominator=40000000, no width or height specified</td>
+              <td style="width:50%; padding:4px;"><strong>Map B</strong> - scale-denominator=40000000, width=1024, no height specified</td>
             </tr>
           </table>
 
@@ -112,9 +113,9 @@
                 </div>
               </td>
 
-              <!-- Map B: no width or height (server chooses defaults) -->
+              <!-- Map B: explicit width=1024, no height (server chooses default) -->
               <td style="width:50%; padding:8px; vertical-align:top;">
-                <p><strong>Map B</strong> - Default dimensions (scale-denominator=40000000, no width or height)</p>
+                <p><strong>Map B</strong> - Default height (scale-denominator=40000000, width=1024, no height)</p>
                 <p style="font-size:0.85em; word-break:break-all;">
                   <xsl:element name="a">
                     <xsl:attribute name="href"><xsl:value-of select="$map-b-url" /></xsl:attribute>
@@ -125,7 +126,7 @@
                 <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
                   <xsl:element name="img">
                     <xsl:attribute name="src"><xsl:value-of select="$map-b-url" /></xsl:attribute>
-                    <xsl:attribute name="alt">Map B - no width or height, server uses defaults</xsl:attribute>
+                    <xsl:attribute name="alt">Map B - width=1024, no height, server uses default</xsl:attribute>
                     <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
                     <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-b-error').style.display='block';</xsl:attribute>
                   </xsl:element>
@@ -142,8 +143,8 @@
           <p style="margin-top:16px;">
             <strong>Question:</strong> Does Map B appear to be rendered at a
             <strong>reasonable scale and resolution</strong> consistent with the scale
-            denominator? The server should have chosen sensible default dimensions when
-            width and height were omitted.
+            denominator? The server should have chosen a sensible default height when
+            height was omitted (width=1024 was still provided).
           </p>
           <p>
             <input type="submit" name="submit" value="yes"

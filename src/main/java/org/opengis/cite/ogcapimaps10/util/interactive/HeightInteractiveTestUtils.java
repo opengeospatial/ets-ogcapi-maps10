@@ -12,22 +12,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utility methods called from CTL scripts via the XSLT Java bridge to build map request
- * URLs for interactive (manual) verification of A.13 width-definition (Req 13/H).
+ * URLs for interactive (manual) verification of A.14 height-definition (Req 14/H).
  *
  * <p>
  * Two URLs are produced for side-by-side comparison in the CTL form. Both include a fixed
- * {@code scale-denominator} so that the server must compute the spatial extent from that
- * parameter:
+ * {@code scale-denominator} and an explicit {@code width} so that the only difference is
+ * whether {@code height} is provided:
  * <ul>
- * <li>Explicit-width map: {@code scale-denominator=40000000&width=1024&height=512&f=png}
- * - server uses the provided dimensions.</li>
- * <li>Default-width map: {@code scale-denominator=40000000&f=png} - no width or height
- * specified; the server must choose appropriate default dimensions.</li>
+ * <li>Explicit-height map: {@code scale-denominator=40000000&width=1024&height=512&f=png}
+ * - server uses the provided height.</li>
+ * <li>Default-height map: {@code scale-denominator=40000000&width=1024&f=png} - height is
+ * omitted; the server must choose an appropriate default height.</li>
  * </ul>
- * The human tester confirms whether the default-width map appears to be rendered at a
+ * The human tester confirms whether the default-height map appears to be rendered at a
  * reasonable scale and resolution consistent with the scale denominator.
  */
-public final class WidthInteractiveTestUtils {
+public final class HeightInteractiveTestUtils {
 
 	/**
 	 * Sentinel prefix returned when no valid map URL can be found. CTL scripts detect
@@ -39,17 +39,17 @@ public final class WidthInteractiveTestUtils {
 
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private WidthInteractiveTestUtils() {
+	private HeightInteractiveTestUtils() {
 	}
 
 	/**
 	 * Builds a map URL with explicit dimensions ({@code width=1024&height=512}) combined
 	 * with a fixed scale denominator, serving as the reference map for comparison.
 	 * @param landingPageUrl the API landing page URL
-	 * @return the map URL with explicit dimensions, or a NOT_FOUND: prefixed string if
-	 * the map endpoint cannot be resolved
+	 * @return the map URL with explicit height, or a NOT_FOUND: prefixed string if the
+	 * map endpoint cannot be resolved
 	 */
-	public static String buildExplicitWidthMapUrl(String landingPageUrl) {
+	public static String buildExplicitHeightMapUrl(String landingPageUrl) {
 		String mapUrl = findMapUrl(landingPageUrl);
 		if (mapUrl == null) {
 			return NOT_FOUND_PREFIX + landingPageUrl + "/map";
@@ -59,20 +59,20 @@ public final class WidthInteractiveTestUtils {
 	}
 
 	/**
-	 * Builds a map URL with no {@code width} or {@code height} parameters, using only a
-	 * fixed scale denominator. The server must choose appropriate default dimensions,
-	 * which is the behavior being verified by Req 13/H.
+	 * Builds a map URL with an explicit {@code width=1024} but no {@code height}
+	 * parameter, using a fixed scale denominator. The server must choose an appropriate
+	 * default height, which is the behaviour being verified by Req 14/H.
 	 * @param landingPageUrl the API landing page URL
-	 * @return the map URL without width/height, or a NOT_FOUND: prefixed string if the
-	 * map endpoint cannot be resolved
+	 * @return the map URL without height, or a NOT_FOUND: prefixed string if the map
+	 * endpoint cannot be resolved
 	 */
-	public static String buildDefaultWidthMapUrl(String landingPageUrl) {
+	public static String buildDefaultHeightMapUrl(String landingPageUrl) {
 		String mapUrl = findMapUrl(landingPageUrl);
 		if (mapUrl == null) {
 			return NOT_FOUND_PREFIX + landingPageUrl + "/map";
 		}
 		String separator = mapUrl.contains("?") ? "&" : "?";
-		return mapUrl + separator + "scale-denominator=40000000&f=png";
+		return mapUrl + separator + "scale-denominator=40000000&width=1024&f=png";
 	}
 
 	// -------------------------------------------------------------------------

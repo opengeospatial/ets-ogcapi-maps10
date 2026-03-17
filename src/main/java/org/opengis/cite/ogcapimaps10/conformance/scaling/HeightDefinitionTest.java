@@ -19,40 +19,40 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapimaps10.domain.ScalingWidthInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.ScalingHeightInteractiveTestResult;
 import org.testng.ITestContext;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 /**
- * Implements Abstract Test A.13: /conf/scaling/width-definition
+ * Implements Abstract Test A.14: /conf/scaling/height-definition
  *
  * <p>
- * Test Purpose: Verify that the implementation supports the (scaling) width parameter
- * correctly for map requests (Requirement 13: /req/scaling/width-definition).
+ * Test Purpose: Verify that the implementation supports the (scaling) height parameter
+ * correctly for map requests (Requirement 14: /req/scaling/height-definition).
  *
  * <p>
  * Assertions verified:
  * <ul>
- * <li>[Req13/oas-param] The width query parameter (type: number, required: false) is
+ * <li>[Req14/oas-param] The height query parameter (type: number, required: false) is
  * defined in the OpenAPI document.</li>
- * <li>[Req13/width-pixel-columns] The server returns HTTP 200 for a valid width and, for
- * PNG responses, the returned image width matches the requested pixel count.</li>
- * <li>[Req13/invalid-width] The server returns HTTP 4xx for non-positive or non-integer
- * width values (0, -1, non-numeric).</li>
- * <li>[Req13/max-width] If maxWidth is declared in service metadata, the server returns
- * HTTP 4xx when width exceeds it.</li>
- * <li>[Req13/max-pixels] If maxPixels is declared in service metadata, the server returns
+ * <li>[Req14/height-pixel-rows] The server returns HTTP 200 for a valid height and, for
+ * PNG responses, the returned image height matches the requested pixel count.</li>
+ * <li>[Req14/invalid-height] The server returns HTTP 4xx for non-positive or non-integer
+ * height values (0, -1, non-numeric).</li>
+ * <li>[Req14/max-height] If maxHeight is declared in service metadata, the server returns
+ * HTTP 4xx when height exceeds it.</li>
+ * <li>[Req14/max-pixels] If maxPixels is declared in service metadata, the server returns
  * HTTP 4xx when width times height exceeds it.</li>
- * <li>[Req13/scale-denom-bbox-conflict] If Subsetting is supported, the server returns
- * HTTP 4xx when width, bbox, and scale-denominator are combined.</li>
- * <li>[Req13/width-scale-denom-no-subsetting] If Subsetting is not supported, the server
- * returns HTTP 4xx when width and scale-denominator are combined.</li>
- * <li>[Req13/default-width] When width is omitted, the server returns HTTP 200 and
+ * <li>[Req14/scale-denom-bbox-conflict] If Subsetting is supported, the server returns
+ * HTTP 4xx when height, bbox, and scale-denominator are combined.</li>
+ * <li>[Req14/height-scale-denom-no-subsetting] If Subsetting is not supported, the server
+ * returns HTTP 4xx when height and scale-denominator are combined.</li>
+ * <li>[Req14/default-height] When height is omitted, the server returns HTTP 200 and
  * (interactive) uses appropriate default dimensions reflecting the scale.</li>
  * </ul>
  */
-public class WidthDefinitionTest extends CommonFixture {
+public class HeightDefinitionTest extends CommonFixture {
 
 	private static final String PARAM_WIDTH = "width";
 
@@ -67,18 +67,18 @@ public class WidthDefinitionTest extends CommonFixture {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	/**
-	 * A.13 Abstract Test for Requirement /req/scaling/width-definition.
+	 * A.14 Abstract Test for Requirement /req/scaling/height-definition.
 	 *
 	 * <p>
-	 * Verifies that the server supports the width parameter with correct OAS definition,
-	 * proper pixel-column interpretation, rejection of invalid values, enforcement of
+	 * Verifies that the server supports the height parameter with correct OAS definition,
+	 * proper pixel-row interpretation, rejection of invalid values, enforcement of
 	 * service metadata limits, rejection of forbidden parameter combinations, and
-	 * appropriate default behaviour when width is omitted.
+	 * appropriate default behaviour when height is omitted.
 	 * @param context the TestNG test context, used to access suite attributes
 	 */
-	@Test(description = "A.13 Abstract Test for Requirement /req/scaling/width-definition: "
-			+ "Verify that the implementation supports the scaling width parameter correctly for map requests.")
-	public void verifyWidthDefinition(ITestContext context) {
+	@Test(description = "A.14 Abstract Test for Requirement /req/scaling/height-definition: "
+			+ "Verify that the implementation supports the scaling height parameter correctly for map requests.")
+	public void verifyHeightDefinition(ITestContext context) {
 		List<String> errors = new ArrayList<>();
 
 		String landingPageUrl = rootUri.toString();
@@ -87,23 +87,23 @@ public class WidthDefinitionTest extends CommonFixture {
 		String mapUrl = findMapUrl(landingPageUrl);
 		if (mapUrl == null) {
 			throw new SkipException("Could not find a dataset map endpoint (rel=ogc/1.0/map) from the landing page at "
-					+ landingPageUrl + ". Skipping A.13 test.");
+					+ landingPageUrl + ". Skipping A.14 test.");
 		}
 		String sep = mapUrl.contains("?") ? "&" : "?";
 
-		// --- Assertion A: OAS width parameter defined [Req13/oas-param] ---
-		if (!oasHasWidthParam(landingPageUrl)) {
-			errors.add("[Req13/oas-param] The width query parameter (schema.type: number, required: false) "
+		// --- Assertion A: OAS height parameter defined [Req14/oas-param] ---
+		if (!oasHasHeightParam(landingPageUrl)) {
+			errors.add("[Req14/oas-param] The height query parameter (schema.type: number, required: false) "
 					+ "was not found in the OpenAPI document at " + landingPageUrl + "/api.");
 		}
 
-		// --- Assertion B: width = pixel columns [Req13/width-pixel-columns] ---
+		// --- Assertion B: height = pixel rows [Req14/height-pixel-rows] ---
 		// Request a map at width=200, height=100 and verify HTTP 200.
-		// For PNG responses, also verify the image width matches the request.
+		// For PNG responses, also verify the image height matches the request.
 		String urlB = mapUrl + sep + "width=200&height=100&f=png";
 		int statusB = getStatusRaw(urlB);
 		if (statusB != 200) {
-			errors.add("[Req13/width-pixel-columns] Expected HTTP 200 for " + PARAM_WIDTH + "=200&" + PARAM_HEIGHT
+			errors.add("[Req14/height-pixel-rows] Expected HTTP 200 for " + PARAM_WIDTH + "=200&" + PARAM_HEIGHT
 					+ "=100 but got HTTP " + statusB + ".");
 		}
 		else {
@@ -111,10 +111,10 @@ public class WidthDefinitionTest extends CommonFixture {
 				byte[] bytes = getResponseBytes(urlB);
 				if (bytes != null) {
 					BufferedImage img = ImageIO.read(new ByteArrayInputStream(bytes));
-					if (img != null && img.getWidth() != 200) {
-						errors.add("[Req13/width-pixel-columns] Requested " + PARAM_WIDTH
-								+ "=200 but the PNG response has width=" + img.getWidth()
-								+ "px. The width parameter must define the horizontal pixel count.");
+					if (img != null && img.getHeight() != 100) {
+						errors.add("[Req14/height-pixel-rows] Requested " + PARAM_HEIGHT
+								+ "=100 but the PNG response has height=" + img.getHeight()
+								+ "px. The height parameter must define the vertical pixel count.");
 					}
 				}
 			}
@@ -123,45 +123,46 @@ public class WidthDefinitionTest extends CommonFixture {
 			}
 		}
 
-		// --- Assertion C: invalid width values -> 4xx [Req13/invalid-width] ---
-		int statusZero = getStatusRaw(mapUrl + sep + "width=0&f=png");
+		// --- Assertion C: invalid height values -> 4xx [Req14/invalid-height] ---
+		int statusZero = getStatusRaw(mapUrl + sep + "height=0&f=png");
 		if (!is4xx(statusZero)) {
-			errors.add("[Req13/invalid-width] Expected HTTP 4xx for " + PARAM_WIDTH
+			errors.add("[Req14/invalid-height] Expected HTTP 4xx for " + PARAM_HEIGHT
 					+ "=0 (not a positive integer) but got HTTP " + statusZero + ".");
 		}
-		int statusNeg = getStatusRaw(mapUrl + sep + "width=-1&f=png");
+		int statusNeg = getStatusRaw(mapUrl + sep + "height=-1&f=png");
 		if (!is4xx(statusNeg)) {
-			errors.add("[Req13/invalid-width] Expected HTTP 4xx for " + PARAM_WIDTH + "=-1 (negative) but got HTTP "
+			errors.add("[Req14/invalid-height] Expected HTTP 4xx for " + PARAM_HEIGHT + "=-1 (negative) but got HTTP "
 					+ statusNeg + ".");
 		}
-		int statusAlpha = getStatusRaw(mapUrl + sep + "width=abc&f=png");
+		int statusAlpha = getStatusRaw(mapUrl + sep + "height=abc&f=png");
 		if (!is4xx(statusAlpha)) {
-			errors.add("[Req13/invalid-width] Expected HTTP 4xx for " + PARAM_WIDTH
+			errors.add("[Req14/invalid-height] Expected HTTP 4xx for " + PARAM_HEIGHT
 					+ "=abc (not a number) but got HTTP " + statusAlpha + ".");
 		}
 
 		// --- Assertions D & E: service metadata limits ---
 		Map<String, Object> ogcLimitsMaps = getXOgcLimitsMaps(landingPageUrl);
 
-		// Assertion D: width > maxWidth -> 4xx [Req13/max-width]
-		if (ogcLimitsMaps != null && ogcLimitsMaps.containsKey("maxWidth")) {
-			int maxWidth = ((Number) ogcLimitsMaps.get("maxWidth")).intValue();
-			int overWidth = maxWidth + 1;
-			int statusD = getStatusRaw(mapUrl + sep + PARAM_WIDTH + "=" + overWidth + "&f=png");
+		// Assertion D: height > maxHeight -> 4xx [Req14/max-height]
+		if (ogcLimitsMaps != null && ogcLimitsMaps.containsKey("maxHeight")) {
+			int maxHeight = ((Number) ogcLimitsMaps.get("maxHeight")).intValue();
+			int overHeight = maxHeight + 1;
+			int statusD = getStatusRaw(mapUrl + sep + PARAM_HEIGHT + "=" + overHeight + "&f=png");
 			if (!is4xx(statusD)) {
-				errors.add("[Req13/max-width] Expected HTTP 4xx (preferably 413) for " + PARAM_WIDTH + "=" + overWidth
-						+ " (exceeds maxWidth=" + maxWidth + " from x-OGC-limits.maps) but got HTTP " + statusD + ".");
+				errors.add("[Req14/max-height] Expected HTTP 4xx (preferably 413) for " + PARAM_HEIGHT + "="
+						+ overHeight + " (exceeds maxHeight=" + maxHeight + " from x-OGC-limits.maps) but got HTTP "
+						+ statusD + ".");
 			}
 		}
 
-		// Assertion E: width*height > maxPixels -> 4xx [Req13/max-pixels]
+		// Assertion E: width*height > maxPixels -> 4xx [Req14/max-pixels]
 		if (ogcLimitsMaps != null && ogcLimitsMaps.containsKey("maxPixels")) {
 			long maxPixels = ((Number) ogcLimitsMaps.get("maxPixels")).longValue();
 			int side = (int) Math.sqrt((double) maxPixels) + 1;
 			int statusE = getStatusRaw(
 					mapUrl + sep + PARAM_WIDTH + "=" + side + "&" + PARAM_HEIGHT + "=" + side + "&f=png");
 			if (!is4xx(statusE)) {
-				errors.add("[Req13/max-pixels] Expected HTTP 4xx (preferably 413) for " + PARAM_WIDTH + "=" + side + "&"
+				errors.add("[Req14/max-pixels] Expected HTTP 4xx (preferably 413) for " + PARAM_WIDTH + "=" + side + "&"
 						+ PARAM_HEIGHT + "=" + side + " (product " + ((long) side * side) + " exceeds maxPixels="
 						+ maxPixels + " from x-OGC-limits.maps) but got HTTP " + statusE + ".");
 			}
@@ -170,52 +171,54 @@ public class WidthDefinitionTest extends CommonFixture {
 		// --- Assertions F & G: scale-denominator conflicts ---
 		boolean hasSubsetting = hasConformanceClass(landingPageUrl, CONF_SPATIAL_SUBSETTING);
 
-		// Assertion F: width+bbox+scale-denominator -> 4xx (only if Subsetting supported)
-		// [Req13/scale-denom-bbox-conflict]
+		// Assertion F: height+bbox+scale-denominator -> 4xx (only if Subsetting
+		// supported)
+		// [Req14/scale-denom-bbox-conflict]
 		if (hasSubsetting) {
 			String rawUrlF = mapUrl + sep
 					+ "width=800&height=400&bbox=-180,-90,180,90&scale-denominator=40000000&f=png";
 			int statusF = getStatusRaw(rawUrlF);
 			if (!is4xx(statusF)) {
-				errors.add("[Req13/scale-denom-bbox-conflict] Expected HTTP 4xx when combining " + PARAM_WIDTH
+				errors.add("[Req14/scale-denom-bbox-conflict] Expected HTTP 4xx when combining " + PARAM_HEIGHT
 						+ ", bbox, and " + PARAM_SCALE_DENOMINATOR + " but got HTTP " + statusF + ".");
 			}
 		}
 
-		// Assertion G: width+scale-denominator -> 4xx (only if Subsetting NOT supported)
-		// [Req13/width-scale-denom-no-subsetting]
+		// Assertion G: height+scale-denominator -> 4xx (only if Subsetting NOT supported)
+		// [Req14/height-scale-denom-no-subsetting]
 		if (!hasSubsetting) {
-			String rawUrlG = mapUrl + sep + "width=800&scale-denominator=40000000&f=png";
+			String rawUrlG = mapUrl + sep + "height=400&scale-denominator=40000000&f=png";
 			int statusG = getStatusRaw(rawUrlG);
 			if (!is4xx(statusG)) {
-				errors.add("[Req13/width-scale-denom-no-subsetting] Expected HTTP 4xx when combining " + PARAM_WIDTH
+				errors.add("[Req14/height-scale-denom-no-subsetting] Expected HTTP 4xx when combining " + PARAM_HEIGHT
 						+ " and " + PARAM_SCALE_DENOMINATOR
 						+ " (Spatial Subsetting conformance class not declared) but got HTTP " + statusG + ".");
 			}
 		}
 
-		// --- Assertion H: omit width -> HTTP 200 + interactive [Req13/default-width] ---
-		int statusH = getStatusRaw(mapUrl + sep + "f=png");
+		// --- Assertion H: omit height -> HTTP 200 + interactive [Req14/default-height]
+		// ---
+		int statusH = getStatusRaw(mapUrl + sep + "width=1024&f=png");
 		if (statusH != 200) {
-			errors.add("[Req13/default-width] Expected HTTP 200 when " + PARAM_WIDTH + " is omitted but got HTTP "
-					+ statusH + ".");
+			errors.add("[Req14/default-height] Expected HTTP 200 when " + PARAM_HEIGHT
+					+ " is omitted (with width=1024) but got HTTP " + statusH + ".");
 		}
 
-		ScalingWidthInteractiveTestResult interactiveResult = (ScalingWidthInteractiveTestResult) context.getSuite()
-			.getAttribute(SuiteAttribute.SCALING_WIDTH_INTERACTIVE_TEST_RESULT.getName());
+		ScalingHeightInteractiveTestResult interactiveResult = (ScalingHeightInteractiveTestResult) context.getSuite()
+			.getAttribute(SuiteAttribute.SCALING_HEIGHT_INTERACTIVE_TEST_RESULT.getName());
 		if (interactiveResult != null && interactiveResult.isEnabled()) {
-			if (!interactiveResult.isWidthDefaultAppropriate()) {
-				errors.add("[Req13/default-width] Interactive verification failed: the map rendered without a "
-						+ PARAM_WIDTH + " parameter (with " + PARAM_SCALE_DENOMINATOR
+			if (!interactiveResult.isHeightDefaultAppropriate()) {
+				errors.add("[Req14/default-height] Interactive verification failed: the map rendered without a "
+						+ PARAM_HEIGHT + " parameter (with width=1024 and " + PARAM_SCALE_DENOMINATOR
 						+ "=40000000) was reported as NOT having appropriate default dimensions. "
-						+ "The server does not appear to compute a default width that accurately "
+						+ "The server does not appear to compute a default height that accurately "
 						+ "reflects the requested scale.");
 			}
 		}
 
 		clearMessages();
 		if (!errors.isEmpty()) {
-			throw new AssertionError("A.13 verifyWidthDefinition failed:\n" + String.join("\n", errors));
+			throw new AssertionError("A.14 verifyHeightDefinition failed:\n" + String.join("\n", errors));
 		}
 	}
 
@@ -257,15 +260,15 @@ public class WidthDefinitionTest extends CommonFixture {
 	}
 
 	/**
-	 * Checks whether the OpenAPI document exposes a {@code width} query parameter with
-	 * the characteristics required by Req 13/A: name=width, in=query, required=false,
+	 * Checks whether the OpenAPI document exposes a {@code height} query parameter with
+	 * the characteristics required by Req 14/A: name=height, in=query, required=false,
 	 * schema.type=number. Resolves {@code $ref} pointers to
 	 * {@code components/parameters}.
 	 * @param landingPageUrl the IUT landing page URL
-	 * @return {@code true} if a conformant width parameter definition is found
+	 * @return {@code true} if a conformant height parameter definition is found
 	 */
 	@SuppressWarnings("unchecked")
-	private boolean oasHasWidthParam(String landingPageUrl) {
+	private boolean oasHasHeightParam(String landingPageUrl) {
 		try {
 			Map<String, Object> oas = fetchJson(landingPageUrl + "/api?f=json");
 			if (oas == null) {
@@ -296,7 +299,7 @@ public class WidthDefinitionTest extends CommonFixture {
 					}
 					for (Map<String, Object> param : params) {
 						Map<String, Object> resolved = resolveParamRef(param, componentParams);
-						if (!"width".equals(resolved.get("name")) || !"query".equals(resolved.get("in"))) {
+						if (!"height".equals(resolved.get("name")) || !"query".equals(resolved.get("in"))) {
 							continue;
 						}
 						Object required = resolved.get("required");

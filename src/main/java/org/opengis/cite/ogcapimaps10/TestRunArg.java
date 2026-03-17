@@ -18,16 +18,16 @@ public enum TestRunArg {
 	NOOFCOLLECTIONS,
 
 	/**
-	 * Whether the interactive verification for A.13 default width (Req 13/H) was enabled
+	 * Whether the interactive verification for A.14 default height (Req 14/H) was enabled
 	 * by the tester.
 	 */
-	SCALING_WIDTH_INTERACTIVE_ENABLED,
+	SCALING_HEIGHT_INTERACTIVE_ENABLED,
 
 	/**
-	 * Whether the tester confirmed that the server uses an appropriate default width when
-	 * the width parameter is omitted (Req 13/H).
+	 * Whether the tester confirmed that the server uses an appropriate default height
+	 * when the height parameter is omitted (Req 14/H).
 	 */
-	SCALING_WIDTH_DEFAULT_APPROPRIATE;
+	SCALING_HEIGHT_DEFAULT_APPROPRIATE;
 
 	/** {@inheritDoc} */
 	@Override

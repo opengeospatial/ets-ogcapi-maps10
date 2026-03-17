@@ -10,7 +10,7 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapimaps10.domain.ScalingWidthInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.ScalingHeightInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -88,26 +88,26 @@ public class SuiteFixtureListener implements ISuiteListener {
 			TestSuiteLogger.log(WARNING, String.format("Could not parse parameter %s: %s. Expected is a valid integer",
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
-		parseScalingWidthInteractiveResults(suite);
+		parseScalingHeightInteractiveResults(suite);
 	}
 
 	/**
-	 * Parses the interactive test parameters for A.13 default width verification (Req
-	 * 13/H) and stores the result as a suite attribute.
+	 * Parses the interactive test parameters for A.14 default height verification (Req
+	 * 14/H) and stores the result as a suite attribute.
 	 * @param suite the TestNG suite instance
 	 */
-	private void parseScalingWidthInteractiveResults(ISuite suite) {
+	private void parseScalingHeightInteractiveResults(ISuite suite) {
 		Map<String, String> params = suite.getXmlSuite().getParameters();
-		String enabledStr = params.get(TestRunArg.SCALING_WIDTH_INTERACTIVE_ENABLED.toString());
+		String enabledStr = params.get(TestRunArg.SCALING_HEIGHT_INTERACTIVE_ENABLED.toString());
 		boolean enabled = "true".equalsIgnoreCase(enabledStr);
-		boolean widthDefaultAppropriate = false;
+		boolean heightDefaultAppropriate = false;
 		if (enabled) {
-			String appropriateStr = params.get(TestRunArg.SCALING_WIDTH_DEFAULT_APPROPRIATE.toString());
-			widthDefaultAppropriate = "true".equalsIgnoreCase(appropriateStr);
+			String appropriateStr = params.get(TestRunArg.SCALING_HEIGHT_DEFAULT_APPROPRIATE.toString());
+			heightDefaultAppropriate = "true".equalsIgnoreCase(appropriateStr);
 		}
-		ScalingWidthInteractiveTestResult result = new ScalingWidthInteractiveTestResult(enabled,
-				widthDefaultAppropriate);
-		suite.setAttribute(SuiteAttribute.SCALING_WIDTH_INTERACTIVE_TEST_RESULT.getName(), result);
+		ScalingHeightInteractiveTestResult result = new ScalingHeightInteractiveTestResult(enabled,
+				heightDefaultAppropriate);
+		suite.setAttribute(SuiteAttribute.SCALING_HEIGHT_INTERACTIVE_TEST_RESULT.getName(), result);
 	}
 
 	/**

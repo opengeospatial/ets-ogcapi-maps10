@@ -9,7 +9,7 @@ import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import jakarta.ws.rs.client.Client;
 
-import org.opengis.cite.ogcapimaps10.domain.ScalingWidthInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.ScalingHeightInteractiveTestResult;
 
 /**
  * An enumerated type defining ISuite attributes that may be set to constitute a shared
@@ -83,10 +83,11 @@ public enum SuiteAttribute {
 	FEATUREIDS("featureIds", Map.class),
 
 	/**
-	 * Pre-collected interactive verification result for A.13 default width (Req 13/H);
+	 * Pre-collected interactive verification result for A.14 default height (Req 14/H);
 	 * set by SuiteFixtureListener before TestNG runs.
 	 */
-	SCALING_WIDTH_INTERACTIVE_TEST_RESULT("scalingWidthInteractiveTestResult", ScalingWidthInteractiveTestResult.class);
+	SCALING_HEIGHT_INTERACTIVE_TEST_RESULT("scalingHeightInteractiveTestResult",
+			ScalingHeightInteractiveTestResult.class);
 
 	private final Class attrType;
 
