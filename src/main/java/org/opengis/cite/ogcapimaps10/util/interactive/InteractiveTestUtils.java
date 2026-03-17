@@ -4,8 +4,11 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,28 +33,38 @@ public final class InteractiveTestUtils {
 	}
 
 	/**
-	 * Builds a dataset map URL using the first two available collection IDs in their
-	 * natural order: {@code ?collections=id1,id2}.
+	 * Builds a dataset map URL using two renderable leaf collection IDs in their selected
+	 * order: {@code ?collections=id1,id2}.
+	 *
+	 * <p>
+	 * Parent containers (collections whose ID is a prefix of another collection's ID) are
+	 * excluded because they may render nothing. A raster + non-raster pair is preferred
+	 * to maximise visual distinctiveness when the order is reversed.
+	 *
 	 * <p>
 	 * Used to display Map A in the interactive rendering-order verification form.
-	 * </p>
-	 * @param landingPageUrl The API landing page URL.
-	 * @return The map URL with collections in natural order, or a NOT_FOUND: prefixed
-	 * string if the map endpoint or collections cannot be resolved.
+	 * @param landingPageUrl the API landing page URL
+	 * @return the map URL with collections in natural order, or a NOT_FOUND: prefixed
+	 * string if the map endpoint or two renderable leaf collections cannot be resolved
 	 */
 	public static String buildFirstOrderCollectionsUrl(String landingPageUrl) {
 		return buildCollectionsUrl(landingPageUrl, false);
 	}
 
 	/**
-	 * Builds a dataset map URL using the first two available collection IDs in reversed
+	 * Builds a dataset map URL using two renderable leaf collection IDs in reversed
 	 * order: {@code ?collections=id2,id1}.
+	 *
+	 * <p>
+	 * Same collection-selection logic as {@link #buildFirstOrderCollectionsUrl}.
+	 * Reversing the order changes which layer is painted last and should produce a
+	 * visually different map if the server honours Req 12B.
+	 *
 	 * <p>
 	 * Used to display Map B in the interactive rendering-order verification form.
-	 * </p>
-	 * @param landingPageUrl The API landing page URL.
-	 * @return The map URL with collections in reversed order, or a NOT_FOUND: prefixed
-	 * string if the map endpoint or collections cannot be resolved.
+	 * @param landingPageUrl the API landing page URL
+	 * @return the map URL with collections in reversed order, or a NOT_FOUND: prefixed
+	 * string if the map endpoint or two renderable leaf collections cannot be resolved
 	 */
 	public static String buildSecondOrderCollectionsUrl(String landingPageUrl) {
 		return buildCollectionsUrl(landingPageUrl, true);
@@ -67,16 +80,16 @@ public final class InteractiveTestUtils {
 			return NOT_FOUND_PREFIX + landingPageUrl;
 		}
 
-		List<String> ids = findFirstTwoCollectionIds(landingPageUrl);
+		List<String> ids = findTwoRenderableCollectionIds(landingPageUrl);
 		if (ids == null || ids.size() < 2) {
 			return NOT_FOUND_PREFIX + mapUrl;
 		}
 
-		String collections = reversed ? ids.get(1) + "," + ids.get(0) : ids.get(0) + "," + ids.get(1);
+		// Reversed: id2,id1 — natural: id1,id2
 		// Raw concatenation: colons in namespaced IDs (e.g. NaturalEarth:cultural:...)
-		// and
-		// commas between IDs are valid query-string characters and must NOT be
-		// percent-encoded.
+		// and commas between IDs are valid query-string characters (RFC 3986
+		// sub-delimiters) and must NOT be percent-encoded.
+		String collections = reversed ? ids.get(1) + "," + ids.get(0) : ids.get(0) + "," + ids.get(1);
 		String separator = mapUrl.contains("?") ? "&" : "?";
 		return mapUrl + separator + "collections=" + collections + "&f=png&width=800&height=400";
 	}
@@ -113,10 +126,16 @@ public final class InteractiveTestUtils {
 	}
 
 	/**
-	 * Fetches the first two collection IDs from {landingPageUrl}/collections.
+	 * Discovers two renderable leaf collection IDs from {landingPageUrl}/collections.
+	 * Parent containers are excluded: a collection is a parent if any other collection's
+	 * ID starts with {@code {id}:}. Among the leaf collections, a raster + non-raster
+	 * pair is preferred so that reversing the order produces a visually distinct result.
+	 * @param landingPageUrl the API landing page URL
+	 * @return a list of exactly two leaf collection IDs, or {@code null} if fewer than
+	 * two leaf collections are available
 	 */
 	@SuppressWarnings("unchecked")
-	private static List<String> findFirstTwoCollectionIds(String landingPageUrl) {
+	private static List<String> findTwoRenderableCollectionIds(String landingPageUrl) {
 		try {
 			String base = landingPageUrl.endsWith("/") ? landingPageUrl.substring(0, landingPageUrl.length() - 1)
 					: landingPageUrl;
@@ -130,10 +149,61 @@ public final class InteractiveTestUtils {
 				return null;
 			}
 
-			String id1 = (String) collections.get(0).get("id");
-			String id2 = (String) collections.get(1).get("id");
-			if (id1 == null || id2 == null) {
+			// Collect all IDs preserving encounter order
+			Set<String> allIds = new LinkedHashSet<>();
+			for (Map<String, Object> c : collections) {
+				String id = (String) c.get("id");
+				if (id != null) {
+					allIds.add(id);
+				}
+			}
+
+			// Filter out parent containers: a collection is a parent if any other
+			// collection's ID starts with "{id}:"
+			List<String> leafIds = new ArrayList<>();
+			for (String id : allIds) {
+				boolean isParent = false;
+				for (String other : allIds) {
+					if (other.startsWith(id + ":")) {
+						isParent = true;
+						break;
+					}
+				}
+				if (!isParent) {
+					leafIds.add(id);
+				}
+			}
+
+			if (leafIds.size() < 2) {
 				return null;
+			}
+
+			// Prefer a raster leaf + non-raster leaf pair for visual distinctiveness
+			// when rendering order is reversed (one raster, one vector/cultural layer)
+			String rasterLeaf = null;
+			String otherLeaf = null;
+			for (String id : leafIds) {
+				if (rasterLeaf == null && id.toLowerCase().contains("raster")) {
+					rasterLeaf = id;
+				}
+				else if (otherLeaf == null) {
+					otherLeaf = id;
+				}
+				if (rasterLeaf != null && otherLeaf != null) {
+					break;
+				}
+			}
+
+			String id1;
+			String id2;
+			if (rasterLeaf != null && otherLeaf != null) {
+				id1 = rasterLeaf;
+				id2 = otherLeaf;
+			}
+			else {
+				// No raster/non-raster split available; fall back to first two leaf IDs
+				id1 = leafIds.get(0);
+				id2 = leafIds.get(1);
 			}
 
 			return List.of(id1, id2);

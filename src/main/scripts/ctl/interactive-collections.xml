@@ -7,11 +7,17 @@
   <!--
     Interactive test function for A.12 collections-response verification (Req 12B).
 
-    This function displays two map images side-by-side - one with collections in
-    natural order (id1, id2) and one with them reversed (id2, id1) - and asks the
-    user to confirm that the two maps look visually different. A visual difference
-    confirms that the server respects the left-to-right rendering order required by
-    Requirement 12B.
+    This function displays two map images side-by-side - one with two renderable leaf
+    collections in natural order (id1, id2) and one with them reversed (id2, id1) -
+    and asks the user to confirm that the two maps look visually different.
+
+    Parent container collections (whose ID is a prefix of another collection's ID) are
+    excluded from selection because they may render nothing on their own. A raster +
+    non-raster pair is preferred where available to maximise visual distinctiveness.
+
+    Note: the spec qualifies Req 12B with "if the style applied does not specify
+    otherwise". If the server's default style overrides layer order, both maps may
+    look the same, which is also valid conformant behaviour.
   -->
 
   <ctl:function name="interactive:verifyCollectionsResponse">
@@ -19,8 +25,8 @@
     <ctl:return>The test result: "true" if the user confirmed the maps look different, "false" otherwise.</ctl:return>
     <ctl:description>
       Interactive test for A.12 (Req 12B): Verify that collection rendering order
-      is respected - maps requested with the same two collections in reversed order
-      must look visually different.
+      is respected - maps requested with the same two leaf collections in reversed
+      order should look visually different when the server honours the specified order.
     </ctl:description>
     <ctl:code>
 
@@ -60,15 +66,18 @@
         <ctl:form width="1000" height="800" xmlns="http://www.w3.org/1999/xhtml">
           <h3>Collection Rendering Order Verification (A.12 - Req 12B)</h3>
           <p>
-            Two maps have been requested using the same two collections in <strong>reversed order</strong>.
-            According to Requirement 12B, the rendering order must differ: the first (leftmost) collection
-            is rendered at the bottom of the display stack, the last (rightmost) on top.
+            Two maps have been requested using the same two renderable leaf collections
+            (parent containers excluded) in <strong>reversed order</strong>. A raster +
+            non-raster pair was selected where available to maximise visual distinctiveness.
+            Requirement 12B states that the first (leftmost) collection is rendered at the
+            bottom of the display stack and the last (rightmost) on top, unless the applied
+            style specifies otherwise.
           </p>
 
           <xsl:if test="$not-found">
             <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
-              [!] Warning: Could not discover a dataset map endpoint or two collections automatically.
-              The URLs below may not be valid. Please verify manually.
+              [!] Warning: Could not discover a dataset map endpoint or two renderable leaf
+              collections automatically. The URLs below may not be valid. Please verify manually.
             </p>
           </xsl:if>
 
@@ -125,7 +134,14 @@
           <hr style="margin-top:16px;" />
           <p style="margin-top:16px;">
             <strong>Question:</strong> Do Map A and Map B look <strong>visually different</strong>?
-            (A difference confirms that the server renders collections in the requested order.)
+            (A difference - such as a different layer visible on top - suggests the server renders
+            collections in the specified left-to-right order.)
+          </p>
+          <p style="font-size:0.9em; color:#555; background:#f8f8f8; border:1px solid #ddd; padding:8px;">
+            Note: the spec qualifies this requirement with "if the style applied does not specify
+            otherwise". If the server's default style overrides the rendering order, both maps may
+            look the same, which is also valid conformant behaviour. Answer "yes" only if you observe
+            a clear visual difference that appears to be caused by the change in collection order.
           </p>
           <p>
             <input type="submit" name="submit" value="yes"

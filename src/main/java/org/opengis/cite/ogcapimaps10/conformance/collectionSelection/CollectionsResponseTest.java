@@ -4,8 +4,10 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
@@ -70,7 +72,7 @@ public class CollectionsResponseTest extends CommonFixture {
 		List<String> errors = new ArrayList<>();
 
 		// ----------------------------------------------------------------
-		// Setup: discover dataset map URL and first two collection IDs
+		// Setup: discover dataset map URL and two renderable leaf collection IDs
 		// ----------------------------------------------------------------
 
 		String mapUrl = findDatasetMapUrl();
@@ -78,9 +80,10 @@ public class CollectionsResponseTest extends CommonFixture {
 			throw new SkipException("No dataset map endpoint found; skipping A.12");
 		}
 
-		List<String> collectionIds = findFirstTwoCollectionIds();
+		List<String> collectionIds = findTwoRenderableCollectionIds();
 		if (collectionIds == null || collectionIds.size() < 2) {
-			throw new SkipException("Fewer than two collections available; skipping A.12");
+			throw new SkipException(
+					"Could not find two renderable leaf collections (parent containers filtered out); skipping A.12");
 		}
 
 		String id1 = collectionIds.get(0);
@@ -194,10 +197,15 @@ public class CollectionsResponseTest extends CommonFixture {
 	}
 
 	/**
-	 * Returns the first two collection IDs from {rootUri}/collections, or null if fewer
-	 * than two collections are available.
+	 * Discovers two renderable leaf collection IDs from {rootUri}/collections. Parent
+	 * containers are excluded: a collection is considered a parent if any other
+	 * collection's ID starts with {@code {id}:}. Among the remaining leaf collections, a
+	 * raster + non-raster pair is preferred to maximise visual distinctiveness when the
+	 * order is reversed for Req 12B verification.
+	 * @return a list of exactly two leaf collection IDs, or {@code null} if fewer than
+	 * two leaf collections are available
 	 */
-	private List<String> findFirstTwoCollectionIds() {
+	private List<String> findTwoRenderableCollectionIds() {
 		try {
 			String base = rootUri.toString();
 			if (base.endsWith("/")) {
@@ -211,11 +219,64 @@ public class CollectionsResponseTest extends CommonFixture {
 			if (collections == null || collections.size() < 2) {
 				return null;
 			}
-			String id1 = (String) collections.get(0).get("id");
-			String id2 = (String) collections.get(1).get("id");
-			if (id1 == null || id2 == null) {
+
+			// Collect all IDs preserving encounter order
+			Set<String> allIds = new LinkedHashSet<>();
+			for (Map<String, Object> c : collections) {
+				String id = (String) c.get("id");
+				if (id != null) {
+					allIds.add(id);
+				}
+			}
+
+			// Filter out parent containers: a collection is a parent if any other
+			// collection's ID starts with "{id}:"
+			List<String> leafIds = new ArrayList<>();
+			for (String id : allIds) {
+				boolean isParent = false;
+				for (String other : allIds) {
+					if (other.startsWith(id + ":")) {
+						isParent = true;
+						break;
+					}
+				}
+				if (!isParent) {
+					leafIds.add(id);
+				}
+			}
+
+			if (leafIds.size() < 2) {
 				return null;
 			}
+
+			// Prefer a raster leaf + non-raster leaf pair for visual distinctiveness
+			// when rendering order is reversed (one raster, one vector/cultural layer)
+			String rasterLeaf = null;
+			String otherLeaf = null;
+			for (String id : leafIds) {
+				if (rasterLeaf == null && id.toLowerCase().contains("raster")) {
+					rasterLeaf = id;
+				}
+				else if (otherLeaf == null) {
+					otherLeaf = id;
+				}
+				if (rasterLeaf != null && otherLeaf != null) {
+					break;
+				}
+			}
+
+			String id1;
+			String id2;
+			if (rasterLeaf != null && otherLeaf != null) {
+				id1 = rasterLeaf;
+				id2 = otherLeaf;
+			}
+			else {
+				// No raster/non-raster split available; fall back to first two leaf IDs
+				id1 = leafIds.get(0);
+				id2 = leafIds.get(1);
+			}
+
 			return List.of(id1, id2);
 		}
 		catch (Exception e) {
