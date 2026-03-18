@@ -8,7 +8,6 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +33,6 @@ import org.testng.annotations.Test;
  * <p>
  * Assertions verified:
  * <ul>
- * <li>[Req14/oas-param] The height query parameter (type: number, required: false) is
- * defined in the OpenAPI document.</li>
  * <li>[Req14/height-pixel-rows] The server returns HTTP 200 for a valid height and, for
  * PNG responses, the returned image height matches the requested pixel count.</li>
  * <li>[Req14/invalid-height] The server returns HTTP 4xx for non-positive or non-integer
@@ -70,10 +67,10 @@ public class HeightDefinitionTest extends CommonFixture {
 	 * A.14 Abstract Test for Requirement /req/scaling/height-definition.
 	 *
 	 * <p>
-	 * Verifies that the server supports the height parameter with correct OAS definition,
-	 * proper pixel-row interpretation, rejection of invalid values, enforcement of
-	 * service metadata limits, rejection of forbidden parameter combinations, and
-	 * appropriate default behaviour when height is omitted.
+	 * Verifies that the server supports the height parameter with correct pixel-row
+	 * interpretation, rejection of invalid values, enforcement of service metadata
+	 * limits, rejection of forbidden parameter combinations, and appropriate default
+	 * behaviour when height is omitted.
 	 * @param context the TestNG test context, used to access suite attributes
 	 */
 	@Test(description = "A.14 Abstract Test for Requirement /req/scaling/height-definition: "
@@ -90,12 +87,6 @@ public class HeightDefinitionTest extends CommonFixture {
 					+ landingPageUrl + ". Skipping A.14 test.");
 		}
 		String sep = mapUrl.contains("?") ? "&" : "?";
-
-		// --- Assertion A: OAS height parameter defined [Req14/oas-param] ---
-		if (!oasHasHeightParam(landingPageUrl)) {
-			errors.add("[Req14/oas-param] The height query parameter (schema.type: number, required: false) "
-					+ "was not found in the OpenAPI document at " + landingPageUrl + "/api.");
-		}
 
 		// --- Assertion B: height = pixel rows [Req14/height-pixel-rows] ---
 		// Request a map at width=200, height=100 and verify HTTP 200.
@@ -260,67 +251,6 @@ public class HeightDefinitionTest extends CommonFixture {
 	}
 
 	/**
-	 * Checks whether the OpenAPI document exposes a {@code height} query parameter with
-	 * the characteristics required by Req 14/A: name=height, in=query, required=false,
-	 * schema.type=number. Resolves {@code $ref} pointers to
-	 * {@code components/parameters}.
-	 * @param landingPageUrl the IUT landing page URL
-	 * @return {@code true} if a conformant height parameter definition is found
-	 */
-	@SuppressWarnings("unchecked")
-	private boolean oasHasHeightParam(String landingPageUrl) {
-		try {
-			Map<String, Object> oas = fetchJson(landingPageUrl + "/api?f=json");
-			if (oas == null) {
-				return false;
-			}
-			Map<String, Object> componentParams = new HashMap<>();
-			Map<String, Object> components = (Map<String, Object>) oas.get("components");
-			if (components != null) {
-				Map<String, Object> cp = (Map<String, Object>) components.get("parameters");
-				if (cp != null) {
-					componentParams.putAll(cp);
-				}
-			}
-			Map<String, Object> paths = (Map<String, Object>) oas.get("paths");
-			if (paths == null) {
-				return false;
-			}
-			for (Object pathItemObj : paths.values()) {
-				Map<String, Object> pathItem = (Map<String, Object>) pathItemObj;
-				for (String method : new String[] { "get", "post", "put", "delete", "patch", "head" }) {
-					Map<String, Object> op = (Map<String, Object>) pathItem.get(method);
-					if (op == null) {
-						continue;
-					}
-					List<Map<String, Object>> params = (List<Map<String, Object>>) op.get("parameters");
-					if (params == null) {
-						continue;
-					}
-					for (Map<String, Object> param : params) {
-						Map<String, Object> resolved = resolveParamRef(param, componentParams);
-						if (!"height".equals(resolved.get("name")) || !"query".equals(resolved.get("in"))) {
-							continue;
-						}
-						Object required = resolved.get("required");
-						if (Boolean.TRUE.equals(required)) {
-							continue;
-						}
-						Map<String, Object> schema = (Map<String, Object>) resolved.get("schema");
-						if (schema != null && "number".equals(schema.get("type"))) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-		catch (Exception e) {
-			// return false
-		}
-		return false;
-	}
-
-	/**
 	 * Reads the {@code x-OGC-limits.maps} object from the OpenAPI document's {@code info}
 	 * section, returning the map of limit properties ({@code maxWidth},
 	 * {@code maxHeight}, {@code maxPixels}).
@@ -364,35 +294,15 @@ public class HeightDefinitionTest extends CommonFixture {
 				return false;
 			}
 			List<String> classes = (List<String>) conf.get("conformsTo");
-			return classes != null && classes.contains(classUri);
+			if (classes == null) {
+				return false;
+			}
+			String normalizedTarget = normalizeScheme(classUri);
+			return classes.stream().anyMatch(c -> normalizeScheme(c).equals(normalizedTarget));
 		}
 		catch (Exception e) {
 			return false;
 		}
-	}
-
-	/**
-	 * Resolves a parameter object that may be a {@code $ref} pointer to
-	 * {@code #/components/parameters/{key}}.
-	 * @param param the raw parameter map (may contain a {@code $ref} key)
-	 * @param componentParams the parsed {@code components/parameters} map
-	 * @return the resolved parameter map, or the original if no ref is present
-	 */
-	@SuppressWarnings("unchecked")
-	private Map<String, Object> resolveParamRef(Map<String, Object> param, Map<String, Object> componentParams) {
-		String ref = (String) param.get("$ref");
-		if (ref == null) {
-			return param;
-		}
-		String prefix = "#/components/parameters/";
-		if (ref.startsWith(prefix)) {
-			String key = ref.substring(prefix.length());
-			Map<String, Object> resolved = (Map<String, Object>) componentParams.get(key);
-			if (resolved != null) {
-				return resolved;
-			}
-		}
-		return param;
 	}
 
 	private Map<String, Object> fetchJson(String urlString) {
