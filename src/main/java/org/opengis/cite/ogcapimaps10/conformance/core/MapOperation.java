@@ -62,7 +62,7 @@ public class MapOperation extends CommonFixture {
 		for (int i = 0; i < limit; i++) {
 			Map<String, Object> collection = collectionsList.get(i);
 			List<Map<String, Object>> collectionLinks = (List<Map<String, Object>>) collection.get("links");
-			Map<String, Object> relMap = findLinkByRel(collectionLinks, "http://www.opengis.net/def/rel/ogc/1.0/map");
+			Map<String, Object> relMap = findLinkByRel(collectionLinks, "https://www.opengis.net/def/rel/ogc/1.0/map");
 
 			if (relMap == null) {
 				continue;
