@@ -9,6 +9,8 @@ import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import jakarta.ws.rs.client.Client;
 
+import org.opengis.cite.ogcapimaps10.domain.ScalingScaleDenominatorInteractiveTestResult;
+
 /**
  * An enumerated type defining ISuite attributes that may be set to constitute a shared
  * test fixture.
@@ -78,7 +80,14 @@ public enum SuiteAttribute {
 	 * Collection names assigned to a feature id parsed from resource
 	 * /collections/{name}/items; Added during execution.
 	 */
-	FEATUREIDS("featureIds", Map.class);
+	FEATUREIDS("featureIds", Map.class),
+
+	/**
+	 * Pre-collected interactive verification result for A.15 scale-denominator (Req 15/B,
+	 * C, G); set by SuiteFixtureListener before TestNG runs.
+	 */
+	SCALING_SCALE_DENOMINATOR_INTERACTIVE_TEST_RESULT("scalingScaleDenominatorInteractiveTestResult",
+			ScalingScaleDenominatorInteractiveTestResult.class);
 
 	private final Class attrType;
 

@@ -4,7 +4,8 @@
              xmlns:tns="http://www.opengis.net/cite/ogcapi-maps-1.0"
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
-             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController">
+             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
+             xmlns:iscaledenom="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-scale-denominator.xml">
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
@@ -73,6 +74,25 @@
               </div>
             </p>
           </fieldset>
+          <fieldset style="background:#ffffcc">
+            <legend style="font-family: sans-serif; color: #000099;
+                           background-color:#F0F8FF; border-style: solid;
+                           border-width: medium; padding:4px">Interactive Tests (A.15 Scale Denominator)
+            </legend>
+            <p>
+              <input type="checkbox" id="runScaleDenominatorInteractiveTests"
+                     name="runScaleDenominatorInteractiveTests" value="true" />
+              <label for="runScaleDenominatorInteractiveTests">
+                Enable interactive visual verification for scale-denominator behaviour (A.15, Req 15/B, C, G)
+              </label>
+            </p>
+            <p style="font-size:0.9em; color:#555;">
+              When enabled, you will be shown two map images - one with explicit
+              scale-denominator=40000000 and dimensions, and one with scale-denominator
+              only - and asked to confirm that the server correctly interprets the scale
+              and derives a sensible geographic extent from it.
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -80,10 +100,27 @@
           </p>
         </ctl:form>
       </xsl:variable>
+      <xsl:variable name="iut-url"
+                    select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+      <xsl:variable name="run-scale-denominator-interactive"
+                    select="$form-data/values/value[@key='runScaleDenominatorInteractiveTests'] = 'true'" />
+
+      <!-- Run interactive scale-denominator verification if enabled -->
+      <xsl:variable name="scale-denominator-result">
+        <xsl:choose>
+          <xsl:when test="$run-scale-denominator-interactive">
+            <ctl:call-function name="iscaledenom:verifyScaleDenominator">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
-            <xsl:value-of select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+            <xsl:value-of select="$iut-url" />
           </entry>
           <entry key="noofcollections">
             <xsl:choose>
@@ -92,6 +129,12 @@
                 <xsl:value-of select="$form-data/values/value[@key='noOfCollections']" />
               </xsl:otherwise>
             </xsl:choose>
+          </entry>
+          <entry key="scaling_scale_denominator_interactive_enabled">
+            <xsl:value-of select="$run-scale-denominator-interactive" />
+          </entry>
+          <entry key="scaling_scale_denominator_result_appropriate">
+            <xsl:value-of select="$scale-denominator-result" />
           </entry>
         </properties>
       </xsl:variable>

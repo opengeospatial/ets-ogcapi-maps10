@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.domain.ScalingScaleDenominatorInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -87,6 +88,26 @@ public class SuiteFixtureListener implements ISuiteListener {
 			TestSuiteLogger.log(WARNING, String.format("Could not parse parameter %s: %s. Expected is a valid integer",
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
+		parseScalingScaleDenominatorInteractiveResults(suite);
+	}
+
+	/**
+	 * Parses the interactive test parameters for A.15 scale-denominator verification (Req
+	 * 15/B, C, G) and stores the result as a suite attribute.
+	 * @param suite the TestNG suite instance
+	 */
+	private void parseScalingScaleDenominatorInteractiveResults(ISuite suite) {
+		Map<String, String> params = suite.getXmlSuite().getParameters();
+		String enabledStr = params.get(TestRunArg.SCALING_SCALE_DENOMINATOR_INTERACTIVE_ENABLED.toString());
+		boolean enabled = "true".equalsIgnoreCase(enabledStr);
+		boolean scaleDenominatorAppropriate = false;
+		if (enabled) {
+			String appropriateStr = params.get(TestRunArg.SCALING_SCALE_DENOMINATOR_RESULT_APPROPRIATE.toString());
+			scaleDenominatorAppropriate = "true".equalsIgnoreCase(appropriateStr);
+		}
+		ScalingScaleDenominatorInteractiveTestResult result = new ScalingScaleDenominatorInteractiveTestResult(enabled,
+				scaleDenominatorAppropriate);
+		suite.setAttribute(SuiteAttribute.SCALING_SCALE_DENOMINATOR_INTERACTIVE_TEST_RESULT.getName(), result);
 	}
 
 	/**

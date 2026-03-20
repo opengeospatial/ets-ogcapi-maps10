@@ -11,4 +11,12 @@
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.LoggingTestListener" />
   </listeners>
 
+
+  <test name="A.5 Conformance Class Scaling">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.scaling.ScaleDenominatorDefinitionTest" />
+    </classes>
+  </test>
+
 </suite>
