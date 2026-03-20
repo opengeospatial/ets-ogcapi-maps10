@@ -4,7 +4,8 @@
              xmlns:tns="http://www.opengis.net/cite/ogcapi-maps-1.0"
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
-             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController">
+             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
+             xmlns:interactive-jpegxl="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-jpegxl.xml">
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
@@ -47,7 +48,7 @@
           </div>
           <fieldset style="background:#ccffff">
             <legend style="font-family: sans-serif; color: #000099;
-			                 background-color:#F0F8FF; border-style: solid; 
+			                 background-color:#F0F8FF; border-style: solid;
                        border-width: medium; padding:4px">Implementation under test
             </legend>
             <p>
@@ -73,6 +74,18 @@
               </div>
             </p>
           </fieldset>
+          <fieldset style="background:#e6f0ff; margin-top: 10px;">
+            <legend style="font-family: sans-serif; color: #004d99;
+                           background-color:#F0F8FF; border-style: solid;
+                           border-width: medium; padding:4px">JPEG XL Interactive Tests (A.57)
+            </legend>
+            <p>
+              <input type="checkbox" id="jpegXlInteractiveEnabled" name="jpegXlInteractiveEnabled" value="true" />
+              <label for="jpegXlInteractiveEnabled">
+                <strong>Run JPEG XL interactive tests</strong> (Part B: color image verification, Part C: portrayal consistency)
+              </label>
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -80,6 +93,30 @@
           </p>
         </ctl:form>
       </xsl:variable>
+      <!-- JPEG XL Interactive Tests (A.57) -->
+      <xsl:variable name="jpegxl-interactive-enabled"
+                    select="$form-data/values/value[@key='jpegXlInteractiveEnabled'] = 'true'" />
+      <xsl:variable name="iut-url"
+                    select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+
+      <xsl:variable name="jpegxl-colors-result">
+        <xsl:choose>
+          <xsl:when test="$jpegxl-interactive-enabled">
+            <xsl:value-of select="interactive-jpegxl:verifyJpegXlColors($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="jpegxl-portrayal-result">
+        <xsl:choose>
+          <xsl:when test="$jpegxl-interactive-enabled">
+            <xsl:value-of select="interactive-jpegxl:verifyPortrayalConsistency($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
@@ -92,6 +129,15 @@
                 <xsl:value-of select="$form-data/values/value[@key='noOfCollections']" />
               </xsl:otherwise>
             </xsl:choose>
+          </entry>
+          <entry key="jpegxl_interactive_tests_enabled">
+            <xsl:value-of select="$jpegxl-interactive-enabled" />
+          </entry>
+          <entry key="jpegxl_colors_represent_features">
+            <xsl:value-of select="$jpegxl-colors-result" />
+          </entry>
+          <entry key="jpegxl_portrayal_consistent">
+            <xsl:value-of select="$jpegxl-portrayal-result" />
           </entry>
         </properties>
       </xsl:variable>
