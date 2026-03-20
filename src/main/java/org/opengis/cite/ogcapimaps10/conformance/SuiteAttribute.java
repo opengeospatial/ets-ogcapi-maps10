@@ -7,6 +7,8 @@ import java.util.Map;
 
 import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
+import org.opengis.cite.ogcapimaps10.domain.MapSuccessInteractiveTestResult;
+
 import jakarta.ws.rs.client.Client;
 
 /**
@@ -78,7 +80,13 @@ public enum SuiteAttribute {
 	 * Collection names assigned to a feature id parsed from resource
 	 * /collections/{name}/items; Added during execution.
 	 */
-	FEATUREIDS("featureIds", Map.class);
+	FEATUREIDS("featureIds", Map.class),
+
+	/**
+	 * Pre-collected interactive verification results for A.17 map-success; set by
+	 * SuiteFixtureListener before TestNG runs.
+	 */
+	MAP_SUCCESS_INTERACTIVE_TEST_RESULT("mapSuccessInteractiveTestResult", MapSuccessInteractiveTestResult.class);
 
 	private final Class attrType;
 

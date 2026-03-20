@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-map-success.xml"
+             xmlns:ctl="http://www.occamlab.com/ctl"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             xmlns:msitu="java:org.opengis.cite.ogcapimaps10.util.interactive.MapSuccessInteractiveTestUtils">
+
+  <!--
+    Interactive test function for A.17 map-success verification (Req 17).
+
+    Displays two map images side-by-side using a fixed scale-denominator and dimensions
+    so that the server computes the bbox from those parameters (Effect 1):
+      Map A - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.28
+      Map B - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.14
+
+    Halving mm-per-pixel from 0.28 to 0.14 halves the physical pixel size, which halves
+    the computed bbox extent at the same scale. Map B should cover half the area of Map A,
+    appearing zoomed in.
+
+    Asks the user to confirm that the two maps look visually different (different spatial
+    extents), which verifies that the server correctly interprets the mm-per-pixel parameter.
+  -->
+
+  <ctl:function name="interactive:verifyMapSuccess">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>The test result: "true" if the user confirmed the maps look different, "false" otherwise.</ctl:return>
+    <ctl:description>
+      Interactive test for A.17 (Req 17): Verify that the server correctly interprets
+      the mm-per-pixel parameter by rendering maps at different display resolutions.
+    </ctl:description>
+    <ctl:code>
+
+      <!-- Map A: mm-per-pixel=0.28 with scale-denominator and dimensions -->
+      <xsl:variable name="map-a-raw">
+        <xsl:value-of select="msitu:buildStandardResolutionMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Map B: mm-per-pixel=0.14 with scale-denominator and dimensions (zoomed in) -->
+      <xsl:variable name="map-b-raw">
+        <xsl:value-of select="msitu:buildHalvedResolutionMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Detect NOT_FOUND sentinel -->
+      <xsl:variable name="not-found" select="starts-with($map-a-raw, 'NOT_FOUND:')" />
+
+      <xsl:variable name="map-a-url">
+        <xsl:choose>
+          <xsl:when test="$not-found">
+            <xsl:value-of select="substring-after($map-a-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-a-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="map-b-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-b-raw, 'NOT_FOUND:')">
+            <xsl:value-of select="substring-after($map-b-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-b-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- Show form and collect user answer -->
+      <xsl:variable name="form-values">
+        <ctl:form width="1000" height="820" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Map Success Verification (A.17 - Req 17)</h3>
+          <p>
+            Two maps have been requested using different <strong>mm-per-pixel</strong> values,
+            combined with a fixed <strong>scale-denominator=40000000</strong> and dimensions
+            (width=1024, height=512). The server computes the spatial extent (bbox) from
+            these parameters. Halving mm-per-pixel from 0.28 to 0.14 halves the computed
+            bbox extent, so Map B should appear zoomed in to a smaller area.
+          </p>
+          <table style="width:100%; font-size:0.9em; background:#f0f0f0;
+                        border:1px solid #ccc; padding:6px; margin-bottom:10px;">
+            <tr>
+              <td style="width:50%; padding:4px;"><strong>Map A</strong> - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.28</td>
+              <td style="width:50%; padding:4px;"><strong>Map B</strong> - scale-denominator=40000000, width=1024, height=512, mm-per-pixel=0.14</td>
+            </tr>
+          </table>
+
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
+              [!] Warning: Could not discover a dataset map endpoint automatically.
+              The URLs below may not be valid. Please verify manually.
+            </p>
+          </xsl:if>
+
+          <!-- Side-by-side map previews -->
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <!-- Map A: mm-per-pixel=0.28 -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map A</strong> - mm-per-pixel=0.28 (scale-denominator=40000000, 1024x512)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-a-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map A - mm-per-pixel=0.28</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('ms-map-a-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="ms-map-a-error" style="display:none; color:#856404; background:#fff3cd;
+                                                  border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+
+              <!-- Map B: mm-per-pixel=0.14 (zoomed in) -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map B</strong> - mm-per-pixel=0.14 (scale-denominator=40000000, 1024x512)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-b-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map B - mm-per-pixel=0.14</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('ms-map-b-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="ms-map-b-error" style="display:none; color:#856404; background:#fff3cd;
+                                                  border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <hr style="margin-top:16px;" />
+          <p style="margin-top:16px;">
+            <strong>Question:</strong> Do Map A and Map B look <strong>visually different</strong>?
+            (Map B uses mm-per-pixel=0.14, half of Map A's 0.28. At the same scale-denominator
+            and dimensions, Map B should cover half the spatial extent of Map A - appearing
+            zoomed in to a smaller area.)
+          </p>
+          <p>
+            <input type="submit" name="submit" value="yes"
+                   style="margin-right:12px; padding:6px 24px;" />
+            <input type="submit" name="submit" value="no"
+                   style="padding:6px 24px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+
+      <!-- Return true/false based on user answer -->
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit'] = 'yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>
