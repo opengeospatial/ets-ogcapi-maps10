@@ -15,7 +15,24 @@ public enum TestRunArg {
 	 * The number of collections to test (a value less or equal to 0 means all
 	 * collections).
 	 */
-	NOOFCOLLECTIONS;
+	NOOFCOLLECTIONS,
+
+	/**
+	 * Whether interactive display-resolution tests are enabled (true/false).
+	 */
+	DISPLAY_RESOLUTION_INTERACTIVE_ENABLED,
+
+	/**
+	 * Whether the user confirmed that maps rendered at different mm-per-pixel values look
+	 * visually different (true/false).
+	 */
+	MM_PER_PIXEL_CORRECT,
+
+	/**
+	 * Whether the user confirmed that a map without mm-per-pixel looks the same as a map
+	 * with mm-per-pixel=0.28, verifying the default assumption (true/false).
+	 */
+	MM_PER_PIXEL_DEFAULT_CORRECT;
 
 	/** {@inheritDoc} */
 	@Override

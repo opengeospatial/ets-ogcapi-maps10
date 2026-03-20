@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.domain.DisplayResolutionInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -87,6 +88,36 @@ public class SuiteFixtureListener implements ISuiteListener {
 			TestSuiteLogger.log(WARNING, String.format("Could not parse parameter %s: %s. Expected is a valid integer",
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
+
+		DisplayResolutionInteractiveTestResult displayResolutionResult = parseDisplayResolutionInteractiveResults(
+				params);
+		suite.setAttribute(SuiteAttribute.DISPLAY_RESOLUTION_INTERACTIVE_TEST_RESULT.getName(),
+				displayResolutionResult);
+	}
+
+	/**
+	 * Parses display-resolution interactive test parameters from the test run properties.
+	 * @param params the test run parameters map
+	 * @return a populated {@link DisplayResolutionInteractiveTestResult}
+	 */
+	private DisplayResolutionInteractiveTestResult parseDisplayResolutionInteractiveResults(
+			Map<String, String> params) {
+		boolean enabled = parseBooleanParam(params, TestRunArg.DISPLAY_RESOLUTION_INTERACTIVE_ENABLED);
+		boolean mmPerPixelCorrect = parseBooleanParam(params, TestRunArg.MM_PER_PIXEL_CORRECT);
+		boolean mmPerPixelDefaultCorrect = parseBooleanParam(params, TestRunArg.MM_PER_PIXEL_DEFAULT_CORRECT);
+		return new DisplayResolutionInteractiveTestResult(enabled, mmPerPixelCorrect, mmPerPixelDefaultCorrect);
+	}
+
+	/**
+	 * Parses a boolean value from the test run parameters.
+	 * @param params the test run parameters map
+	 * @param arg the argument key to look up
+	 * @return true if the parameter value equals "true" (case-insensitive), false
+	 * otherwise
+	 */
+	private boolean parseBooleanParam(Map<String, String> params, TestRunArg arg) {
+		String value = params.get(arg.toString());
+		return Boolean.parseBoolean(value);
 	}
 
 	/**

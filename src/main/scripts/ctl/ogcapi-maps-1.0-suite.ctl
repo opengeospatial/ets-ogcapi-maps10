@@ -4,7 +4,8 @@
              xmlns:tns="http://www.opengis.net/cite/ogcapi-maps-1.0"
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
-             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController">
+             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
+             xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-mm-per-pixel.xml">
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
@@ -73,6 +74,23 @@
               </div>
             </p>
           </fieldset>
+          <fieldset style="background:#ffffcc">
+            <legend style="font-family: sans-serif; color: #000099;
+                           background-color:#F0F8FF; border-style: solid;
+                           border-width: medium; padding:4px">Interactive Tests (A.16 Display Resolution)
+            </legend>
+            <p>
+              <input type="checkbox" id="runDisplayResolutionInteractiveTests"
+                     name="runDisplayResolutionInteractiveTests" value="true" />
+              <label for="runDisplayResolutionInteractiveTests">
+                Enable interactive visual verification for mm-per-pixel parameter (A.16)
+              </label>
+            </p>
+            <p style="font-size:0.9em; color:#555;">
+              When enabled, you will be shown two map images rendered at different
+              display resolutions and asked to confirm they look visually different.
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -80,10 +98,39 @@
           </p>
         </ctl:form>
       </xsl:variable>
+      <xsl:variable name="iut-url"
+                    select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+      <xsl:variable name="run-display-resolution-interactive"
+                    select="$form-data/values/value[@key='runDisplayResolutionInteractiveTests'] = 'true'" />
+
+      <!-- Run interactive display-resolution verification if enabled -->
+      <xsl:variable name="mm-per-pixel-result">
+        <xsl:choose>
+          <xsl:when test="$run-display-resolution-interactive">
+            <ctl:call-function name="interactive:verifyMmPerPixelInterpretation">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- Run interactive default assumption verification if enabled -->
+      <xsl:variable name="mm-per-pixel-default-result">
+        <xsl:choose>
+          <xsl:when test="$run-display-resolution-interactive">
+            <ctl:call-function name="interactive:verifyMmPerPixelDefault">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
-            <xsl:value-of select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+            <xsl:value-of select="$iut-url" />
           </entry>
           <entry key="noofcollections">
             <xsl:choose>
@@ -92,6 +139,15 @@
                 <xsl:value-of select="$form-data/values/value[@key='noOfCollections']" />
               </xsl:otherwise>
             </xsl:choose>
+          </entry>
+          <entry key="display_resolution_interactive_enabled">
+            <xsl:value-of select="$run-display-resolution-interactive" />
+          </entry>
+          <entry key="mm_per_pixel_correct">
+            <xsl:value-of select="$mm-per-pixel-result" />
+          </entry>
+          <entry key="mm_per_pixel_default_correct">
+            <xsl:value-of select="$mm-per-pixel-default-result" />
           </entry>
         </properties>
       </xsl:variable>
