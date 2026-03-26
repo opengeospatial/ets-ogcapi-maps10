@@ -4,10 +4,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +78,7 @@ public class BBoxCrsDefinitionTest extends CommonFixture {
 		String sep = mapUrl.contains("?") ? "&" : "?";
 
 		// --- Assertion B (Req 18/B): CRS84 accepted as bbox-crs value ---
-		int statusB = getStatusRaw(mapUrl + sep + WHOLE_WORLD_BBOX + "&bbox-crs=" + CRS84_URI + "&f=png");
+		int statusB = getStatusRaw(mapUrl + sep + WHOLE_WORLD_BBOX + "&bbox-crs=" + encodeCrsUri(CRS84_URI) + "&f=png");
 		if (statusB != 200) {
 			errors.add("[Req18/crs84-accepted] Expected HTTP 200 when bbox-crs=" + CRS84_URI
 					+ " with a valid bbox, but got HTTP " + statusB + ".");
@@ -96,7 +94,8 @@ public class BBoxCrsDefinitionTest extends CommonFixture {
 		// --- Assertion D (Req 18/D): storage/native CRS accepted ---
 		String storageCrs = discoverStorageCrs(landingPageUrl);
 		if (storageCrs != null) {
-			int statusD = getStatusRaw(mapUrl + sep + WHOLE_WORLD_BBOX + "&bbox-crs=" + storageCrs + "&f=png");
+			int statusD = getStatusRaw(
+					mapUrl + sep + WHOLE_WORLD_BBOX + "&bbox-crs=" + encodeCrsUri(storageCrs) + "&f=png");
 			if (statusD != 200) {
 				errors.add("[Req18/storage-crs-accepted] Expected HTTP 200 when bbox-crs=" + storageCrs
 						+ " (storage CRS) but got HTTP " + statusD + ".");
@@ -111,7 +110,7 @@ public class BBoxCrsDefinitionTest extends CommonFixture {
 		}
 
 		// --- Assertion F (Req 18/F): bbox-crs ignored when bbox is absent ---
-		int statusF = getStatusRaw(mapUrl + sep + "bbox-crs=" + CRS84_URI + "&f=png");
+		int statusF = getStatusRaw(mapUrl + sep + "bbox-crs=" + encodeCrsUri(CRS84_URI) + "&f=png");
 		if (statusF != 200) {
 			errors.add("[Req18/bbox-crs-ignored] Expected HTTP 200 when bbox-crs is supplied without bbox"
 					+ " (bbox-crs should be ignored), but got HTTP " + statusF + ".");
@@ -204,21 +203,22 @@ public class BBoxCrsDefinitionTest extends CommonFixture {
 
 	private int getStatusRaw(String urlString) {
 		try {
-			HttpClient client = HttpClient.newBuilder()
-				.followRedirects(HttpClient.Redirect.NORMAL)
-				.connectTimeout(Duration.ofSeconds(30))
-				.build();
-			HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(urlString))
-				.GET()
-				.timeout(Duration.ofSeconds(30))
-				.build();
-			return client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
+			URL url = new URL(urlString);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.setConnectTimeout(10000);
+			conn.setReadTimeout(10000);
+			conn.setInstanceFollowRedirects(true);
+			return conn.getResponseCode();
 		}
 		catch (Exception e) {
 			System.err.println("[A.18] HTTP request failed for: " + urlString + " => " + e.getMessage());
 			return -1;
 		}
+	}
+
+	private String encodeCrsUri(String crsUri) {
+		return URLEncoder.encode(crsUri, StandardCharsets.UTF_8);
 	}
 
 	private String resolveUrl(String baseUrl, String url) {
