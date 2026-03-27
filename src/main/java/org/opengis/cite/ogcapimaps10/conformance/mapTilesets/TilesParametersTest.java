@@ -4,11 +4,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import org.opengis.cite.ogcapimaps10.domain.InteractiveTestResult;
 import org.testng.ITestContext;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
@@ -34,6 +34,10 @@ import io.restassured.response.Response;
  *        vertical dimension is available), general subsetting, and scaling requirements classes
  * Then:
  * - assert that tiles responses reflect the relevant map parameters used for the requests
+ *
+ * NOTE: This is an integration test that verifies the tiles endpoint accepts parameters
+ *       from other requirements classes. Detailed parameter validation is handled by each
+ *       requirements class's own conformance tests (e.g., A.6-A.10 for Background).
  * </pre>
  */
 public class TilesParametersTest extends TilesParametersFixture {
@@ -53,12 +57,6 @@ public class TilesParametersTest extends TilesParametersFixture {
 	 * Identifier: /conf/tilesets/tiles-parameters
 	 * Requirement: Requirement 5: /req/tilesets/tiles-parameters
 	 * Test purpose: Verify that the implementation supports relevant parameters for map tilesets
-	 *
-	 * Test method:
-	 * Given: a geospatial data resource conforming to this Standard, to "Map Tilesets", to OGC API — Tiles, and to Maps requirements classes introducing parameters relevant for map tiles
-	 * When: retrieving the map tiles with parameters for the background, display resolution, spatial subsetting (only for subset and subset-crs parameters, and only if a vertical dimension is available), general subsetting, and scaling requirements classes
-	 * Then:
-	 * - assert that tiles responses reflect the relevant map parameters used for the requests
 	 * </pre>
 	 */
 	@Test(description = "Implements A.2.2. Abstract Test for Requirement tiles-parameters (Requirement /req/tilesets/tiles-parameters)")
@@ -76,138 +74,69 @@ public class TilesParametersTest extends TilesParametersFixture {
 		}
 
 		// ============================================================
-		// 1. Scaling Requirements Class - Automated Verification
+		// 1. Scaling Requirements Class (Req 13, 14, 15)
+		// - width, height: verify pixel dimensions
+		// - scale-denominator: verify tiles endpoint accepts the parameter
 		// ============================================================
 
-		// 1.1 Test width parameter
-		try {
-			Response widthResponse = init().accept("image/*").queryParam("width", TEST_WIDTH).when().get(tileUrl);
+		if (hasConformance("/conf/scaling")) {
+			// 1.1 Test width parameter
+			verifyScalingWidth(tileUrl, errors);
 
-			if (widthResponse.getStatusCode() != 200) {
-				errors.add(
-						String.format("[Scaling/width] Expected status 200 but got %d", widthResponse.getStatusCode()));
-			}
-			else {
-				String contentType = widthResponse.getContentType();
-				if (contentType == null || !contentType.startsWith("image/")) {
-					errors.add(String.format("[Scaling/width] Expected image content type but got: %s", contentType));
-				}
-				else {
-					BufferedImage image = readImage(widthResponse.asByteArray());
-					if (image == null) {
-						errors.add("[Scaling/width] Failed to read image from response");
-					}
-					else if (image.getWidth() != TEST_WIDTH) {
-						errors.add(String.format("[Scaling/width] Image width mismatch. Expected %d but got %d",
-								TEST_WIDTH, image.getWidth()));
-					}
-				}
-			}
-		}
-		catch (Exception e) {
-			errors.add("[Scaling/width] Exception: " + e.getMessage());
-		}
+			// 1.2 Test height parameter
+			verifyScalingHeight(tileUrl, errors);
 
-		// 1.2 Test height parameter
-		try {
-			Response heightResponse = init().accept("image/*").queryParam("height", TEST_HEIGHT).when().get(tileUrl);
+			// 1.3 Test width + height combined
+			verifyScalingWidthHeight(tileUrl, errors);
 
-			if (heightResponse.getStatusCode() != 200) {
-				errors.add(String.format("[Scaling/height] Expected status 200 but got %d",
-						heightResponse.getStatusCode()));
-			}
-			else {
-				BufferedImage image = readImage(heightResponse.asByteArray());
-				if (image == null) {
-					errors.add("[Scaling/height] Failed to read image from response");
-				}
-				else if (image.getHeight() != TEST_HEIGHT) {
-					errors.add(String.format("[Scaling/height] Image height mismatch. Expected %d but got %d",
-							TEST_HEIGHT, image.getHeight()));
-				}
-			}
-		}
-		catch (Exception e) {
-			errors.add("[Scaling/height] Exception: " + e.getMessage());
-		}
-
-		// 1.3 Test width + height combined
-		try {
-			Response combinedResponse = init().accept("image/*")
-				.queryParam("width", ALTERNATIVE_WIDTH)
-				.queryParam("height", ALTERNATIVE_HEIGHT)
-				.when()
-				.get(tileUrl);
-
-			if (combinedResponse.getStatusCode() != 200) {
-				errors.add(String.format("[Scaling/width+height] Expected status 200 but got %d",
-						combinedResponse.getStatusCode()));
-			}
-			else {
-				BufferedImage image = readImage(combinedResponse.asByteArray());
-				if (image == null) {
-					errors.add("[Scaling/width+height] Failed to read image from response");
-				}
-				else {
-					if (image.getWidth() != ALTERNATIVE_WIDTH) {
-						errors.add(String.format("[Scaling/width+height] Image width mismatch. Expected %d but got %d",
-								ALTERNATIVE_WIDTH, image.getWidth()));
-					}
-					if (image.getHeight() != ALTERNATIVE_HEIGHT) {
-						errors.add(String.format("[Scaling/width+height] Image height mismatch. Expected %d but got %d",
-								ALTERNATIVE_HEIGHT, image.getHeight()));
-					}
-				}
-			}
-		}
-		catch (Exception e) {
-			errors.add("[Scaling/width+height] Exception: " + e.getMessage());
+			// 1.4 Test scale-denominator parameter
+			verifyParameterAccepted(tileUrl, "scale-denominator", "50000000", "[Scaling/scale-denominator]", errors);
 		}
 
 		// ============================================================
-		// 2. Background Requirements Class - Interactive Verification
+		// 2. Background Requirements Class (Req 6, 7, 8, 9)
+		// - bgcolor, transparent: bytes comparison (response must differ)
+		// - void-color, void-transparent: HTTP 200 + image/*
+		// (effect depends on CRS having void areas)
 		// ============================================================
 
-		InteractiveTestResult interactiveResult = null;
-		try {
-			interactiveResult = getInteractiveTestResult(context);
+		if (hasConformance("/conf/background")) {
+			verifyResponseDiffers(tileUrl, "bgcolor", "0xFF0000", "[Background/bgcolor]", errors);
+			verifyResponseDiffers(tileUrl, "transparent", "true", "[Background/transparent]", errors);
+			verifyConditionalParameter(tileUrl, "void-color", "00FF00", "[Background/void-color]", errors);
+			verifyConditionalParameter(tileUrl, "void-transparent", "true", "[Background/void-transparent]", errors);
 		}
-		catch (SkipException e) {
-			// Interactive tests not enabled, skip these checks
+
+		// ============================================================
+		// 3. Display Resolution Requirements Class (Req 16)
+		// - mm-per-pixel
+		// - Verify tiles endpoint accepts this parameter
+		// ============================================================
+
+		if (hasConformance("/conf/display-resolution")) {
+			verifyParameterAccepted(tileUrl, "mm-per-pixel", "0.56", "[Display Resolution/mm-per-pixel]", errors);
 		}
 
-		if (interactiveResult != null && interactiveResult.isEnabled()) {
-			// 2.1 Test bgcolor parameter
-			if (!interactiveResult.isBgcolorCorrect()) {
-				errors.add("[Background/bgcolor] Interactive verification failed: "
-						+ "Tile does not display correct background color");
-			}
+		// ============================================================
+		// 4. Spatial Subsetting Requirements Class (Req 22, 19)
+		// - Only subset and subset-crs, only if vertical dimension available
+		// - Verify tiles endpoint accepts these parameters
+		// ============================================================
 
-			// 2.2 Test transparent parameter
-			if (!interactiveResult.isTransparentCorrect()) {
-				errors.add("[Background/transparent] Interactive verification failed: "
-						+ "Tile does not display correct transparency");
-			}
+		if (hasConformance("/conf/spatial-subsetting")) {
+			verifyConditionalParameter(tileUrl, "subset", "h(0:100)", "[Spatial Subsetting/subset]", errors);
+			verifyConditionalParameter(tileUrl, "subset-crs", "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+					"[Spatial Subsetting/subset-crs]", errors);
+		}
 
-			// ============================================================
-			// 3. Display Resolution Requirements Class - Interactive Verification
-			// ============================================================
+		// ============================================================
+		// 5. General Subsetting Requirements Class (Req 34)
+		// - subset for additional dimensions (non-spatial, non-temporal)
+		// - Verify tiles endpoint accepts this parameter
+		// ============================================================
 
-			// 3.1 Test mm-per-pixel parameter
-			if (!interactiveResult.isDisplayResolutionCorrect()) {
-				errors.add("[Display Resolution/mm-per-pixel] Interactive verification failed: "
-						+ "Tile does not display at correct resolution/detail level");
-			}
-
-			// ============================================================
-			// 4. Spatial Subsetting Requirements Class - Interactive Verification
-			// ============================================================
-
-			// 4.1 Test subset parameter
-			if (!interactiveResult.isSubsetCorrect()) {
-				errors.add("[Spatial Subsetting/subset] Interactive verification failed: "
-						+ "Tile does not correctly show the specified subset area");
-			}
+		if (hasConformance("/conf/general-subsetting")) {
+			verifyConditionalParameter(tileUrl, "subset", "pressure(500:1000)", "[General Subsetting/subset]", errors);
 		}
 
 		// ============================================================
@@ -227,6 +156,234 @@ public class TilesParametersTest extends TilesParametersFixture {
 			throw new AssertionError(message.toString());
 		}
 	}
+
+	// ============================================================
+	// Scaling verification with pixel dimension checks
+	// ============================================================
+
+	private void verifyScalingWidth(String tileUrl, List<String> errors) {
+		try {
+			Response response = init().accept("image/*").queryParam("width", TEST_WIDTH).when().get(tileUrl);
+
+			if (response.getStatusCode() != 200) {
+				errors.add(String.format("[Scaling/width] Expected status 200 but got %d", response.getStatusCode()));
+			}
+			else {
+				String contentType = response.getContentType();
+				if (contentType == null || !contentType.startsWith("image/")) {
+					errors.add(String.format("[Scaling/width] Expected image content type but got: %s", contentType));
+				}
+				else {
+					BufferedImage image = readImage(response.asByteArray());
+					if (image == null) {
+						errors.add("[Scaling/width] Failed to read image from response");
+					}
+					else if (image.getWidth() != TEST_WIDTH) {
+						errors.add(String.format("[Scaling/width] Image width mismatch. Expected %d but got %d",
+								TEST_WIDTH, image.getWidth()));
+					}
+				}
+			}
+		}
+		catch (Exception e) {
+			errors.add("[Scaling/width] Exception: " + e.getMessage());
+		}
+	}
+
+	private void verifyScalingHeight(String tileUrl, List<String> errors) {
+		try {
+			Response response = init().accept("image/*").queryParam("height", TEST_HEIGHT).when().get(tileUrl);
+
+			if (response.getStatusCode() != 200) {
+				errors.add(String.format("[Scaling/height] Expected status 200 but got %d", response.getStatusCode()));
+			}
+			else {
+				BufferedImage image = readImage(response.asByteArray());
+				if (image == null) {
+					errors.add("[Scaling/height] Failed to read image from response");
+				}
+				else if (image.getHeight() != TEST_HEIGHT) {
+					errors.add(String.format("[Scaling/height] Image height mismatch. Expected %d but got %d",
+							TEST_HEIGHT, image.getHeight()));
+				}
+			}
+		}
+		catch (Exception e) {
+			errors.add("[Scaling/height] Exception: " + e.getMessage());
+		}
+	}
+
+	private void verifyScalingWidthHeight(String tileUrl, List<String> errors) {
+		try {
+			Response response = init().accept("image/*")
+				.queryParam("width", ALTERNATIVE_WIDTH)
+				.queryParam("height", ALTERNATIVE_HEIGHT)
+				.when()
+				.get(tileUrl);
+
+			if (response.getStatusCode() != 200) {
+				errors.add(String.format("[Scaling/width+height] Expected status 200 but got %d",
+						response.getStatusCode()));
+			}
+			else {
+				BufferedImage image = readImage(response.asByteArray());
+				if (image == null) {
+					errors.add("[Scaling/width+height] Failed to read image from response");
+				}
+				else {
+					if (image.getWidth() != ALTERNATIVE_WIDTH) {
+						errors.add(String.format("[Scaling/width+height] Image width mismatch. Expected %d but got %d",
+								ALTERNATIVE_WIDTH, image.getWidth()));
+					}
+					if (image.getHeight() != ALTERNATIVE_HEIGHT) {
+						errors.add(String.format("[Scaling/width+height] Image height mismatch. Expected %d but got %d",
+								ALTERNATIVE_HEIGHT, image.getHeight()));
+					}
+				}
+			}
+		}
+		catch (Exception e) {
+			errors.add("[Scaling/width+height] Exception: " + e.getMessage());
+		}
+	}
+
+	// ============================================================
+	// Bytes comparison verification
+	// ============================================================
+
+	/**
+	 * Verifies that a parameter is reflected by the tiles endpoint by comparing the
+	 * response bytes with and without the parameter. If the responses are identical, the
+	 * parameter is likely being ignored. This is used for parameters whose effect is
+	 * clearly visible (e.g., bgcolor, transparent).
+	 * @param tileUrl The tile URL to test.
+	 * @param paramName The query parameter name.
+	 * @param paramValue The query parameter value.
+	 * @param label The label for error messages.
+	 * @param errors The list to collect error messages.
+	 */
+	private void verifyResponseDiffers(String tileUrl, String paramName, String paramValue, String label,
+			List<String> errors) {
+		try {
+			// Get default tile (without parameter)
+			Response defaultResponse = init().accept("image/*").when().get(tileUrl);
+			if (defaultResponse.getStatusCode() != 200) {
+				errors.add(String.format("%s Default tile request failed with status %d", label,
+						defaultResponse.getStatusCode()));
+				return;
+			}
+			byte[] defaultBytes = defaultResponse.asByteArray();
+
+			// Get tile with parameter
+			Response paramResponse = init().accept("image/*").queryParam(paramName, paramValue).when().get(tileUrl);
+
+			if (paramResponse.getStatusCode() != 200) {
+				errors.add(String.format("%s Expected status 200 but got %d", label, paramResponse.getStatusCode()));
+				return;
+			}
+
+			String contentType = paramResponse.getContentType();
+			if (contentType == null || !contentType.startsWith("image/")) {
+				errors.add(String.format("%s Expected image content type but got: %s", label, contentType));
+				return;
+			}
+
+			byte[] paramBytes = paramResponse.asByteArray();
+
+			if (Arrays.equals(defaultBytes, paramBytes)) {
+				errors.add(String.format(
+						"%s Response with %s=%s is identical to default response — parameter may be ignored", label,
+						paramName, paramValue));
+			}
+		}
+		catch (Exception e) {
+			errors.add(String.format("%s Exception: %s", label, e.getMessage()));
+		}
+	}
+
+	// ============================================================
+	// Generic parameter acceptance verification
+	// ============================================================
+
+	/**
+	 * Verifies that the tiles endpoint accepts a given parameter by checking that the
+	 * response is HTTP 200 with an image content type. This is used for parameters whose
+	 * effect depends on data/CRS conditions and may not always produce a visibly
+	 * different response. Detailed parameter behavior validation is handled by each
+	 * requirement class's own conformance tests.
+	 * @param tileUrl The tile URL to test.
+	 * @param paramName The query parameter name.
+	 * @param paramValue The query parameter value.
+	 * @param label The label for error messages (e.g., "[Background/bgcolor]").
+	 * @param errors The list to collect error messages.
+	 */
+	private void verifyParameterAccepted(String tileUrl, String paramName, String paramValue, String label,
+			List<String> errors) {
+		try {
+			Response response = init().accept("image/*").queryParam(paramName, paramValue).when().get(tileUrl);
+
+			int statusCode = response.getStatusCode();
+			if (statusCode != 200) {
+				errors.add(String.format("%s Expected status 200 but got %d", label, statusCode));
+				return;
+			}
+
+			String contentType = response.getContentType();
+			if (contentType == null || !contentType.startsWith("image/")) {
+				errors.add(String.format("%s Expected image content type but got: %s", label, contentType));
+			}
+		}
+		catch (Exception e) {
+			errors.add(String.format("%s Exception: %s", label, e.getMessage()));
+		}
+	}
+
+	// ============================================================
+	// Conditional parameter verification
+	// ============================================================
+
+	/**
+	 * Verifies a parameter that depends on data conditions (e.g., vertical dimension must
+	 * be available for spatial subsetting, extra dimensions for general subsetting). HTTP
+	 * 400 is treated as "not applicable" (the server does not have the required
+	 * data/dimension) and is silently skipped, not counted as a failure. Only unexpected
+	 * errors (e.g., 500) are reported as failures.
+	 * @param tileUrl The tile URL to test.
+	 * @param paramName The query parameter name.
+	 * @param paramValue The query parameter value.
+	 * @param label The label for error messages.
+	 * @param errors The list to collect error messages.
+	 */
+	private void verifyConditionalParameter(String tileUrl, String paramName, String paramValue, String label,
+			List<String> errors) {
+		try {
+			Response response = init().accept("image/*").queryParam(paramName, paramValue).when().get(tileUrl);
+
+			int statusCode = response.getStatusCode();
+
+			// 400 = server does not support this dimension/parameter value — skip
+			if (statusCode == 400) {
+				return;
+			}
+
+			if (statusCode != 200) {
+				errors.add(String.format("%s Expected status 200 but got %d", label, statusCode));
+				return;
+			}
+
+			String contentType = response.getContentType();
+			if (contentType == null || !contentType.startsWith("image/")) {
+				errors.add(String.format("%s Expected image content type but got: %s", label, contentType));
+			}
+		}
+		catch (Exception e) {
+			errors.add(String.format("%s Exception: %s", label, e.getMessage()));
+		}
+	}
+
+	// ============================================================
+	// Helper methods
+	// ============================================================
 
 	/**
 	 * Finds the first available tile from a tileset.

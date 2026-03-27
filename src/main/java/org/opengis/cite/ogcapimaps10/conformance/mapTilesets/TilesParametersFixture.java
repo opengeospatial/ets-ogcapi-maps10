@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapimaps10.domain.InteractiveTestResult;
 import org.testng.ITestContext;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
@@ -13,8 +12,8 @@ import org.testng.annotations.BeforeClass;
 import io.restassured.response.Response;
 
 /**
- * Base fixture for tiles-parameters tests. Provides common functionality for both
- * automated and interactive tests related to tile parameters.
+ * Base fixture for tiles-parameters tests. Provides common functionality for automated
+ * verification of tile parameters on the tiles endpoint.
  */
 public class TilesParametersFixture extends CommonFixture {
 
@@ -61,20 +60,32 @@ public class TilesParametersFixture extends CommonFixture {
 	}
 
 	/**
-	 * Retrieves the InteractiveTestResult from the test context.
-	 * @param context The test context.
-	 * @return The InteractiveTestResult containing interactive test results.
-	 * @throws SkipException if the context or result is null.
+	 * Checks whether the SUT declares conformance to a specific conformance class.
+	 * @param conformanceClassSuffix The suffix to match (e.g., "/conf/background").
+	 * @return true if the SUT declares conformance to the specified class.
 	 */
-	protected InteractiveTestResult getInteractiveTestResult(ITestContext context) {
-		if (context == null) {
-			throw new SkipException("Test context is null!");
+	protected boolean hasConformance(String conformanceClassSuffix) {
+		String baseUrl = rootUri.toString();
+		if (baseUrl.endsWith("/")) {
+			baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
 		}
-		Object attribute = context.getSuite().getAttribute(SuiteAttribute.INTERACTIVE_TEST_RESULT.getName());
-		if (attribute == null) {
-			throw new SkipException("Interactive test result is missing!");
+		try {
+			Response response = init().accept("application/json").when().get(baseUrl + "/conformance");
+			if (response.getStatusCode() == 200) {
+				List<String> conformsTo = response.jsonPath().getList("conformsTo");
+				if (conformsTo != null) {
+					for (String uri : conformsTo) {
+						if (uri != null && uri.toLowerCase().contains(conformanceClassSuffix.toLowerCase())) {
+							return true;
+						}
+					}
+				}
+			}
 		}
-		return (InteractiveTestResult) attribute;
+		catch (Exception e) {
+			// Failed to check conformance
+		}
+		return false;
 	}
 
 	/**

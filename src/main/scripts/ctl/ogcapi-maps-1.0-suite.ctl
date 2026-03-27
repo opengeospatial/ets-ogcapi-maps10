@@ -5,7 +5,7 @@
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
              xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
-             xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive.xml">
+>
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
@@ -83,20 +83,6 @@
               </select>
             </p>
           </fieldset>
-          <fieldset style="background:#ffffcc; margin-top: 10px;">
-            <legend style="font-family: sans-serif; color: #000099;
-                         background-color:#F0F8FF; border-style: solid;
-                         border-width: medium; padding:4px">Interactive Tests (tiles-parameters)
-            </legend>
-            <p>
-              <input type="checkbox" id="runInteractiveTests" name="runInteractiveTests" value="true" />
-              <label for="runInteractiveTests">Run interactive tests for tiles-parameters verification</label>
-            </p>
-            <p style="font-size: 0.9em; color: #666;">
-              If enabled, you will be prompted to manually verify bgcolor, transparent, display resolution,
-              and subset parameters on map tiles.
-            </p>
-          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -104,62 +90,8 @@
           </p>
         </ctl:form>
       </xsl:variable>
-      <!-- Run interactive tests if enabled -->
       <xsl:variable name="iut-url" select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
-      <xsl:variable name="run-interactive" select="$form-data/values/value[@key='runInteractiveTests'] = 'true'" />
       <xsl:variable name="tile-matrix-set" select="$form-data/values/value[@key='tileMatrixSet']" />
-
-      <!-- Interactive test results (defaults to false if not run) -->
-      <xsl:variable name="bgcolor-result">
-        <xsl:choose>
-          <xsl:when test="$run-interactive">
-            <ctl:call-function name="interactive:verifyTilesBgcolor">
-              <ctl:with-param name="tiles.url" select="$iut-url" />
-              <ctl:with-param name="bgcolor" select="'0x00FF00'" />
-              <ctl:with-param name="tileMatrixSet" select="$tile-matrix-set" />
-            </ctl:call-function>
-          </xsl:when>
-          <xsl:otherwise>false</xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
-
-      <xsl:variable name="transparent-result">
-        <xsl:choose>
-          <xsl:when test="$run-interactive">
-            <ctl:call-function name="interactive:verifyTilesTransparent">
-              <ctl:with-param name="tiles.url" select="$iut-url" />
-              <ctl:with-param name="tileMatrixSet" select="$tile-matrix-set" />
-            </ctl:call-function>
-          </xsl:when>
-          <xsl:otherwise>false</xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
-
-      <xsl:variable name="resolution-result">
-        <xsl:choose>
-          <xsl:when test="$run-interactive">
-            <ctl:call-function name="interactive:verifyDisplayResolution">
-              <ctl:with-param name="tiles.url" select="$iut-url" />
-              <ctl:with-param name="mm-per-pixel" select="'0.28'" />
-              <ctl:with-param name="tileMatrixSet" select="$tile-matrix-set" />
-            </ctl:call-function>
-          </xsl:when>
-          <xsl:otherwise>false</xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
-
-      <xsl:variable name="subset-result">
-        <xsl:choose>
-          <xsl:when test="$run-interactive">
-            <ctl:call-function name="interactive:verifyTilesSubset">
-              <ctl:with-param name="tiles.url" select="$iut-url" />
-              <ctl:with-param name="subset" select="'Lat(40:50)'" />
-              <ctl:with-param name="tileMatrixSet" select="$tile-matrix-set" />
-            </ctl:call-function>
-          </xsl:when>
-          <xsl:otherwise>false</xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
 
       <xsl:variable name="test-run-props">
         <properties version="1.0">
@@ -173,23 +105,6 @@
                 <xsl:value-of select="$form-data/values/value[@key='noOfCollections']" />
               </xsl:otherwise>
             </xsl:choose>
-          </entry>
-          <!-- Interactive tests enabled flag -->
-          <entry key="interactive_tests_enabled">
-            <xsl:value-of select="$run-interactive" />
-          </entry>
-          <!-- Interactive test results for tiles-parameters -->
-          <entry key="tiles_bgcolor_correct">
-            <xsl:value-of select="$bgcolor-result" />
-          </entry>
-          <entry key="tiles_transparent_correct">
-            <xsl:value-of select="$transparent-result" />
-          </entry>
-          <entry key="tiles_display_resolution_correct">
-            <xsl:value-of select="$resolution-result" />
-          </entry>
-          <entry key="tiles_subset_correct">
-            <xsl:value-of select="$subset-result" />
           </entry>
           <!-- TileMatrixSet selection -->
           <entry key="tile_matrix_set">

@@ -6,11 +6,4 @@
   <entry key="noofcollections">3</entry>
   <!-- TileMatrixSet: WebMercatorQuad or WorldCRS84Quad -->
   <entry key="tile_matrix_set">WebMercatorQuad</entry>
-  <!-- Whether interactive tests are enabled (true/false) -->
-  <entry key="interactive_tests_enabled">false</entry>
-  <!-- Interactive test results (only used when interactive_tests_enabled=true) -->
-  <entry key="tiles_bgcolor_correct">false</entry>
-  <entry key="tiles_transparent_correct">false</entry>
-  <entry key="tiles_display_resolution_correct">false</entry>
-  <entry key="tiles_subset_correct">false</entry>
 </properties>

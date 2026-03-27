@@ -10,7 +10,6 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapimaps10.domain.InteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -89,10 +88,6 @@ public class SuiteFixtureListener implements ISuiteListener {
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
 
-		// Parse and set interactive test results for tiles-parameters
-		InteractiveTestResult interactiveTestResult = parseInteractiveTestResults(params);
-		suite.setAttribute(SuiteAttribute.INTERACTIVE_TEST_RESULT.getName(), interactiveTestResult);
-
 		// Parse and set TileMatrixSet parameter (default to WebMercatorQuad)
 		String tileMatrixSet = params.get(TestRunArg.TILE_MATRIX_SET.toString());
 		if (tileMatrixSet == null || tileMatrixSet.isEmpty()) {
@@ -100,36 +95,6 @@ public class SuiteFixtureListener implements ISuiteListener {
 		}
 		suite.setAttribute(SuiteAttribute.TILE_MATRIX_SET.getName(), tileMatrixSet);
 		TestSuiteLogger.log(Level.CONFIG, "Using TileMatrixSet: " + tileMatrixSet);
-	}
-
-	/**
-	 * Parses interactive test results from the test run parameters.
-	 * @param params The test run parameters map.
-	 * @return An InteractiveTestResult containing the parsed boolean results.
-	 */
-	private InteractiveTestResult parseInteractiveTestResults(Map<String, String> params) {
-		boolean enabled = parseBoolean(params, TestRunArg.INTERACTIVE_TESTS_ENABLED);
-		boolean bgcolorCorrect = parseBoolean(params, TestRunArg.TILES_BGCOLOR_CORRECT);
-		boolean transparentCorrect = parseBoolean(params, TestRunArg.TILES_TRANSPARENT_CORRECT);
-		boolean displayResolutionCorrect = parseBoolean(params, TestRunArg.TILES_DISPLAY_RESOLUTION_CORRECT);
-		boolean subsetCorrect = parseBoolean(params, TestRunArg.TILES_SUBSET_CORRECT);
-		return new InteractiveTestResult(enabled, bgcolorCorrect, transparentCorrect, displayResolutionCorrect,
-				subsetCorrect);
-	}
-
-	/**
-	 * Parses a boolean value from the parameters map.
-	 * @param params The parameters map.
-	 * @param arg The TestRunArg key to look up.
-	 * @return The parsed boolean value, or false if not present.
-	 */
-	private boolean parseBoolean(Map<String, String> params, TestRunArg arg) {
-		String key = arg.toString();
-		if (params.containsKey(key)) {
-			String value = params.get(key);
-			return Boolean.parseBoolean(value);
-		}
-		return false;
 	}
 
 	/**
