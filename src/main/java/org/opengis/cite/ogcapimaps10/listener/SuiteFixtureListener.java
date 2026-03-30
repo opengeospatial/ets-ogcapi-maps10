@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.domain.TiffInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -87,6 +88,32 @@ public class SuiteFixtureListener implements ISuiteListener {
 			TestSuiteLogger.log(WARNING, String.format("Could not parse parameter %s: %s. Expected is a valid integer",
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
+
+		// Parse and set TIFF interactive test results
+		TiffInteractiveTestResult tiffInteractiveTestResult = parseTiffInteractiveTestResults(params);
+		suite.setAttribute(SuiteAttribute.TIFF_INTERACTIVE_TEST_RESULT.getName(), tiffInteractiveTestResult);
+	}
+
+	/**
+	 * Parses TIFF interactive test results from the test run parameters.
+	 * @param params The test run parameters map.
+	 * @return A TiffInteractiveTestResult containing the parsed boolean results.
+	 */
+	private TiffInteractiveTestResult parseTiffInteractiveTestResults(Map<String, String> params) {
+		boolean enabled = parseBooleanParam(params, TestRunArg.TIFF_INTERACTIVE_TESTS_ENABLED);
+		boolean portrayalConsistent = parseBooleanParam(params, TestRunArg.TIFF_PORTRAYAL_CONSISTENT);
+		return new TiffInteractiveTestResult(enabled, portrayalConsistent);
+	}
+
+	/**
+	 * Parses a boolean value from the parameters map.
+	 * @param params The parameters map.
+	 * @param arg The TestRunArg key to look up.
+	 * @return The parsed boolean value, or false if not present.
+	 */
+	private boolean parseBooleanParam(Map<String, String> params, TestRunArg arg) {
+		String value = params.get(arg.toString());
+		return value != null && Boolean.parseBoolean(value);
 	}
 
 	/**

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package xmlns:interactive-tiff="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-tiff.xml"
+             xmlns:ctl="http://www.occamlab.com/ctl"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             xmlns:titu="java:org.opengis.cite.ogcapimaps10.util.interactive.TiffInteractiveTestUtils">
+
+  <!--
+    Interactive test functions for TIFF content verification (Abstract test A.58).
+    These functions display forms to collect manual verification results
+    for requirements that cannot be automatically validated.
+
+    Note: Part B (palette/RGB color model) is fully automated and does not
+    require interactive verification.
+  -->
+
+  <!-- Function 1: Verify portrayal consistency across map requests (Part C) -->
+  <ctl:function name="interactive-tiff:verifyPortrayalConsistency">
+    <ctl:param name="iut.url">The landing page URL of the implementation under test.</ctl:param>
+    <ctl:return>The test result (true | false).</ctl:return>
+    <ctl:description>
+      Interactive test for TIFF content requirement Part C: Verify that all maps
+      representing parts of the same resource and using the same style follow
+      the same portrayal rules or represent data with the same reference and
+      units of measure.
+    </ctl:description>
+    <ctl:code>
+      <xsl:variable name="map-url1-raw">
+        <xsl:value-of select="titu:buildMapRequestSmallBbox($iut.url)" />
+      </xsl:variable>
+      <xsl:variable name="map-url2-raw">
+        <xsl:value-of select="titu:buildMapRequestLargeBbox($iut.url)" />
+      </xsl:variable>
+      <xsl:variable name="map1-not-found" select="starts-with($map-url1-raw, 'NOT_FOUND:')" />
+      <xsl:variable name="map-url1">
+        <xsl:choose>
+          <xsl:when test="$map1-not-found">
+            <xsl:value-of select="substring-after($map-url1-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="$map-url1-raw" />
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="map2-not-found" select="starts-with($map-url2-raw, 'NOT_FOUND:')" />
+      <xsl:variable name="map-url2">
+        <xsl:choose>
+          <xsl:when test="$map2-not-found">
+            <xsl:value-of select="substring-after($map-url2-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="$map-url2-raw" />
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="form-values">
+        <ctl:form width="1000" height="800" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>TIFF Portrayal Consistency Verification (/req/tiff/content)</h3>
+
+          <p>Compare the two TIFF map files below. Both are from the <strong>same resource</strong>, centered on the
+             <strong>same location</strong> but at <strong>different scales</strong>. The smaller area (Map 1) is fully
+             contained within the larger area (Map 2). They should use the same rendering style
+             or represent data with the same reference and units of measure.</p>
+
+          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <!-- Map 1: Small area -->
+            <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
+              <p><strong>Map 1 (small area - 25% of extent):</strong></p>
+              <p style="word-break: break-all; font-size: 0.85em;">
+                <xsl:element name="a">
+                  <xsl:attribute name="href"><xsl:value-of select="$map-url1" /></xsl:attribute>
+                  <xsl:attribute name="target">_blank</xsl:attribute>
+                  <xsl:value-of select="$map-url1" />
+                </xsl:element>
+              </p>
+            </div>
+
+            <!-- Map 2: Large area -->
+            <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
+              <p><strong>Map 2 (large area - 50% of extent):</strong></p>
+              <p style="word-break: break-all; font-size: 0.85em;">
+                <xsl:element name="a">
+                  <xsl:attribute name="href"><xsl:value-of select="$map-url2" /></xsl:attribute>
+                  <xsl:attribute name="target">_blank</xsl:attribute>
+                  <xsl:value-of select="$map-url2" />
+                </xsl:element>
+              </p>
+            </div>
+          </div>
+
+          <xsl:if test="$map1-not-found or $map2-not-found">
+            <p style="color: #dc3545; font-size: 0.9em; margin-top: 5px;">[!] Warning: No valid map URL found. The service may not provide a [ogc-rel:map] link.</p>
+          </xsl:if>
+
+          <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0; background: #f9f9f9;">
+            <p style="font-size: 0.9em;">Please download both TIFF files and compare them using an image viewer or GIS tool (e.g., QGIS, GDAL).</p>
+          </div>
+
+          <hr />
+          <p style="margin-top: 20px;"><strong>Question:</strong> Do both maps follow the same portrayal rules
+             or represent data with the same reference and units of measure?</p>
+          <p>
+            <input type="submit" name="submit" value="yes" style="margin-right: 10px; padding: 5px 20px;" />
+            <input type="submit" name="submit" value="no" style="padding: 5px 20px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit']='yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>
