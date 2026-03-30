@@ -71,11 +71,7 @@
           </xsl:if>
 
           <hr />
-          <p style="margin-top: 20px;"><strong>Question:</strong> Do the colors in this PNG map correctly represent geospatial features or coverage values?</p>
-          <p style="font-size: 0.9em; color: #666;">
-            The map should display recognizable geographic content (e.g., land, water, roads, buildings)
-            with colors that meaningfully correspond to the underlying data.
-          </p>
+          <p style="margin-top: 20px;"><strong>Question:</strong> Do the colors in this PNG map reasonably represent the geospatial features or coverage values?</p>
           <p>
             <input type="submit" name="submit" value="yes" style="margin-right: 10px; padding: 5px 20px;" />
             <input type="submit" name="submit" value="no" style="padding: 5px 20px;" />
@@ -104,10 +100,10 @@
     </ctl:description>
     <ctl:code>
       <xsl:variable name="map-url1-raw">
-        <xsl:value-of select="pitu:buildMapRequestAsPng($iut.url)" />
+        <xsl:value-of select="pitu:buildMapRequestLeftBbox($iut.url)" />
       </xsl:variable>
       <xsl:variable name="map-url2-raw">
-        <xsl:value-of select="pitu:buildMapRequestWithBbox($iut.url, '-5,40,5,50')" />
+        <xsl:value-of select="pitu:buildMapRequestRightBbox($iut.url)" />
       </xsl:variable>
       <xsl:variable name="map1-not-found" select="starts-with($map-url1-raw, 'NOT_FOUND:')" />
       <xsl:variable name="map-url1">
@@ -135,16 +131,18 @@
         <ctl:form width="1000" height="800" xmlns="http://www.w3.org/1999/xhtml">
           <h3>Portrayal Consistency Verification (Part D: /req/png/content)</h3>
 
-          <p>Compare the two map images below. Both are from the <strong>same resource</strong> but show
-             <strong>different areas</strong>. They should use the same rendering style (colors, symbols, line widths, etc.).</p>
+          <p>Compare the two map images below. Both are from the <strong>same resource</strong>, centered on the
+             <strong>same location</strong> but at <strong>different scales</strong>. The smaller area (Map 1) is fully
+             contained within the larger area (Map 2). They should use the same rendering style
+             (colors, symbols, line widths, etc.).</p>
 
           <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <!-- Map 1: Default extent -->
+            <!-- Map 1: Small area around center of collection extent -->
             <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
-              <p><strong>Map 1 (default extent):</strong></p>
+              <p><strong>Map 1 (small area - 25% of extent):</strong></p>
               <xsl:element name="img">
                 <xsl:attribute name="src"><xsl:value-of select="$map-url1" /></xsl:attribute>
-                <xsl:attribute name="alt">Map 1 - Default Extent</xsl:attribute>
+                <xsl:attribute name="alt">Map 1 - Small area</xsl:attribute>
                 <xsl:attribute name="style">max-width: 400px; max-height: 350px; border: 1px solid #999;</xsl:attribute>
                 <xsl:attribute name="onerror">this.style.display='none'; document.getElementById('portrayal-error1').style.display='block';</xsl:attribute>
                 <xsl:attribute name="onload">document.getElementById('portrayal-error1').style.display='none';</xsl:attribute>
@@ -154,12 +152,12 @@
               </div>
             </div>
 
-            <!-- Map 2: Different extent (bbox) -->
+            <!-- Map 2: Large area around center of collection extent -->
             <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
-              <p><strong>Map 2 (bbox: -5,40,5,50):</strong></p>
+              <p><strong>Map 2 (large area - 50% of extent):</strong></p>
               <xsl:element name="img">
                 <xsl:attribute name="src"><xsl:value-of select="$map-url2" /></xsl:attribute>
-                <xsl:attribute name="alt">Map 2 - Subset Area</xsl:attribute>
+                <xsl:attribute name="alt">Map 2 - Large area</xsl:attribute>
                 <xsl:attribute name="style">max-width: 400px; max-height: 350px; border: 1px solid #999;</xsl:attribute>
                 <xsl:attribute name="onerror">this.style.display='none'; document.getElementById('portrayal-error2').style.display='block';</xsl:attribute>
                 <xsl:attribute name="onload">document.getElementById('portrayal-error2').style.display='none';</xsl:attribute>

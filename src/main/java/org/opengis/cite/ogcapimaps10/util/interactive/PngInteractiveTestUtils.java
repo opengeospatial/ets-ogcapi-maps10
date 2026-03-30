@@ -43,6 +43,9 @@ public final class PngInteractiveTestUtils {
 		if (mapUrl == null) {
 			return NOT_FOUND_PREFIX + landingPageUrl + "/map";
 		}
+		if (mapUrl.contains("f=png")) {
+			return mapUrl;
+		}
 		String separator = mapUrl.contains("?") ? "&" : "?";
 		return mapUrl + separator + "f=png";
 	}
@@ -61,8 +64,100 @@ public final class PngInteractiveTestUtils {
 		if (mapUrl == null) {
 			return NOT_FOUND_PREFIX + landingPageUrl + "/map?f=png&bbox=" + bbox;
 		}
-		String separator = mapUrl.contains("?") ? "&" : "?";
-		return mapUrl + separator + "f=png&bbox=" + bbox;
+		String withPng = mapUrl.contains("f=png") ? mapUrl : mapUrl + (mapUrl.contains("?") ? "&" : "?") + "f=png";
+		return withPng + "&bbox=" + bbox;
+	}
+
+	/**
+	 * Builds a map request URL for a small area around the center of the collection's
+	 * spatial extent (25% of extent dimensions). Used as the inner/smaller map for Part D
+	 * portrayal consistency comparison.
+	 * @param landingPageUrl The landing page URL of the implementation under test.
+	 * @return The map URL with small bbox, or a NOT_FOUND prefixed fallback URL.
+	 */
+	public static String buildMapRequestLeftBbox(String landingPageUrl) {
+		double[] bbox = findCollectionBbox(landingPageUrl);
+		if (bbox == null) {
+			return buildMapRequestWithBbox(landingPageUrl, "-45,-22.5,45,22.5");
+		}
+		double centerLon = (bbox[0] + bbox[2]) / 2.0;
+		double centerLat = (bbox[1] + bbox[3]) / 2.0;
+		double quarterWidth = (bbox[2] - bbox[0]) / 4.0;
+		double quarterHeight = (bbox[3] - bbox[1]) / 4.0;
+		String smallBbox = (centerLon - quarterWidth) + "," + (centerLat - quarterHeight) + ","
+				+ (centerLon + quarterWidth) + "," + (centerLat + quarterHeight);
+		return buildMapRequestWithBbox(landingPageUrl, smallBbox);
+	}
+
+	/**
+	 * Builds a map request URL for a large area around the center of the collection's
+	 * spatial extent (50% of extent dimensions). The small bbox from
+	 * {@link #buildMapRequestLeftBbox} is fully contained within this bbox. Used as the
+	 * outer/larger map for Part D portrayal consistency comparison.
+	 * @param landingPageUrl The landing page URL of the implementation under test.
+	 * @return The map URL with large bbox, or a NOT_FOUND prefixed fallback URL.
+	 */
+	public static String buildMapRequestRightBbox(String landingPageUrl) {
+		double[] bbox = findCollectionBbox(landingPageUrl);
+		if (bbox == null) {
+			return buildMapRequestWithBbox(landingPageUrl, "-90,-45,90,45");
+		}
+		double centerLon = (bbox[0] + bbox[2]) / 2.0;
+		double centerLat = (bbox[1] + bbox[3]) / 2.0;
+		double halfWidth = (bbox[2] - bbox[0]) / 2.0;
+		double halfHeight = (bbox[3] - bbox[1]) / 2.0;
+		String largeBbox = (centerLon - halfWidth) + "," + (centerLat - halfHeight) + "," + (centerLon + halfWidth)
+				+ "," + (centerLat + halfHeight);
+		return buildMapRequestWithBbox(landingPageUrl, largeBbox);
+	}
+
+	/**
+	 * Finds the spatial bbox from the first collection that has a map link. Reads
+	 * extent.spatial.bbox from the collection metadata.
+	 * @param landingPageUrl The landing page URL.
+	 * @return A double array [minLon, minLat, maxLon, maxLat], or null if not found.
+	 */
+	@SuppressWarnings("unchecked")
+	private static double[] findCollectionBbox(String landingPageUrl) {
+		try {
+			String collectionsUrl = landingPageUrl.endsWith("/") ? landingPageUrl + "collections"
+					: landingPageUrl + "/collections";
+			Map<String, Object> collectionsData = fetchJson(collectionsUrl);
+			if (collectionsData == null) {
+				return null;
+			}
+			List<Map<String, Object>> collections = (List<Map<String, Object>>) collectionsData.get("collections");
+			if (collections == null) {
+				return null;
+			}
+			for (Map<String, Object> collection : collections) {
+				List<Map<String, Object>> links = (List<Map<String, Object>>) collection.get("links");
+				if (findLinkHrefByRel(links, REL_MAP) == null) {
+					continue;
+				}
+				Map<String, Object> extent = (Map<String, Object>) collection.get("extent");
+				if (extent == null) {
+					continue;
+				}
+				Map<String, Object> spatial = (Map<String, Object>) extent.get("spatial");
+				if (spatial == null) {
+					continue;
+				}
+				List<List<Number>> bboxList = (List<List<Number>>) spatial.get("bbox");
+				if (bboxList == null || bboxList.isEmpty()) {
+					continue;
+				}
+				List<Number> firstBbox = bboxList.get(0);
+				if (firstBbox != null && firstBbox.size() >= 4) {
+					return new double[] { firstBbox.get(0).doubleValue(), firstBbox.get(1).doubleValue(),
+							firstBbox.get(2).doubleValue(), firstBbox.get(3).doubleValue() };
+				}
+			}
+		}
+		catch (Exception e) {
+			// Failed to find collection bbox
+		}
+		return null;
 	}
 
 	/**
