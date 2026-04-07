@@ -66,6 +66,105 @@ public final class JpegXlInteractiveTestUtils {
 	}
 
 	/**
+	 * Builds a map request URL for the left-center area of the collection's spatial
+	 * extent (25% of extent dimensions). Used as Map 1 for Part C portrayal consistency
+	 * comparison. The bbox has the same size as {@link #buildMapRequestRightBbox(String)}
+	 * so that both maps are at the same scale-denominator.
+	 * @param landingPageUrl The landing page URL of the implementation under test.
+	 * @return The map URL with left-center bbox, or a NOT_FOUND prefixed fallback URL.
+	 */
+	public static String buildMapRequestLeftBbox(String landingPageUrl) {
+		double[] bbox = findCollectionBbox(landingPageUrl);
+		if (bbox == null) {
+			return buildMapRequestWithBbox(landingPageUrl, "-67.5,-22.5,-22.5,22.5");
+		}
+		double width = bbox[2] - bbox[0];
+		double height = bbox[3] - bbox[1];
+		double quarterWidth = width / 4.0;
+		double quarterHeight = height / 4.0;
+		// Center of the left half
+		double leftCenterLon = bbox[0] + width / 4.0;
+		double centerLat = (bbox[1] + bbox[3]) / 2.0;
+		String leftBbox = (leftCenterLon - quarterWidth) + "," + (centerLat - quarterHeight) + ","
+				+ (leftCenterLon + quarterWidth) + "," + (centerLat + quarterHeight);
+		return buildMapRequestWithBbox(landingPageUrl, leftBbox);
+	}
+
+	/**
+	 * Builds a map request URL for the right-center area of the collection's spatial
+	 * extent (25% of extent dimensions). Used as Map 2 for Part C portrayal consistency
+	 * comparison. The bbox has the same size as {@link #buildMapRequestLeftBbox(String)}
+	 * so that both maps are at the same scale-denominator.
+	 * @param landingPageUrl The landing page URL of the implementation under test.
+	 * @return The map URL with right-center bbox, or a NOT_FOUND prefixed fallback URL.
+	 */
+	public static String buildMapRequestRightBbox(String landingPageUrl) {
+		double[] bbox = findCollectionBbox(landingPageUrl);
+		if (bbox == null) {
+			return buildMapRequestWithBbox(landingPageUrl, "22.5,-22.5,67.5,22.5");
+		}
+		double width = bbox[2] - bbox[0];
+		double height = bbox[3] - bbox[1];
+		double quarterWidth = width / 4.0;
+		double quarterHeight = height / 4.0;
+		// Center of the right half
+		double rightCenterLon = bbox[0] + 3.0 * width / 4.0;
+		double centerLat = (bbox[1] + bbox[3]) / 2.0;
+		String rightBbox = (rightCenterLon - quarterWidth) + "," + (centerLat - quarterHeight) + ","
+				+ (rightCenterLon + quarterWidth) + "," + (centerLat + quarterHeight);
+		return buildMapRequestWithBbox(landingPageUrl, rightBbox);
+	}
+
+	/**
+	 * Finds the spatial bbox from the first collection that has a map link. Reads
+	 * extent.spatial.bbox from the collection metadata.
+	 * @param landingPageUrl The landing page URL.
+	 * @return A double array [minLon, minLat, maxLon, maxLat], or null if not found.
+	 */
+	@SuppressWarnings("unchecked")
+	private static double[] findCollectionBbox(String landingPageUrl) {
+		try {
+			String collectionsUrl = landingPageUrl.endsWith("/") ? landingPageUrl + "collections"
+					: landingPageUrl + "/collections";
+			Map<String, Object> collectionsData = fetchJson(collectionsUrl);
+			if (collectionsData == null) {
+				return null;
+			}
+			List<Map<String, Object>> collections = (List<Map<String, Object>>) collectionsData.get("collections");
+			if (collections == null) {
+				return null;
+			}
+			for (Map<String, Object> collection : collections) {
+				List<Map<String, Object>> links = (List<Map<String, Object>>) collection.get("links");
+				if (findLinkHrefByRel(links, REL_MAP) == null) {
+					continue;
+				}
+				Map<String, Object> extent = (Map<String, Object>) collection.get("extent");
+				if (extent == null) {
+					continue;
+				}
+				Map<String, Object> spatial = (Map<String, Object>) extent.get("spatial");
+				if (spatial == null) {
+					continue;
+				}
+				List<List<Number>> bboxList = (List<List<Number>>) spatial.get("bbox");
+				if (bboxList == null || bboxList.isEmpty()) {
+					continue;
+				}
+				List<Number> firstBbox = bboxList.get(0);
+				if (firstBbox != null && firstBbox.size() >= 4) {
+					return new double[] { firstBbox.get(0).doubleValue(), firstBbox.get(1).doubleValue(),
+							firstBbox.get(2).doubleValue(), firstBbox.get(3).doubleValue() };
+				}
+			}
+		}
+		catch (Exception e) {
+			// Failed to find collection bbox
+		}
+		return null;
+	}
+
+	/**
 	 * Finds the map resource URL from a landing page or its collections.
 	 * @param landingPageUrl The landing page URL.
 	 * @return The map URL, or null if not found.
