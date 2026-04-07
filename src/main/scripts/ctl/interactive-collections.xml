@@ -30,17 +30,18 @@
     </ctl:description>
     <ctl:code>
 
-      <!-- Build Map A: collections=id1,id2 (natural order) -->
-      <xsl:variable name="map-a-raw">
-        <xsl:value-of select="itu:buildFirstOrderCollectionsUrl($iut.url)" />
+      <!-- Discover map URL and two leaf collection IDs in a single pass,
+           returning "urlA|urlB". Using one call avoids independent HTTP
+           discovery calls that could produce asymmetric results. -->
+      <xsl:variable name="both-urls-raw">
+        <xsl:value-of select="itu:buildBothOrderCollectionsUrls($iut.url)" />
       </xsl:variable>
 
-      <!-- Build Map B: collections=id2,id1 (reversed order) -->
-      <xsl:variable name="map-b-raw">
-        <xsl:value-of select="itu:buildSecondOrderCollectionsUrl($iut.url)" />
-      </xsl:variable>
+      <!-- Split on the pipe delimiter -->
+      <xsl:variable name="map-a-raw" select="substring-before($both-urls-raw, '|')" />
+      <xsl:variable name="map-b-raw" select="substring-after($both-urls-raw, '|')" />
 
-      <!-- Detect NOT_FOUND sentinel -->
+      <!-- Detect NOT_FOUND sentinel (checked on Map A; both fail together) -->
       <xsl:variable name="not-found" select="starts-with($map-a-raw, 'NOT_FOUND:')" />
 
       <xsl:variable name="map-a-url">

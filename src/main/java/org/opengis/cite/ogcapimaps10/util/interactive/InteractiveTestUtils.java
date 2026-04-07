@@ -33,66 +33,43 @@ public final class InteractiveTestUtils {
 	}
 
 	/**
-	 * Builds a dataset map URL using two renderable leaf collection IDs in their selected
-	 * order: {@code ?collections=id1,id2}.
+	 * Builds both the natural-order and reversed-order dataset map URLs in a single
+	 * discovery pass and returns them as a pipe-delimited string:
+	 * {@code "{urlA}|{urlB}"}.
 	 *
 	 * <p>
-	 * Parent containers (collections whose ID is a prefix of another collection's ID) are
-	 * excluded because they may render nothing. A raster + non-raster pair is preferred
-	 * to maximise visual distinctiveness when the order is reversed.
+	 * urlA uses {@code ?collections=id1,id2} (natural order, Map A). urlB uses
+	 * {@code ?collections=id2,id1} (reversed order, Map B). Either part may be prefixed
+	 * with {@link #NOT_FOUND_PREFIX} if discovery fails.
 	 *
 	 * <p>
-	 * Used to display Map A in the interactive rendering-order verification form.
+	 * Performing discovery once avoids independent HTTP calls for Map A and Map B that
+	 * could produce asymmetric results if a second network call fails.
 	 * @param landingPageUrl the API landing page URL
-	 * @return the map URL with collections in natural order, or a NOT_FOUND: prefixed
-	 * string if the map endpoint or two renderable leaf collections cannot be resolved
+	 * @return pipe-delimited string {@code "urlA|urlB"}
 	 */
-	public static String buildFirstOrderCollectionsUrl(String landingPageUrl) {
-		return buildCollectionsUrl(landingPageUrl, false);
-	}
+	public static String buildBothOrderCollectionsUrls(String landingPageUrl) {
+		String mapUrl = findMapUrl(landingPageUrl);
+		if (mapUrl == null) {
+			String notFound = NOT_FOUND_PREFIX + landingPageUrl;
+			return notFound + "|" + notFound;
+		}
 
-	/**
-	 * Builds a dataset map URL using two renderable leaf collection IDs in reversed
-	 * order: {@code ?collections=id2,id1}.
-	 *
-	 * <p>
-	 * Same collection-selection logic as {@link #buildFirstOrderCollectionsUrl}.
-	 * Reversing the order changes which layer is painted last and should produce a
-	 * visually different map if the server honours Req 12B.
-	 *
-	 * <p>
-	 * Used to display Map B in the interactive rendering-order verification form.
-	 * @param landingPageUrl the API landing page URL
-	 * @return the map URL with collections in reversed order, or a NOT_FOUND: prefixed
-	 * string if the map endpoint or two renderable leaf collections cannot be resolved
-	 */
-	public static String buildSecondOrderCollectionsUrl(String landingPageUrl) {
-		return buildCollectionsUrl(landingPageUrl, true);
+		List<String> ids = findTwoRenderableCollectionIds(landingPageUrl);
+		if (ids == null || ids.size() < 2) {
+			String notFound = NOT_FOUND_PREFIX + mapUrl;
+			return notFound + "|" + notFound;
+		}
+
+		String sep = mapUrl.contains("?") ? "&" : "?";
+		String urlA = mapUrl + sep + "collections=" + ids.get(0) + "," + ids.get(1) + "&f=png&width=800&height=400";
+		String urlB = mapUrl + sep + "collections=" + ids.get(1) + "," + ids.get(0) + "&f=png&width=800&height=400";
+		return urlA + "|" + urlB;
 	}
 
 	// -------------------------------------------------------------------------
 	// Private helpers
 	// -------------------------------------------------------------------------
-
-	private static String buildCollectionsUrl(String landingPageUrl, boolean reversed) {
-		String mapUrl = findMapUrl(landingPageUrl);
-		if (mapUrl == null) {
-			return NOT_FOUND_PREFIX + landingPageUrl;
-		}
-
-		List<String> ids = findTwoRenderableCollectionIds(landingPageUrl);
-		if (ids == null || ids.size() < 2) {
-			return NOT_FOUND_PREFIX + mapUrl;
-		}
-
-		// Reversed: id2,id1 — natural: id1,id2
-		// Raw concatenation: colons in namespaced IDs (e.g. NaturalEarth:cultural:...)
-		// and commas between IDs are valid query-string characters (RFC 3986
-		// sub-delimiters) and must NOT be percent-encoded.
-		String collections = reversed ? ids.get(1) + "," + ids.get(0) : ids.get(0) + "," + ids.get(1);
-		String separator = mapUrl.contains("?") ? "&" : "?";
-		return mapUrl + separator + "collections=" + collections + "&f=png&width=800&height=400";
-	}
 
 	/**
 	 * Finds the dataset map URL from the landing page links (rel=ogc/1.0/map), falling
@@ -101,7 +78,11 @@ public final class InteractiveTestUtils {
 	@SuppressWarnings("unchecked")
 	private static String findMapUrl(String landingPageUrl) {
 		try {
-			Map<String, Object> landingPage = fetchJson(landingPageUrl);
+			String base = landingPageUrl.endsWith("/") ? landingPageUrl.substring(0, landingPageUrl.length() - 1)
+					: landingPageUrl;
+			// Append ?f=json so the server returns JSON even when HTML is the default
+			// (consistent with CollectionsResponseTest.findDatasetMapUrl)
+			Map<String, Object> landingPage = fetchJson(base + "?f=json");
 			if (landingPage != null) {
 				List<Map<String, Object>> links = (List<Map<String, Object>>) landingPage.get("links");
 				if (links != null) {
@@ -109,14 +90,18 @@ public final class InteractiveTestUtils {
 						String rel = (String) link.get("rel");
 						if (rel != null && matchesRelIgnoringScheme(rel, REL_MAP)) {
 							String href = (String) link.get("href");
-							return resolveUrl(landingPageUrl, href);
+							String resolved = resolveUrl(base, href);
+							if (resolved != null) {
+								return resolved;
+							}
 						}
 					}
 				}
 			}
 		}
 		catch (Exception e) {
-			// fall through to default
+			System.err
+				.println("[A.12/InteractiveTestUtils] findMapUrl failed for " + landingPageUrl + ": " + e.getMessage());
 		}
 
 		// Default: dataset map is conventionally at {landingPageUrl}/map
@@ -136,16 +121,25 @@ public final class InteractiveTestUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	private static List<String> findTwoRenderableCollectionIds(String landingPageUrl) {
+		String base = landingPageUrl.endsWith("/") ? landingPageUrl.substring(0, landingPageUrl.length() - 1)
+				: landingPageUrl;
+		String collectionsUrl = base + "/collections?f=json";
 		try {
-			String base = landingPageUrl.endsWith("/") ? landingPageUrl.substring(0, landingPageUrl.length() - 1)
-					: landingPageUrl;
-			Map<String, Object> collectionsResponse = fetchJson(base + "/collections?f=json");
+			Map<String, Object> collectionsResponse = fetchJson(collectionsUrl);
 			if (collectionsResponse == null) {
+				System.err.println("[A.12/InteractiveTestUtils] fetchJson returned null for: " + collectionsUrl);
 				return null;
 			}
 
 			List<Map<String, Object>> collections = (List<Map<String, Object>>) collectionsResponse.get("collections");
-			if (collections == null || collections.size() < 2) {
+			if (collections == null) {
+				System.err
+					.println("[A.12/InteractiveTestUtils] No 'collections' key in response from: " + collectionsUrl);
+				return null;
+			}
+			if (collections.size() < 2) {
+				System.err.println("[A.12/InteractiveTestUtils] Fewer than 2 collections returned from: "
+						+ collectionsUrl + " (got " + collections.size() + ")");
 				return null;
 			}
 
@@ -175,6 +169,8 @@ public final class InteractiveTestUtils {
 			}
 
 			if (leafIds.size() < 2) {
+				System.err.println("[A.12/InteractiveTestUtils] Fewer than 2 leaf collections after parent "
+						+ "filtering (allIds=" + allIds.size() + ", leafIds=" + leafIds.size() + ")");
 				return null;
 			}
 
@@ -209,27 +205,31 @@ public final class InteractiveTestUtils {
 			return List.of(id1, id2);
 		}
 		catch (Exception e) {
+			System.err.println("[A.12/InteractiveTestUtils] Exception discovering collections from " + collectionsUrl
+					+ ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
 			return null;
 		}
 	}
 
 	private static Map<String, Object> fetchJson(String urlString) {
 		try {
-			URL url = URI.create(urlString).toURL();
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			HttpURLConnection conn = (HttpURLConnection) new URL(urlString).openConnection();
 			conn.setRequestMethod("GET");
 			conn.setRequestProperty("Accept", "application/json");
 			conn.setConnectTimeout(10000);
 			conn.setReadTimeout(10000);
-			if (conn.getResponseCode() == 200) {
+			int status = conn.getResponseCode();
+			if (status == HttpURLConnection.HTTP_OK) {
 				try (InputStream is = conn.getInputStream()) {
 					return OBJECT_MAPPER.readValue(is, new TypeReference<Map<String, Object>>() {
 					});
 				}
 			}
+			System.err.println("[A.12/InteractiveTestUtils] fetchJson got HTTP " + status + " for: " + urlString);
 		}
 		catch (Exception e) {
-			// return null
+			System.err
+				.println("[A.12/InteractiveTestUtils] fetchJson exception for: " + urlString + " => " + e.getMessage());
 		}
 		return null;
 	}
