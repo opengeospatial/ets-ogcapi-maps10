@@ -69,46 +69,53 @@ public final class PngInteractiveTestUtils {
 	}
 
 	/**
-	 * Builds a map request URL for a small area around the center of the collection's
-	 * spatial extent (25% of extent dimensions). Used as the inner/smaller map for Part D
-	 * portrayal consistency comparison.
+	 * Builds a map request URL for the left-center area of the collection's spatial
+	 * extent (25% of extent dimensions). Used as Map 1 for Part D portrayal consistency
+	 * comparison. The bbox has the same size as {@link #buildMapRequestRightBbox(String)}
+	 * so that both maps are at the same scale-denominator.
 	 * @param landingPageUrl The landing page URL of the implementation under test.
-	 * @return The map URL with small bbox, or a NOT_FOUND prefixed fallback URL.
+	 * @return The map URL with left-center bbox, or a NOT_FOUND prefixed fallback URL.
 	 */
 	public static String buildMapRequestLeftBbox(String landingPageUrl) {
 		double[] bbox = findCollectionBbox(landingPageUrl);
 		if (bbox == null) {
-			return buildMapRequestWithBbox(landingPageUrl, "-45,-22.5,45,22.5");
+			return buildMapRequestWithBbox(landingPageUrl, "-67.5,-22.5,-22.5,22.5");
 		}
-		double centerLon = (bbox[0] + bbox[2]) / 2.0;
+		double width = bbox[2] - bbox[0];
+		double height = bbox[3] - bbox[1];
+		double quarterWidth = width / 4.0;
+		double quarterHeight = height / 4.0;
+		// Center of the left half
+		double leftCenterLon = bbox[0] + width / 4.0;
 		double centerLat = (bbox[1] + bbox[3]) / 2.0;
-		double quarterWidth = (bbox[2] - bbox[0]) / 4.0;
-		double quarterHeight = (bbox[3] - bbox[1]) / 4.0;
-		String smallBbox = (centerLon - quarterWidth) + "," + (centerLat - quarterHeight) + ","
-				+ (centerLon + quarterWidth) + "," + (centerLat + quarterHeight);
-		return buildMapRequestWithBbox(landingPageUrl, smallBbox);
+		String leftBbox = (leftCenterLon - quarterWidth) + "," + (centerLat - quarterHeight) + ","
+				+ (leftCenterLon + quarterWidth) + "," + (centerLat + quarterHeight);
+		return buildMapRequestWithBbox(landingPageUrl, leftBbox);
 	}
 
 	/**
-	 * Builds a map request URL for a large area around the center of the collection's
-	 * spatial extent (50% of extent dimensions). The small bbox from
-	 * {@link #buildMapRequestLeftBbox} is fully contained within this bbox. Used as the
-	 * outer/larger map for Part D portrayal consistency comparison.
+	 * Builds a map request URL for the right-center area of the collection's spatial
+	 * extent (25% of extent dimensions). Used as Map 2 for Part D portrayal consistency
+	 * comparison. The bbox has the same size as {@link #buildMapRequestLeftBbox(String)}
+	 * so that both maps are at the same scale-denominator.
 	 * @param landingPageUrl The landing page URL of the implementation under test.
-	 * @return The map URL with large bbox, or a NOT_FOUND prefixed fallback URL.
+	 * @return The map URL with right-center bbox, or a NOT_FOUND prefixed fallback URL.
 	 */
 	public static String buildMapRequestRightBbox(String landingPageUrl) {
 		double[] bbox = findCollectionBbox(landingPageUrl);
 		if (bbox == null) {
-			return buildMapRequestWithBbox(landingPageUrl, "-90,-45,90,45");
+			return buildMapRequestWithBbox(landingPageUrl, "22.5,-22.5,67.5,22.5");
 		}
-		double centerLon = (bbox[0] + bbox[2]) / 2.0;
+		double width = bbox[2] - bbox[0];
+		double height = bbox[3] - bbox[1];
+		double quarterWidth = width / 4.0;
+		double quarterHeight = height / 4.0;
+		// Center of the right half
+		double rightCenterLon = bbox[0] + 3.0 * width / 4.0;
 		double centerLat = (bbox[1] + bbox[3]) / 2.0;
-		double halfWidth = (bbox[2] - bbox[0]) / 2.0;
-		double halfHeight = (bbox[3] - bbox[1]) / 2.0;
-		String largeBbox = (centerLon - halfWidth) + "," + (centerLat - halfHeight) + "," + (centerLon + halfWidth)
-				+ "," + (centerLat + halfHeight);
-		return buildMapRequestWithBbox(landingPageUrl, largeBbox);
+		String rightBbox = (rightCenterLon - quarterWidth) + "," + (centerLat - quarterHeight) + ","
+				+ (rightCenterLon + quarterWidth) + "," + (centerLat + quarterHeight);
+		return buildMapRequestWithBbox(landingPageUrl, rightBbox);
 	}
 
 	/**

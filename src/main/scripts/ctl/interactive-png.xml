@@ -131,15 +131,16 @@
         <ctl:form width="1000" height="800" xmlns="http://www.w3.org/1999/xhtml">
           <h3>Portrayal Consistency Verification (Part D: /req/png/content)</h3>
 
-          <p>Compare the two map images below. Both are from the <strong>same resource</strong>, centered on the
-             <strong>same location</strong> but at <strong>different scales</strong>. The smaller area (Map 1) is fully
-             contained within the larger area (Map 2). They should use the same rendering style
+          <p>Compare the two map images below. Both are from the <strong>same resource</strong> at the
+             <strong>same scale</strong> (same bbox size) but centered on <strong>different locations</strong>.
+             Map 1 covers the left-center area and Map 2 covers the right-center area of the
+             collection's spatial extent. They should use the same rendering style
              (colors, symbols, line widths, etc.).</p>
 
           <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <!-- Map 1: Small area around center of collection extent -->
+            <!-- Map 1: Left-center area of collection extent -->
             <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
-              <p><strong>Map 1 (small area - 25% of extent):</strong></p>
+              <p><strong>Map 1 (left-center area - 25% of extent):</strong></p>
               <xsl:element name="img">
                 <xsl:attribute name="src"><xsl:value-of select="$map-url1" /></xsl:attribute>
                 <xsl:attribute name="alt">Map 1 - Small area</xsl:attribute>
@@ -152,9 +153,9 @@
               </div>
             </div>
 
-            <!-- Map 2: Large area around center of collection extent -->
+            <!-- Map 2: Right-center area of collection extent -->
             <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
-              <p><strong>Map 2 (large area - 50% of extent):</strong></p>
+              <p><strong>Map 2 (right-center area - 25% of extent):</strong></p>
               <xsl:element name="img">
                 <xsl:attribute name="src"><xsl:value-of select="$map-url2" /></xsl:attribute>
                 <xsl:attribute name="alt">Map 2 - Large area</xsl:attribute>
