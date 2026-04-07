@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-collections.xml"
+             xmlns:ctl="http://www.occamlab.com/ctl"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             xmlns:itu="java:org.opengis.cite.ogcapimaps10.util.interactive.InteractiveTestUtils">
+
+  <!--
+    Interactive test function for A.12 collections-response verification (Req 12B).
+
+    This function displays two map images side-by-side - one with two renderable leaf
+    collections in natural order (id1, id2) and one with them reversed (id2, id1) -
+    and asks the user to confirm that the two maps look visually different.
+
+    Parent container collections (whose ID is a prefix of another collection's ID) are
+    excluded from selection because they may render nothing on their own. A raster +
+    non-raster pair is preferred where available to maximise visual distinctiveness.
+
+    Note: the spec qualifies Req 12B with "if the style applied does not specify
+    otherwise". If the server's default style overrides layer order, both maps may
+    look the same, which is also valid conformant behaviour.
+  -->
+
+  <ctl:function name="interactive:verifyCollectionsResponse">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>The test result: "true" if the user confirmed the maps look different, "false" otherwise.</ctl:return>
+    <ctl:description>
+      Interactive test for A.12 (Req 12B): Verify that collection rendering order
+      is respected - maps requested with the same two leaf collections in reversed
+      order should look visually different when the server honours the specified order.
+    </ctl:description>
+    <ctl:code>
+
+      <!-- Discover map URL and two leaf collection IDs in a single pass,
+           returning "urlA|urlB". Using one call avoids independent HTTP
+           discovery calls that could produce asymmetric results. -->
+      <xsl:variable name="both-urls-raw">
+        <xsl:value-of select="itu:buildBothOrderCollectionsUrls($iut.url)" />
+      </xsl:variable>
+
+      <!-- Split on the pipe delimiter -->
+      <xsl:variable name="map-a-raw" select="substring-before($both-urls-raw, '|')" />
+      <xsl:variable name="map-b-raw" select="substring-after($both-urls-raw, '|')" />
+
+      <!-- Detect NOT_FOUND sentinel (checked on Map A; both fail together) -->
+      <xsl:variable name="not-found" select="starts-with($map-a-raw, 'NOT_FOUND:')" />
+
+      <xsl:variable name="map-a-url">
+        <xsl:choose>
+          <xsl:when test="$not-found">
+            <xsl:value-of select="substring-after($map-a-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-a-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="map-b-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-b-raw, 'NOT_FOUND:')">
+            <xsl:value-of select="substring-after($map-b-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-b-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- Show form and collect user answer -->
+      <xsl:variable name="form-values">
+        <ctl:form width="1000" height="800" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Collection Rendering Order Verification (A.12 - Req 12B)</h3>
+          <p>
+            Two maps have been requested using the same two renderable leaf collections
+            (parent containers excluded) in <strong>reversed order</strong>. A raster +
+            non-raster pair was selected where available to maximise visual distinctiveness.
+            Requirement 12B states that the first (leftmost) collection is rendered at the
+            bottom of the display stack and the last (rightmost) on top, unless the applied
+            style specifies otherwise.
+          </p>
+
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
+              [!] Warning: Could not discover a dataset map endpoint or two renderable leaf
+              collections automatically. The URLs below may not be valid. Please verify manually.
+            </p>
+          </xsl:if>
+
+          <!-- Side-by-side map previews -->
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map A</strong> - natural order</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-a-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map A preview</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-a-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-a-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map B</strong> - reversed order</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-b-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map B preview</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-b-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-b-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <hr style="margin-top:16px;" />
+          <p style="margin-top:16px;">
+            <strong>Question:</strong> Do Map A and Map B look <strong>visually different</strong>?
+            (A difference - such as a different layer visible on top - suggests the server renders
+            collections in the specified left-to-right order.)
+          </p>
+          <p style="font-size:0.9em; color:#555; background:#f8f8f8; border:1px solid #ddd; padding:8px;">
+            Note: the spec qualifies this requirement with "if the style applied does not specify
+            otherwise". If the server's default style overrides the rendering order, both maps may
+            look the same, which is also valid conformant behaviour. Answer "yes" only if you observe
+            a clear visual difference that appears to be caused by the change in collection order.
+          </p>
+          <p>
+            <input type="submit" name="submit" value="yes"
+                   style="margin-right:12px; padding:6px 24px;" />
+            <input type="submit" name="submit" value="no"
+                   style="padding:6px 24px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+
+      <!-- Return true/false based on user answer -->
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit'] = 'yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>

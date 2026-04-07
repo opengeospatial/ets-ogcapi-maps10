@@ -5,6 +5,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import org.opengis.cite.ogcapimaps10.domain.InteractiveTestResult;
+
 import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import jakarta.ws.rs.client.Client;
@@ -78,7 +80,13 @@ public enum SuiteAttribute {
 	 * Collection names assigned to a feature id parsed from resource
 	 * /collections/{name}/items; Added during execution.
 	 */
-	FEATUREIDS("featureIds", Map.class);
+	FEATUREIDS("featureIds", Map.class),
+
+	/**
+	 * Results from interactive (manual) verification tests. Collected by the CTL frontend
+	 * before the TestNG suite runs and stored here for test classes to access.
+	 */
+	INTERACTIVE_TEST_RESULT("interactiveTestResult", InteractiveTestResult.class);
 
 	private final Class attrType;
 

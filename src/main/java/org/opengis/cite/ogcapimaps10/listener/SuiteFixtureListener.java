@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
+import org.opengis.cite.ogcapimaps10.domain.InteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -87,6 +88,31 @@ public class SuiteFixtureListener implements ISuiteListener {
 			TestSuiteLogger.log(WARNING, String.format("Could not parse parameter %s: %s. Expected is a valid integer",
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
+
+		InteractiveTestResult interactiveTestResult = parseInteractiveTestResults(params);
+		suite.setAttribute(SuiteAttribute.INTERACTIVE_TEST_RESULT.getName(), interactiveTestResult);
+	}
+
+	/**
+	 * Parses interactive test results from the test run parameters.
+	 * @param params The test run parameters map.
+	 * @return An InteractiveTestResult containing the parsed boolean results.
+	 */
+	private InteractiveTestResult parseInteractiveTestResults(Map<String, String> params) {
+		boolean enabled = parseBoolean(params, TestRunArg.INTERACTIVE_TESTS_ENABLED);
+		boolean collectionsResponseCorrect = parseBoolean(params, TestRunArg.COLLECTIONS_RESPONSE_CORRECT);
+		return new InteractiveTestResult(enabled, collectionsResponseCorrect);
+	}
+
+	/**
+	 * Parses a boolean value from the parameters map.
+	 * @param params The parameters map.
+	 * @param arg The TestRunArg key to look up.
+	 * @return The parsed boolean value, or false if not present or not parseable.
+	 */
+	private boolean parseBoolean(Map<String, String> params, TestRunArg arg) {
+		String value = params.get(arg.toString());
+		return Boolean.parseBoolean(value);
 	}
 
 	/**
