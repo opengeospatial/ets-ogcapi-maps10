@@ -59,13 +59,15 @@
           <p>Compare the two TIFF map files below. Both are from the <strong>same resource</strong> at the
              <strong>same scale</strong> (same bbox size) but centered on <strong>different locations</strong>.
              Map 1 covers the left-center area and Map 2 covers the right-center area of the
-             collection's spatial extent. They should use the same rendering style
+             collection's spatial extent. The two maps partially overlap (~40%) to allow
+             easier visual comparison of shared features.
+             They should use the same rendering style
              or represent data with the same reference and units of measure.</p>
 
           <div style="display: flex; gap: 20px; flex-wrap: wrap;">
             <!-- Map 1: Left-center area -->
             <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
-              <p><strong>Map 1 (left-center area - 25% of extent):</strong></p>
+              <p><strong>Map 1 (left area, ~40% overlap with Map 2):</strong></p>
               <p style="word-break: break-all; font-size: 0.85em;">
                 <xsl:element name="a">
                   <xsl:attribute name="href"><xsl:value-of select="$map-url1" /></xsl:attribute>
@@ -77,7 +79,7 @@
 
             <!-- Map 2: Right-center area -->
             <div style="flex: 1; min-width: 300px; border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
-              <p><strong>Map 2 (right-center area - 25% of extent):</strong></p>
+              <p><strong>Map 2 (right area, ~40% overlap with Map 1):</strong></p>
               <p style="word-break: break-all; font-size: 0.85em;">
                 <xsl:element name="a">
                   <xsl:attribute name="href"><xsl:value-of select="$map-url2" /></xsl:attribute>
