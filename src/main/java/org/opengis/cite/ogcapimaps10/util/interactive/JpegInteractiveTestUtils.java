@@ -67,9 +67,10 @@ public final class JpegInteractiveTestUtils {
 
 	/**
 	 * Builds a map request URL for the left-center area of the collection's spatial
-	 * extent (25% of extent dimensions). Used as Map 1 for Part C portrayal consistency
-	 * comparison. The bbox has the same size as {@link #buildMapRequestRightBbox(String)}
-	 * so that both maps are at the same scale-denominator.
+	 * extent (centered at 35% of extent width). Used as Map 1 for Part C portrayal
+	 * consistency comparison. The bbox has the same size as
+	 * {@link #buildMapRequestRightBbox(String)} so that both maps are at the same
+	 * scale-denominator, with ~40% overlap for easier visual comparison.
 	 * @param landingPageUrl The landing page URL of the implementation under test.
 	 * @return The map URL with left-center bbox, or a NOT_FOUND prefixed fallback URL.
 	 */
@@ -82,8 +83,8 @@ public final class JpegInteractiveTestUtils {
 		double height = bbox[3] - bbox[1];
 		double quarterWidth = width / 4.0;
 		double quarterHeight = height / 4.0;
-		// Center of the left half
-		double leftCenterLon = bbox[0] + width / 4.0;
+		// Center of the left portion (35% of extent width for ~40% overlap with right)
+		double leftCenterLon = bbox[0] + 0.35 * width;
 		double centerLat = (bbox[1] + bbox[3]) / 2.0;
 		String leftBbox = (leftCenterLon - quarterWidth) + "," + (centerLat - quarterHeight) + ","
 				+ (leftCenterLon + quarterWidth) + "," + (centerLat + quarterHeight);
@@ -92,9 +93,10 @@ public final class JpegInteractiveTestUtils {
 
 	/**
 	 * Builds a map request URL for the right-center area of the collection's spatial
-	 * extent (25% of extent dimensions). Used as Map 2 for Part C portrayal consistency
-	 * comparison. The bbox has the same size as {@link #buildMapRequestLeftBbox(String)}
-	 * so that both maps are at the same scale-denominator.
+	 * extent (centered at 65% of extent width). Used as Map 2 for Part C portrayal
+	 * consistency comparison. The bbox has the same size as
+	 * {@link #buildMapRequestLeftBbox(String)} so that both maps are at the same
+	 * scale-denominator, with ~40% overlap for easier visual comparison.
 	 * @param landingPageUrl The landing page URL of the implementation under test.
 	 * @return The map URL with right-center bbox, or a NOT_FOUND prefixed fallback URL.
 	 */
@@ -107,8 +109,8 @@ public final class JpegInteractiveTestUtils {
 		double height = bbox[3] - bbox[1];
 		double quarterWidth = width / 4.0;
 		double quarterHeight = height / 4.0;
-		// Center of the right half
-		double rightCenterLon = bbox[0] + 3.0 * width / 4.0;
+		// Center of the right portion (65% of extent width for ~40% overlap with left)
+		double rightCenterLon = bbox[0] + 0.65 * width;
 		double centerLat = (bbox[1] + bbox[3]) / 2.0;
 		String rightBbox = (rightCenterLon - quarterWidth) + "," + (centerLat - quarterHeight) + ","
 				+ (rightCenterLon + quarterWidth) + "," + (centerLat + quarterHeight);
