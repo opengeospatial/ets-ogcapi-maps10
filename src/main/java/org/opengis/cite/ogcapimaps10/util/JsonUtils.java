@@ -527,6 +527,47 @@ public class JsonUtils {
 		return parsedGeometry;
 	}
 
+	/**
+	 * Finds the URL to the map resource from the collection object's links. Searches for
+	 * a link with {@code rel="http://www.opengis.net/def/rel/ogc/1.0/map"},
+	 * {@code rel="https://www.opengis.net/def/rel/ogc/1.0/map"}, or {@code rel="map"}.
+	 * @param rootUri the root URI of the API, never <code>null</code>
+	 * @param collection the collection object (from /collections response), never
+	 * <code>null</code>
+	 * @return the absolute URL to the map resource, or <code>null</code> if no map link
+	 * found
+	 */
+	public static String findMapUrl(URI rootUri, Map<String, Object> collection) {
+		List<Object> links = (List<Object>) collection.get("links");
+		if (links == null)
+			return null;
+		return findMapUrl(rootUri, links);
+	}
+
+	private static String findMapUrl(URI rootUri, List<Object> links) {
+		for (Object linkObject : links) {
+			Map<String, Object> link = (Map<String, Object>) linkObject;
+			Object rel = link.get("rel");
+			if ("http://www.opengis.net/def/rel/ogc/1.0/map".equals(rel)
+					|| "https://www.opengis.net/def/rel/ogc/1.0/map".equals(rel) || "map".equals(rel)) {
+				String url = (String) link.get("href");
+				if (url == null)
+					continue;
+				if (!url.startsWith("http")) {
+					String path = url;
+					String base = "";
+					if (rootUri.getScheme() != null && !rootUri.getScheme().isEmpty())
+						base += rootUri.getScheme() + ":";
+					if (rootUri.getAuthority() != null && !rootUri.getAuthority().isEmpty())
+						base += "//" + rootUri.getAuthority();
+					url = base + path;
+				}
+				return url;
+			}
+		}
+		return null;
+	}
+
 	private static String findFeaturesUrlForGeoJson(URI rootUri, List<Object> links) {
 		for (Object linkObject : links) {
 			Map<String, Object> link = (Map<String, Object>) linkObject;

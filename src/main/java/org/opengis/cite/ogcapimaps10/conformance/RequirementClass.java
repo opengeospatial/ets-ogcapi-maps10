@@ -24,7 +24,9 @@ public enum RequirementClass {
 
 	OPENAPI30("http://www.opengis.net/spec/ogcapi-Maps-1/1.0/conf/oas30"),
 
-	CRS("http://www.opengis.net/spec/ogcapi-Maps-2/1.0/conf/crs");
+	CRS("http://www.opengis.net/spec/ogcapi-Maps-2/1.0/conf/crs"),
+
+	SPATIAL_SUBSETTING("https://www.opengis.net/spec/ogcapi-maps-1/1.0/conf/spatial-subsetting");
 
 	private final String conformanceClass;
 
