@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-scale-denominator.xml"
+             xmlns:ctl="http://www.occamlab.com/ctl"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             xmlns:sditu="java:org.opengis.cite.ogcapimaps10.util.interactive.ScaleDenominatorInteractiveTestUtils">
+
+  <!--
+    Interactive test function for A.15 scale-denominator-definition verification
+    (Req 15/B, C, G).
+
+    Displays two map images side-by-side:
+      Map A - scale-denominator=40000000, width=1024, height=512 (explicit scale + dims)
+      Map B - scale-denominator=40000000, no width, height, or bbox
+
+    Map A verifies that the server correctly interprets scale-denominator as the ratio of
+    real-world units to map units at 0.28 mm/pixel default resolution (Req 15/B and C).
+
+    Map B verifies that, when no bbox is provided, the server uses the scale-denominator
+    to derive an appropriate bounding box (Req 15/G - applies when Subsetting is
+    supported).
+
+    Asks the user to confirm that Map A appears to be rendered at approximately
+    1:40,000,000 scale, and that Map B covers a geographically sensible extent consistent
+    with the scale denominator.
+  -->
+
+  <ctl:function name="interactive:verifyScaleDenominator">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>The test result: "true" if the user confirmed correct scale-denominator behaviour, "false" otherwise.</ctl:return>
+    <ctl:description>
+      Interactive test for A.15 (Req 15/B, C, G): Verify that the server correctly
+      interprets the scale-denominator parameter and derives appropriate geographic
+      extents from it.
+    </ctl:description>
+    <ctl:code>
+
+      <!-- Build Map A: explicit scale-denominator + width + height (reference) -->
+      <xsl:variable name="map-a-raw">
+        <xsl:value-of select="sditu:buildExplicitScaleMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Build Map B: scale-denominator only, no width/height/bbox -->
+      <xsl:variable name="map-b-raw">
+        <xsl:value-of select="sditu:buildScaleOnlyMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Detect NOT_FOUND sentinel -->
+      <xsl:variable name="not-found" select="starts-with($map-a-raw, 'NOT_FOUND:')" />
+
+      <xsl:variable name="map-a-url">
+        <xsl:choose>
+          <xsl:when test="$not-found">
+            <xsl:value-of select="substring-after($map-a-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-a-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="map-b-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-b-raw, 'NOT_FOUND:')">
+            <xsl:value-of select="substring-after($map-b-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-b-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- Show form and collect user answer -->
+      <xsl:variable name="form-values">
+        <ctl:form width="1000" height="880" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Scale Denominator Verification (A.15 - Req 15/B, C, G)</h3>
+          <p>
+            Two maps have been requested using <strong>scale-denominator=40000000</strong>
+            (1:40,000,000). At this scale with the default display resolution of 0.28 mm/pixel,
+            one pixel represents approximately <strong>11.2 km</strong> in the real world
+            (<em>physicalMetersPerPixel = (0.28 / 1000) x 40,000,000 = 11,200 m</em>).
+          </p>
+          <table style="width:100%; font-size:0.9em; background:#f0f0f0;
+                        border:1px solid #ccc; padding:6px; margin-bottom:10px;">
+            <tr>
+              <td style="width:50%; padding:4px;"><strong>Map A</strong> - scale-denominator=40000000, width=1024, height=512</td>
+              <td style="width:50%; padding:4px;"><strong>Map B</strong> - scale-denominator=40000000, no width, height, or bbox</td>
+            </tr>
+          </table>
+
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
+              [!] Warning: Could not discover a dataset map endpoint automatically.
+              The URLs below may not be valid. Please verify manually.
+            </p>
+          </xsl:if>
+
+          <!-- Side-by-side map previews -->
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <!-- Map A: explicit scale + dimensions -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map A</strong> - Explicit scale and dimensions (Req 15/B, C)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-a-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-a-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map A - scale-denominator=40000000, width=1024, height=512</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-a-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-a-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+
+              <!-- Map B: scale-denominator only -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map B</strong> - Scale only, no dimensions or bbox (Req 15/G)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-b-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-b-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map B - scale-denominator=40000000 only</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-b-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-b-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <hr style="margin-top:16px;" />
+          <p style="margin-top:16px;">
+            <strong>Question:</strong> Does <strong>Map A</strong> appear to be rendered
+            at approximately <strong>1:40,000,000 scale</strong>, consistent with the
+            scale-denominator value and the default display resolution of 0.28 mm/pixel?
+            (If the server supports Spatial Subsetting, also verify that
+            <strong>Map B</strong> covers a geographically sensible extent derived from
+            the scale denominator.)
+          </p>
+          <p>
+            <input type="submit" name="submit" value="yes"
+                   style="margin-right:12px; padding:6px 24px;" />
+            <input type="submit" name="submit" value="no"
+                   style="padding:6px 24px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+
+      <!-- Return true/false based on user answer -->
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit'] = 'yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>
