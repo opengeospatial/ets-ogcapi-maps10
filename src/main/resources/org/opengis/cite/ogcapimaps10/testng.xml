@@ -3,6 +3,7 @@
 <suite name="ogcapi-maps-1.0-${version}" verbose="0" configfailurepolicy="continue">
   <parameter name="iut" value="" />
   <parameter name="ics" value="" />
+  <parameter name="basicAuth" value="" />
 
   <listeners>
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestRunListener" />
@@ -10,5 +11,12 @@
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestFailureListener" />
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.LoggingTestListener" />
   </listeners>
+
+  <test name="A.7 Conformance Class Spatial Subsetting">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.spatialSubsetting.BBoxDefinitionTest" />
+    </classes>
+  </test>
 
 </suite>
