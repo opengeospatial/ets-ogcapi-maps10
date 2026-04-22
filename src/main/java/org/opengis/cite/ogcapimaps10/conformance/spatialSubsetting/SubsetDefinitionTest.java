@@ -340,6 +340,7 @@ public class SubsetDefinitionTest extends CommonFixture {
 			conn.setConnectTimeout(30000);
 			conn.setReadTimeout(30000);
 			conn.setInstanceFollowRedirects(true);
+			applyAuth(conn);
 			int code = conn.getResponseCode();
 			if (code == HttpURLConnection.HTTP_OK) {
 				try (InputStream is = conn.getInputStream()) {
@@ -362,6 +363,7 @@ public class SubsetDefinitionTest extends CommonFixture {
 			conn.setConnectTimeout(30000);
 			conn.setReadTimeout(60000);
 			conn.setInstanceFollowRedirects(true);
+			applyAuth(conn);
 			return conn.getResponseCode();
 		}
 		catch (Exception e) {

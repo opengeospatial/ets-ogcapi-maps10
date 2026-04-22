@@ -3,6 +3,7 @@
 <suite name="ogcapi-maps-1.0-${version}" verbose="0" configfailurepolicy="continue">
   <parameter name="iut" value="" />
   <parameter name="ics" value="" />
+  <parameter name="basicAuth" value="" />
 
   <listeners>
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestRunListener" />
