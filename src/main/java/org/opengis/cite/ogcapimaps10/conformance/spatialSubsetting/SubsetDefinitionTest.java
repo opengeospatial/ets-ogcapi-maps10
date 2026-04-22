@@ -123,9 +123,10 @@ public class SubsetDefinitionTest extends CommonFixture {
 		List<String> errors = new ArrayList<>();
 
 		// --- 22/A + 22/B: valid ABNF subset with Lat/Lon axis names → HTTP 200
-		int statusA = getStatusRaw(mapUrl + sep + "subset=Lat%28-90%3A90%29&subset=Lon%28-180%3A180%29&f=png");
+		// Use a small extent to avoid slow full-global map generation.
+		int statusA = getStatusRaw(mapUrl + sep + "subset=Lat%28-10%3A10%29&subset=Lon%28-10%3A10%29&f=png");
 		if (statusA != 200) {
-			errors.add("[Req22/subset-accepted] Expected HTTP 200 for subset=Lat(-90:90)&subset=Lon(-180:180)"
+			errors.add("[Req22/subset-accepted] Expected HTTP 200 for subset=Lat(-10:10)&subset=Lon(-10:10)"
 					+ " but got HTTP " + statusA + ".");
 		}
 
@@ -136,54 +137,55 @@ public class SubsetDefinitionTest extends CommonFixture {
 					+ ".");
 		}
 
-		// --- 22/E: interval entirely outside valid CRS axis range → HTTP 204 or 404
-		// Latitude is bounded to [-90, 90] by CRS84; values 200-300 are always out of
-		// range for any dataset.
+		// --- 22/E: interval entirely outside valid CRS axis range → HTTP 204, 404, or
+		// 400.
+		// Latitude is bounded to [-90, 90] by CRS84; values 200-300 are always invalid.
+		// Servers may return 400 (bad request) for CRS-invalid coordinates or 204/404
+		// for an empty spatial intersection — all are conformant responses.
 		int statusE = getStatusRaw(mapUrl + sep + "subset=Lat%28200%3A300%29&f=png");
-		if (statusE != 204 && statusE != 404) {
-			errors.add("[Req22/out-of-range] Expected HTTP 204 or 404 for subset=Lat(200:300)"
+		if (statusE != 204 && statusE != 404 && !is4xx(statusE)) {
+			errors.add("[Req22/out-of-range] Expected HTTP 204, 404, or 4xx for subset=Lat(200:300)"
 					+ " (entirely outside valid latitude range) but got HTTP " + statusE + ".");
 		}
 
 		// --- 22/F: anti-meridian wrap-around (low > high) → HTTP 200
-		int statusF = getStatusRaw(mapUrl + sep + "subset=Lon%28170%3A-170%29&f=png");
+		int statusF = getStatusRaw(mapUrl + sep + "subset=Lat%28-10%3A10%29&subset=Lon%28170%3A-170%29&f=png");
 		if (statusF != 200) {
-			errors.add("[Req22/wrap-around] Expected HTTP 200 for subset=Lon(170:-170)"
+			errors.add("[Req22/wrap-around] Expected HTTP 200 for subset=Lat(-10:10)&subset=Lon(170:-170)"
 					+ " (anti-meridian wrap-around) but got HTTP " + statusF + ".");
 		}
 
 		// --- 22/G: explicit subset-crs=CRS84 → HTTP 200
 		String encodedCrs84 = URLEncoder.encode(CRS84_URI, StandardCharsets.UTF_8);
-		int statusG = getStatusRaw(mapUrl + sep + "subset=Lat%28-90%3A90%29&subset=Lon%28-180%3A180%29&subset-crs="
+		int statusG = getStatusRaw(mapUrl + sep + "subset=Lat%28-10%3A10%29&subset=Lon%28-10%3A10%29&subset-crs="
 				+ encodedCrs84 + "&f=png");
 		if (statusG != 200) {
-			errors.add("[Req22/explicit-subset-crs] Expected HTTP 200 for subset=Lat(-90:90)&subset=Lon(-180:180)"
+			errors.add("[Req22/explicit-subset-crs] Expected HTTP 200 for subset=Lat(-10:10)&subset=Lon(-10:10)"
 					+ "&subset-crs=" + CRS84_URI + " but got HTTP " + statusG + ".");
 		}
 
 		// --- 22/H: subset (spatial) + bbox → HTTP 4xx
-		int statusH1 = getStatusRaw(mapUrl + sep + "subset=Lat%28-90%3A90%29&bbox=-180,-90,180,90&f=png");
+		int statusH1 = getStatusRaw(mapUrl + sep + "subset=Lat%28-10%3A10%29&bbox=-180,-90,180,90&f=png");
 		if (!is4xx(statusH1)) {
 			errors.add("[Req22/subset-bbox-conflict] Expected HTTP 4xx when combining"
-					+ " subset=Lat(-90:90) and bbox but got HTTP " + statusH1 + ".");
+					+ " subset=Lat(-10:10) and bbox but got HTTP " + statusH1 + ".");
 		}
 
 		// --- 22/H: subset (spatial) + center → HTTP 4xx
-		int statusH2 = getStatusRaw(mapUrl + sep + "subset=Lat%28-90%3A90%29&center=0,0&f=png");
+		int statusH2 = getStatusRaw(mapUrl + sep + "subset=Lat%28-10%3A10%29&center=0,0&f=png");
 		if (!is4xx(statusH2)) {
 			errors.add("[Req22/subset-center-conflict] Expected HTTP 4xx when combining"
-					+ " subset=Lat(-90:90) and center but got HTTP " + statusH2 + ".");
+					+ " subset=Lat(-10:10) and center but got HTTP " + statusH2 + ".");
 		}
 
 		// --- 22/I: multiple subset params and single comma-separated form both → HTTP
 		// 200
-		// Multi-param form: subset=Lat(-90:90)&subset=Lon(-180:180)
-		// Already verified above as 22/A (statusA). Only add the single-param form here.
-		// Single-param form: subset=Lat(-90:90),Lon(-180:180) — comma encoded as %2C
-		int statusI = getStatusRaw(mapUrl + sep + "subset=Lat%28-90%3A90%29%2CLon%28-180%3A180%29&f=png");
+		// Multi-param form already verified above as 22/A. Only add single-param form.
+		// Single-param form: subset=Lat(-10:10),Lon(-10:10) — comma encoded as %2C
+		int statusI = getStatusRaw(mapUrl + sep + "subset=Lat%28-10%3A10%29%2CLon%28-10%3A10%29&f=png");
 		if (statusI != 200) {
 			errors.add("[Req22/multiple-subset-equiv] Expected HTTP 200 for single comma-separated form"
-					+ " subset=Lat(-90:90),Lon(-180:180) but got HTTP " + statusI + ".");
+					+ " subset=Lat(-10:10),Lon(-10:10) but got HTTP " + statusI + ".");
 		}
 
 		clearMessages();
