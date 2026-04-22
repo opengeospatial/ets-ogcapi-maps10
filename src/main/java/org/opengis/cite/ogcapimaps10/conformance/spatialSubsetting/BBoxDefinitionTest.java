@@ -318,8 +318,10 @@ public class BBoxDefinitionTest extends CommonFixture {
 			HttpURLConnection conn = (HttpURLConnection) new URL(urlString).openConnection();
 			conn.setRequestMethod("GET");
 			conn.setRequestProperty("Accept", "application/json");
-			conn.setConnectTimeout(10000);
-			conn.setReadTimeout(10000);
+			conn.setConnectTimeout(30000);
+			conn.setReadTimeout(30000);
+			conn.setInstanceFollowRedirects(true);
+			applyAuth(conn);
 			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
 				try (InputStream is = conn.getInputStream()) {
 					return OBJECT_MAPPER.readValue(is, new TypeReference<Map<String, Object>>() {
@@ -337,9 +339,10 @@ public class BBoxDefinitionTest extends CommonFixture {
 		try {
 			HttpURLConnection conn = (HttpURLConnection) new URL(urlString).openConnection();
 			conn.setRequestMethod("GET");
-			conn.setConnectTimeout(10000);
-			conn.setReadTimeout(10000);
+			conn.setConnectTimeout(30000);
+			conn.setReadTimeout(60000);
 			conn.setInstanceFollowRedirects(true);
+			applyAuth(conn);
 			return conn.getResponseCode();
 		}
 		catch (Exception e) {
