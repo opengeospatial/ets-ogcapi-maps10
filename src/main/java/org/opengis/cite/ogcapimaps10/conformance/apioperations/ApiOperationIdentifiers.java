@@ -356,6 +356,7 @@ public class ApiOperationIdentifiers extends CommonFixture {
 			this.path = path;
 			this.operationId = operationId;
 		}
+
 	}
 
 }
