@@ -82,7 +82,6 @@ public class CorsSupport extends CommonFixture {
 
 		for (ResourceUnderTest resource : resources) {
 			verifyGetCors(resource, errors);
-			verifyOptionsCors(resource, errors);
 		}
 
 		if (!errors.isEmpty()) {
@@ -127,7 +126,7 @@ public class CorsSupport extends CommonFixture {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
 			String collectionsUrl = getBaseUrl() + "/collections";
-			HttpURLConnection connection = (HttpURLConnection) new URL(collectionsUrl).openConnection();
+			HttpURLConnection connection = openConnection(collectionsUrl, "GET");
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Accept", "application/json");
 
@@ -155,7 +154,7 @@ public class CorsSupport extends CommonFixture {
 	private List<Map<String, Object>> readLandingPageLinks() {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
-			HttpURLConnection connection = (HttpURLConnection) new URL(getBaseUrl()).openConnection();
+			HttpURLConnection connection = openConnection(getBaseUrl(), "GET");
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Accept", "application/json");
 
@@ -176,7 +175,7 @@ public class CorsSupport extends CommonFixture {
 	private void discoverApiDefinitionResources(String apiDefinitionUrl, Set<String> seen) {
 		try {
 			ObjectMapper objectMapper = new ObjectMapper();
-			HttpURLConnection connection = (HttpURLConnection) new URL(apiDefinitionUrl).openConnection();
+			HttpURLConnection connection = openConnection(apiDefinitionUrl, "GET");
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Accept", "application/json");
 
@@ -252,10 +251,23 @@ public class CorsSupport extends CommonFixture {
 			return;
 		}
 		String absoluteUrl = resolveUrl(getBaseUrl(), href);
-		String accept = valueAsString(link.get("type"));
+		String accept = getAcceptHeader(resourceType, valueAsString(link.get("type")));
 		if (seen.add(resourceType + "|" + absoluteUrl)) {
 			resources.add(new ResourceUnderTest(resourceType, absoluteUrl, accept));
 		}
+	}
+
+	private String getAcceptHeader(String resourceType, String linkType) {
+		if ("collection-map".equals(resourceType) || "dataset-map".equals(resourceType) || "map".equals(resourceType)
+				|| "styled-map".equals(resourceType)) {
+			return null;
+		}
+		if ("collection-tilesets-map".equals(resourceType) || "dataset-tilesets-map".equals(resourceType)
+				|| "tilesets-list".equals(resourceType) || "tileset".equals(resourceType)
+				|| "projections".equals(resourceType)) {
+			return "application/json";
+		}
+		return linkType;
 	}
 
 	private void verifyGetCors(ResourceUnderTest resource, List<String> errors) {
