@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="ogcapi-maps-1.0-${version}" verbose="0" configfailurepolicy="continue">
-  <parameter name="iut" value="" />
+  <parameter name="iut" value="https://demo.pygeoapi.io/stable" />
   <parameter name="ics" value="" />
+  <parameter name="noofcollections" value="5" />
 
   <listeners>
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestRunListener" />
@@ -10,5 +11,12 @@
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestFailureListener" />
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.LoggingTestListener" />
   </listeners>
+
+  <test name="Core">
+   <classes>
+     <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
+     <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapOperation" />
+   </classes>
+  </test>
 
 </suite>
