@@ -24,12 +24,16 @@ import java.util.Map;
  * Given: a conformance resource in a recognized format, such as the OGC API JSON /conformance resource
  * When: retrieving that resource from the API endpoint
  * Then: assert that the list of conformance classes includes at minimum:
+ *   https://www.opengis.net/spec/ogcapi-maps-1/1.0/conf/core
+ * or the legacy ATS URI:
  *   https://www.opengis.net/spec/ogcapi-maps-1/1.0/req/core
  * </pre>
  */
 public class MapConformanceSuccess extends CommonFixture {
 
-	private static final String REQUIRED_CORE_URI = "https://www.opengis.net/spec/ogcapi-maps-1/1.0/req/core";
+	private static final String REQUIRED_CORE_URI = "https://www.opengis.net/spec/ogcapi-maps-1/1.0/conf/core";
+
+	private static final String LEGACY_REQUIRED_CORE_URI = "https://www.opengis.net/spec/ogcapi-maps-1/1.0/req/core";
 
 	@Test(description = "Implements A.1.3. Abstract Test for Requirement Map Conformance Success (Requirement /req/core/conformance-success)")
 	public void verifyConformanceClassPresence() throws Exception {
@@ -52,7 +56,8 @@ public class MapConformanceSuccess extends CommonFixture {
 
 		boolean found = false;
 		for (Object o : conformsToList) {
-			if (o != null && o.toString().trim().equals(REQUIRED_CORE_URI)) {
+			if (o != null && (o.toString().trim().equals(REQUIRED_CORE_URI)
+					|| o.toString().trim().equals(LEGACY_REQUIRED_CORE_URI))) {
 				found = true;
 				break;
 			}
@@ -65,7 +70,7 @@ public class MapConformanceSuccess extends CommonFixture {
 			}
 		}
 
-		Assert.assertTrue(found, "The required conformance class 'req/core' is not declared.");
+		Assert.assertTrue(found, "The required conformance class 'conf/core' or legacy 'req/core' is not declared.");
 	}
 
 }
