@@ -1,42 +1,51 @@
 package org.opengis.cite.ogcapimaps10.conformance.core;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertTrue;
 
-import java.net.URI;
+import java.util.List;
 
-import org.testng.ITestContext;
-import org.testng.annotations.BeforeClass;
+import org.opengis.cite.ogcapimaps10.conformance.RequirementClass;
 import org.testng.annotations.Test;
-import org.testng.ISuite;
+
+import io.restassured.path.json.JsonPath;
 
 /**
- * Integration Test for MapConformanceSuccess
+ * Tests for MapConformanceSuccess.
  */
 public class MapConformanceSuccessIT {
 
-	private static ITestContext testContext;
+	@Test
+	public void parsesCoreConformanceClass() {
+		MapConformanceSuccess conformanceTest = new MapConformanceSuccess();
+		JsonPath jsonPath = new JsonPath(
+				"{\"conformsTo\":[\"https://www.opengis.net/spec/ogcapi-maps-1/1.0/conf/core\"]}");
 
-	private static ISuite suite;
+		List<RequirementClass> requirementClasses = conformanceTest.parseAndValidateRequirementClasses(jsonPath);
 
-	private static URI rootUri;
-
-	@BeforeClass
-	public static void initTestFixture() throws Exception {
-		testContext = mock(ITestContext.class);
-		suite = mock(ISuite.class);
-		when(testContext.getSuite()).thenReturn(suite);
-
-		rootUri = new URI("http://localhost:5000");
-		when(suite.getAttribute("iut")).thenReturn(rootUri);
+		assertTrue(requirementClasses.contains(RequirementClass.CORE));
 	}
 
 	@Test
-	public void testMapConformanceSuccess() throws Exception {
+	public void parsesLegacyCoreRequirementUri() {
 		MapConformanceSuccess conformanceTest = new MapConformanceSuccess();
-		conformanceTest.initCommonFixture(testContext);
+		JsonPath jsonPath = new JsonPath(
+				"{\"conformsTo\":[\"https://www.opengis.net/spec/ogcapi-maps-1/1.0/req/core\"]}");
 
-		conformanceTest.verifyConformanceClassPresence();
+		List<RequirementClass> requirementClasses = conformanceTest.parseAndValidateRequirementClasses(jsonPath);
+
+		assertTrue(requirementClasses.contains(RequirementClass.CORE));
+	}
+
+	@Test(expectedExceptions = AssertionError.class)
+	public void failsIfConformsToIsMissing() {
+		MapConformanceSuccess conformanceTest = new MapConformanceSuccess();
+		conformanceTest.parseAndValidateRequirementClasses(new JsonPath("{}"));
+	}
+
+	@Test(expectedExceptions = AssertionError.class)
+	public void failsIfConformsToEntryIsNotString() {
+		MapConformanceSuccess conformanceTest = new MapConformanceSuccess();
+		conformanceTest.parseAndValidateRequirementClasses(new JsonPath("{\"conformsTo\":[123]}"));
 	}
 
 }

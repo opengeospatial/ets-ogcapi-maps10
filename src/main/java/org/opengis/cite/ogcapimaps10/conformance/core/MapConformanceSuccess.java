@@ -1,15 +1,23 @@
 package org.opengis.cite.ogcapimaps10.conformance.core;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static io.restassured.http.ContentType.JSON;
+import static io.restassured.http.Method.GET;
+import static org.opengis.cite.ogcapimaps10.conformance.RequirementClass.CORE;
+import static org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute.REQUIREMENTCLASSES;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.opengis.cite.ogcapimaps10.conformance.CommonFixture;
-import org.testng.Assert;
+import org.opengis.cite.ogcapimaps10.conformance.RequirementClass;
+import org.testng.ITestContext;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
-import java.util.Map;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
 
 /**
  * <pre>
@@ -35,42 +43,59 @@ public class MapConformanceSuccess extends CommonFixture {
 
 	private static final String LEGACY_REQUIRED_CORE_URI = "https://www.opengis.net/spec/ogcapi-maps-1/1.0/req/core";
 
+	private List<RequirementClass> requirementClasses = new ArrayList<>();
+
+	@AfterClass
+	public void storeRequirementClassesInTestContext(ITestContext testContext) {
+		testContext.getSuite().setAttribute(REQUIREMENTCLASSES.getName(), this.requirementClasses);
+	}
+
 	@Test(description = "Implements A.1.3. Abstract Test for Requirement Map Conformance Success (Requirement /req/core/conformance-success)")
-	public void verifyConformanceClassPresence() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper();
-		String conformanceUrl = rootUri.toString() + "/conformance";
+	public void verifyMapConformanceSuccess() {
+		String conformanceUrl = buildConformanceUrl();
+		Response response = init().baseUri(conformanceUrl).accept(JSON).when().request(GET);
+		response.then().statusCode(200);
 
-		URL url = new URL(conformanceUrl);
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setRequestMethod("GET");
+		this.requirementClasses = parseAndValidateRequirementClasses(response.jsonPath());
+		assertTrue(this.requirementClasses.contains(CORE),
+				"The required conformance class 'conf/core' or legacy 'req/core' is not declared.");
+	}
 
-		connection.setRequestProperty("Accept", "application/json");
-
-		InputStream responseStream = connection.getInputStream();
-		Map<String, Object> responseMap = objectMapper.readValue(responseStream, Map.class);
-
-		Object conformsToObj = responseMap.get("conformsTo");
-		Assert.assertNotNull(conformsToObj, "'conformsTo' is missing in response.");
-
-		List<?> conformsToList = (List<?>) conformsToObj;
-
-		boolean found = false;
-		for (Object o : conformsToList) {
-			if (o != null && (o.toString().trim().equals(REQUIRED_CORE_URI)
-					|| o.toString().trim().equals(LEGACY_REQUIRED_CORE_URI))) {
-				found = true;
-				break;
-			}
+	List<RequirementClass> parseAndValidateRequirementClasses(JsonPath jsonPath) {
+		Object conformsToObj = jsonPath.get("conformsTo");
+		assertNotNull(conformsToObj, "Missing member 'conformsTo'.");
+		if (!(conformsToObj instanceof List<?>)) {
+			throw new AssertionError("Member 'conformsTo' is not an array.");
 		}
 
-		if (!found) {
-			System.out.println("Returned conformsTo entries:");
-			for (Object o : conformsToList) {
-				System.out.println(" - " + o);
+		List<RequirementClass> parsedRequirementClasses = new ArrayList<>();
+		for (Object conformsToEntry : (List<?>) conformsToObj) {
+			if (!(conformsToEntry instanceof String)) {
+				throw new AssertionError(
+						"At least one element array 'conformsTo' is not a string value (" + conformsToEntry + ")");
+			}
+			String conformanceClass = ((String) conformsToEntry).trim();
+			RequirementClass requirementClass = requirementClassByConformanceClass(conformanceClass);
+			if (requirementClass != null && !parsedRequirementClasses.contains(requirementClass)) {
+				parsedRequirementClasses.add(requirementClass);
 			}
 		}
+		return parsedRequirementClasses;
+	}
 
-		Assert.assertTrue(found, "The required conformance class 'conf/core' or legacy 'req/core' is not declared.");
+	private RequirementClass requirementClassByConformanceClass(String conformanceClass) {
+		if (REQUIRED_CORE_URI.equals(conformanceClass) || LEGACY_REQUIRED_CORE_URI.equals(conformanceClass)) {
+			return CORE;
+		}
+		return RequirementClass.byConformanceClass(conformanceClass);
+	}
+
+	private String buildConformanceUrl() {
+		String rootUriString = rootUri.toString();
+		if (rootUriString.endsWith("/")) {
+			rootUriString = rootUriString.substring(0, rootUriString.length() - 1);
+		}
+		return rootUriString + "/conformance";
 	}
 
 }
