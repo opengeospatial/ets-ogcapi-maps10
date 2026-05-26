@@ -155,9 +155,8 @@ public class BackgroundMapSuccess extends CommonFixture {
 				new TypeReference<Map<String, Object>>() {
 				});
 
-		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"),
-				new TypeReference<List<String>>() {
-				});
+		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"), new TypeReference<List<String>>() {
+		});
 		if (conformsTo == null)
 			return false;
 
@@ -479,8 +478,7 @@ public class BackgroundMapSuccess extends CommonFixture {
 			System.out.println("  [Pre-check] void-transparent supported: " + supportsVoidTransparent);
 		}
 		else {
-			System.out.println(
-					"\n[CRS Discovery] No void-capable CRS found. Void parameter tests will be skipped.");
+			System.out.println("\n[CRS Discovery] No void-capable CRS found. Void parameter tests will be skipped.");
 		}
 
 		// Test 9 combinations: transparent (absent/false/true) × bgcolor (absent/hex/W3C)

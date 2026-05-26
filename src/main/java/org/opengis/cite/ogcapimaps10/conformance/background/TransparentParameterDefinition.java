@@ -47,9 +47,8 @@ public class TransparentParameterDefinition extends CommonFixture {
 				new TypeReference<Map<String, Object>>() {
 				});
 
-		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"),
-				new TypeReference<List<String>>() {
-				});
+		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"), new TypeReference<List<String>>() {
+		});
 		if (conformsTo == null) {
 			throw new SkipException("No 'conformsTo' array found in conformance response.");
 		}

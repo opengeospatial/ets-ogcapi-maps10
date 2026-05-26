@@ -36,8 +36,8 @@ public class VoidColorParameterDefinition extends CommonFixture {
 	private static final String GLOBAL_BBOX = "-180,-90,180,90";
 
 	/**
-	 * Known interrupted projection CRSs that produce void areas (parts of the map
-	 * outside the valid area of the projection). Void areas only exist for interrupted
+	 * Known interrupted projection CRSs that produce void areas (parts of the map outside
+	 * the valid area of the projection). Void areas only exist for interrupted
 	 * projections where the map is intentionally "torn"; most standard CRSs (CRS84,
 	 * Mercator, UTM, Lambert, etc.) have a fully valid ℝ² and thus no void.
 	 */
@@ -86,9 +86,8 @@ public class VoidColorParameterDefinition extends CommonFixture {
 				new TypeReference<Map<String, Object>>() {
 				});
 
-		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"),
-				new TypeReference<List<String>>() {
-				});
+		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"), new TypeReference<List<String>>() {
+		});
 		if (conformsTo == null) {
 			throw new SkipException("No 'conformsTo' array found in conformance response.");
 		}
@@ -145,9 +144,8 @@ public class VoidColorParameterDefinition extends CommonFixture {
 				new TypeReference<Map<String, Object>>() {
 				});
 
-		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"),
-				new TypeReference<List<String>>() {
-				});
+		List<String> conformsTo = objectMapper.convertValue(data.get("conformsTo"), new TypeReference<List<String>>() {
+		});
 		if (conformsTo == null)
 			return false;
 
