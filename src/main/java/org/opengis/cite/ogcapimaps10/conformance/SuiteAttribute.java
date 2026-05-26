@@ -78,7 +78,15 @@ public enum SuiteAttribute {
 	 * Collection names assigned to a feature id parsed from resource
 	 * /collections/{name}/items; Added during execution.
 	 */
-	FEATUREIDS("featureIds", Map.class);
+	FEATUREIDS("featureIds", Map.class),
+
+	/**
+	 * The TileMatrixSet identifier to use for tile requests. Supported values are
+	 * "WebMercatorQuad" and "WorldCRS84Quad".
+	 * @see <a href="https://docs.ogc.org/is/17-083r4/17-083r4.html#toc49">OGC Two
+	 * Dimensional Tile Matrix Set and Tile Set Metadata</a>
+	 */
+	TILE_MATRIX_SET("tileMatrixSet", String.class);
 
 	private final Class attrType;
 

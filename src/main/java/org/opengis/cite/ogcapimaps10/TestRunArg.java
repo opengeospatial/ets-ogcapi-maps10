@@ -15,7 +15,15 @@ public enum TestRunArg {
 	 * The number of collections to test (a value less or equal to 0 means all
 	 * collections).
 	 */
-	NOOFCOLLECTIONS;
+	NOOFCOLLECTIONS,
+
+	/**
+	 * The TileMatrixSet to use for tile requests. Supported values are "WebMercatorQuad"
+	 * and "WorldCRS84Quad". Default is "WebMercatorQuad".
+	 * @see <a href="https://docs.ogc.org/is/17-083r4/17-083r4.html#toc49">OGC Two
+	 * Dimensional Tile Matrix Set and Tile Set Metadata</a>
+	 */
+	TILE_MATRIX_SET;
 
 	/** {@inheritDoc} */
 	@Override

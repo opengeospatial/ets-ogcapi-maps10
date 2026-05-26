@@ -4,7 +4,8 @@
              xmlns:tns="http://www.opengis.net/cite/ogcapi-maps-1.0"
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
-             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController">
+             xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
+>
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
@@ -72,6 +73,15 @@
                 <label for="noOfCollectionsAll">All collections</label>
               </div>
             </p>
+            <p>
+              <label for="tileMatrixSet">
+                <h4 style="margin-bottom: 0.5em">TileMatrixSet</h4>
+              </label>
+              <select id="tileMatrixSet" name="tileMatrixSet">
+                <option value="WebMercatorQuad" selected="selected">WebMercatorQuad (EPSG:3857)</option>
+                <option value="WorldCRS84Quad">WorldCRS84Quad (CRS84)</option>
+              </select>
+            </p>
           </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
@@ -80,10 +90,13 @@
           </p>
         </ctl:form>
       </xsl:variable>
+      <xsl:variable name="iut-url" select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+      <xsl:variable name="tile-matrix-set" select="$form-data/values/value[@key='tileMatrixSet']" />
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
-            <xsl:value-of select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+            <xsl:value-of select="$iut-url" />
           </entry>
           <entry key="noofcollections">
             <xsl:choose>
@@ -92,6 +105,10 @@
                 <xsl:value-of select="$form-data/values/value[@key='noOfCollections']" />
               </xsl:otherwise>
             </xsl:choose>
+          </entry>
+          <!-- TileMatrixSet selection -->
+          <entry key="tile_matrix_set">
+            <xsl:value-of select="$tile-matrix-set" />
           </entry>
         </properties>
       </xsl:variable>

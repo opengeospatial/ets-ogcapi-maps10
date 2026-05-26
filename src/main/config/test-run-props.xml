@@ -4,4 +4,6 @@
   <comment>Sample test run arguments (ets-ogcapi-maps10)</comment>
   <entry key="iut">https://demo.pygeoapi.io/stable</entry>
   <entry key="noofcollections">3</entry>
+  <!-- TileMatrixSet: WebMercatorQuad or WorldCRS84Quad -->
+  <entry key="tile_matrix_set">WebMercatorQuad</entry>
 </properties>

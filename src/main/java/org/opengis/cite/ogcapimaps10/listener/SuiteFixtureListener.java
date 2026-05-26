@@ -87,6 +87,14 @@ public class SuiteFixtureListener implements ISuiteListener {
 			TestSuiteLogger.log(WARNING, String.format("Could not parse parameter %s: %s. Expected is a valid integer",
 					TestRunArg.NOOFCOLLECTIONS, noOfCollections));
 		}
+
+		// Parse and set TileMatrixSet parameter (default to WebMercatorQuad)
+		String tileMatrixSet = params.get(TestRunArg.TILE_MATRIX_SET.toString());
+		if (tileMatrixSet == null || tileMatrixSet.isEmpty()) {
+			tileMatrixSet = "WebMercatorQuad";
+		}
+		suite.setAttribute(SuiteAttribute.TILE_MATRIX_SET.getName(), tileMatrixSet);
+		TestSuiteLogger.log(Level.CONFIG, "Using TileMatrixSet: " + tileMatrixSet);
 	}
 
 	/**
