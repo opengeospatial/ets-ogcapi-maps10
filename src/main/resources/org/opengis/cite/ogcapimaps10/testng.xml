@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="ogcapi-maps-1.0-${version}" verbose="0" configfailurepolicy="continue">
-  <parameter name="iut" value="https://demo.pygeoapi.io/stable" />
+  <parameter name="iut" value="" />
   <parameter name="ics" value="" />
+  <parameter name="basicAuth" value="" />
   <parameter name="noofcollections" value="5" />
 
   <listeners>
@@ -13,12 +14,12 @@
   </listeners>
 
   <test name="Core">
-   <classes>
-     <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
-     <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapOperation" />
-     <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapResponse" />
-     <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapConformanceSuccess" />
-   </classes>
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapOperation" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapResponse" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapConformanceSuccess" />
+    </classes>
   </test>
 
   <test name="Map Tilesets">
@@ -30,18 +31,25 @@
 
   <test name="Background">
     <classes>
-      <class name="org.opengis.cite.ogcapimaps10.conformance.background.BgcolorParameterDefinition"/>
-      <class name="org.opengis.cite.ogcapimaps10.conformance.background.TransparentParameterDefinition"/>
-      <class name="org.opengis.cite.ogcapimaps10.conformance.background.VoidColorParameterDefinition"/>
-      <class name="org.opengis.cite.ogcapimaps10.conformance.background.VoidTransparentParameterDefinition"/>
-      <class name="org.opengis.cite.ogcapimaps10.conformance.background.BackgroundMapSuccess"/>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.BgcolorParameterDefinition" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.TransparentParameterDefinition" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.VoidColorParameterDefinition" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.VoidTransparentParameterDefinition" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.background.BackgroundMapSuccess" />
     </classes>
   </test>
 
   <test name="Dataset Map">
-   <classes>
-     <class name="org.opengis.cite.ogcapimaps10.conformance.datasetmap.DatasetMapLandingPage" />
-   </classes>
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.datasetmap.DatasetMapLandingPage" />
+    </classes>
+  </test>
+
+  <test name="A.8 Conformance Class Date and Time">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.datetime.DatetimeResponse" />
+    </classes>
   </test>
 
 </suite>

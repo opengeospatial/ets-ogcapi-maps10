@@ -162,6 +162,15 @@
       <plugin>
         <artifactId>maven-scm-publish-plugin</artifactId>
       </plugin>
+      <plugin>
+        <artifactId>maven-site-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>site-package</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
 
     <pluginManagement>
