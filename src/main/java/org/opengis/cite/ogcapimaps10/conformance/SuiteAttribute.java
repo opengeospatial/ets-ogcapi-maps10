@@ -5,6 +5,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import org.opengis.cite.ogcapimaps10.domain.DatetimeSubsetCrsInteractiveTestResult;
+
 import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import jakarta.ws.rs.client.Client;
@@ -86,7 +88,14 @@ public enum SuiteAttribute {
 	 * @see <a href="https://docs.ogc.org/is/17-083r4/17-083r4.html#toc49">OGC Two
 	 * Dimensional Tile Matrix Set and Tile Set Metadata</a>
 	 */
-	TILE_MATRIX_SET("tileMatrixSet", String.class);
+	TILE_MATRIX_SET("tileMatrixSet", String.class),
+
+	/**
+	 * Pre-collected result of the interactive CRS-interpretation verification for
+	 * Abstract Test A.29 Req 29/E.
+	 */
+	DATETIME_SUBSET_CRS_INTERACTIVE_TEST_RESULT("datetimeSubsetCrsInteractiveTestResult",
+			DatetimeSubsetCrsInteractiveTestResult.class);
 
 	private final Class attrType;
 
