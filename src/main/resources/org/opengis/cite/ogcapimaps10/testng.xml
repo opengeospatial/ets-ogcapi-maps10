@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="ogcapi-maps-1.0-${version}" verbose="0" configfailurepolicy="continue">
-  <parameter name="iut" value="https://demo.pygeoapi.io/stable" />
+  <parameter name="iut" value="https://maps.gnosis.earth/ogcapi" />
   <parameter name="ics" value="" />
+  <parameter name="basicAuth" value="" />
   <parameter name="noofcollections" value="5" />
+  <parameter name="datetime_subset_response_interactive_enabled" value="true" />
+  <parameter name="datetime_subset_response_result_correct" value="true" />
 
   <listeners>
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestRunListener" />
@@ -42,6 +45,13 @@
    <classes>
      <class name="org.opengis.cite.ogcapimaps10.conformance.datasetmap.DatasetMapLandingPage" />
    </classes>
+  </test>
+
+  <test name="A.8 Req 30 subset-response">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.datetime.DatetimeSubsetResponse" />
+    </classes>
   </test>
 
 </suite>

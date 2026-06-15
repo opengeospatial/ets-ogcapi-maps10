@@ -5,6 +5,7 @@
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
              xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
+             xmlns:idsr="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-datetime-subset-response.xml"
 >
 
   <ctl:function name="tns:run-ets-${ets-code}">
@@ -48,7 +49,7 @@
           </div>
           <fieldset style="background:#ccffff">
             <legend style="font-family: sans-serif; color: #000099;
-			                 background-color:#F0F8FF; border-style: solid; 
+			                 background-color:#F0F8FF; border-style: solid;
                        border-width: medium; padding:4px">Implementation under test
             </legend>
             <p>
@@ -83,6 +84,25 @@
               </select>
             </p>
           </fieldset>
+          <fieldset style="background:#ffffcc">
+            <legend style="font-family: sans-serif; color: #000099;
+                           background-color:#F0F8FF; border-style: solid;
+                           border-width: medium; padding:4px">Interactive Tests (A.30 Temporal Subset Response)
+            </legend>
+            <p>
+              <input type="checkbox" id="runDatetimeSubsetResponseInteractiveTests"
+                     name="runDatetimeSubsetResponseInteractiveTests" value="true" />
+              <label for="runDatetimeSubsetResponseInteractiveTests">
+                Enable interactive visual verification for temporal subset filter application (A.30, Req 30/A)
+              </label>
+            </p>
+            <p style="font-size:0.9em; color:#555;">
+              When enabled, you will be shown two map images side by side - one filtered
+              to a specific time instant using the subset parameter, and one showing the
+              full temporal extent - and asked to confirm that the filtered map shows
+              different content, proving the server correctly applied the temporal filter.
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -92,6 +112,20 @@
       </xsl:variable>
       <xsl:variable name="iut-url" select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
       <xsl:variable name="tile-matrix-set" select="$form-data/values/value[@key='tileMatrixSet']" />
+      <xsl:variable name="run-datetime-subset-response-interactive"
+                    select="$form-data/values/value[@key='runDatetimeSubsetResponseInteractiveTests'] = 'true'" />
+
+      <!-- Run interactive datetime subset response verification if enabled -->
+      <xsl:variable name="datetime-subset-response-result">
+        <xsl:choose>
+          <xsl:when test="$run-datetime-subset-response-interactive">
+            <ctl:call-function name="idsr:verifyDatetimeSubsetResponse">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
 
       <xsl:variable name="test-run-props">
         <properties version="1.0">
@@ -109,6 +143,13 @@
           <!-- TileMatrixSet selection -->
           <entry key="tile_matrix_set">
             <xsl:value-of select="$tile-matrix-set" />
+          </entry>
+          <!-- A.30 interactive subset-response verification -->
+          <entry key="datetime_subset_response_interactive_enabled">
+            <xsl:value-of select="$run-datetime-subset-response-interactive" />
+          </entry>
+          <entry key="datetime_subset_response_result_correct">
+            <xsl:value-of select="$datetime-subset-response-result" />
           </entry>
         </properties>
       </xsl:variable>

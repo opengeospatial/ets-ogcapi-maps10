@@ -86,7 +86,14 @@ public enum SuiteAttribute {
 	 * @see <a href="https://docs.ogc.org/is/17-083r4/17-083r4.html#toc49">OGC Two
 	 * Dimensional Tile Matrix Set and Tile Set Metadata</a>
 	 */
-	TILE_MATRIX_SET("tileMatrixSet", String.class);
+	TILE_MATRIX_SET("tileMatrixSet", String.class),
+
+	/**
+	 * Pre-collected result of the interactive filter-application verification for
+	 * Abstract Test A.30 Req 30/A.
+	 */
+	DATETIME_SUBSET_RESPONSE_INTERACTIVE_TEST_RESULT("datetimeSubsetResponseInteractiveTestResult",
+			org.opengis.cite.ogcapimaps10.domain.DatetimeSubsetResponseInteractiveTestResult.class);
 
 	private final Class attrType;
 

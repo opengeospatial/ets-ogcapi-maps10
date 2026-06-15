@@ -95,6 +95,27 @@ public class SuiteFixtureListener implements ISuiteListener {
 		}
 		suite.setAttribute(SuiteAttribute.TILE_MATRIX_SET.getName(), tileMatrixSet);
 		TestSuiteLogger.log(Level.CONFIG, "Using TileMatrixSet: " + tileMatrixSet);
+
+		parseDatetimeSubsetResponseInteractiveResults(suite);
+	}
+
+	/**
+	 * Parses the interactive test parameters for A.30 Req 30/A (filter application) and
+	 * stores the result as a suite attribute.
+	 * @param suite the TestNG suite instance
+	 */
+	private void parseDatetimeSubsetResponseInteractiveResults(ISuite suite) {
+		Map<String, String> params = suite.getXmlSuite().getParameters();
+		String enabledStr = params.get(TestRunArg.DATETIME_SUBSET_RESPONSE_INTERACTIVE_ENABLED.toString());
+		boolean enabled = "true".equalsIgnoreCase(enabledStr);
+		boolean filterAppliedCorrect = false;
+		if (enabled) {
+			String correctStr = params.get(TestRunArg.DATETIME_SUBSET_RESPONSE_RESULT_CORRECT.toString());
+			filterAppliedCorrect = "true".equalsIgnoreCase(correctStr);
+		}
+		org.opengis.cite.ogcapimaps10.domain.DatetimeSubsetResponseInteractiveTestResult result = new org.opengis.cite.ogcapimaps10.domain.DatetimeSubsetResponseInteractiveTestResult(
+				enabled, filterAppliedCorrect);
+		suite.setAttribute(SuiteAttribute.DATETIME_SUBSET_RESPONSE_INTERACTIVE_TEST_RESULT.getName(), result);
 	}
 
 	/**
