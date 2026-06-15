@@ -117,16 +117,18 @@ public class DatetimeSubsetResponse extends CommonFixture {
 		HttpResult resultFull = fetch(temporalMapUrl + fullFmtParam);
 		HttpResult resultFiltered = fetch(
 				temporalMapUrl + tSep + "subset=time(%22" + instant + "%22)" + temporalFmtSuffix);
-		if (resultFull.status == 200 && resultFiltered.status == 200) {
-			if (Arrays.equals(resultFull.body, resultFiltered.body)) {
-				errors.add("[Req30/A-instant] subset=time(\"" + instant
-						+ "\") response body is identical to the full-extent body"
-						+ " — the server does not appear to be applying the temporal filter.");
-			}
+		if (resultFull.status != 200 && resultFull.status != 204) {
+			errors.add("[Req30/A-instant] Full-extent map request returned HTTP " + resultFull.status
+					+ " — check that basicAuth is configured correctly.");
 		}
 		else if (resultFiltered.status != 200 && resultFiltered.status != 204) {
 			errors.add("[Req30/A-instant] Expected HTTP 200 or 204 for subset=time(\"" + instant + "\") but got HTTP "
 					+ resultFiltered.status + ".");
+		}
+		else if (Arrays.equals(resultFull.body, resultFiltered.body)) {
+			errors.add("[Req30/A-instant] subset=time(\"" + instant
+					+ "\") response body is identical to the full-extent body"
+					+ " — the server does not appear to be applying the temporal filter.");
 		}
 		clearMessages();
 		if (!errors.isEmpty()) {
@@ -155,16 +157,18 @@ public class DatetimeSubsetResponse extends CommonFixture {
 		HttpResult resultFull = fetch(temporalMapUrl + fullFmtParam);
 		HttpResult resultFiltered = fetch(temporalMapUrl + tSep + "subset=time(%22" + intervalLow + "%22:%22"
 				+ intervalHigh + "%22)" + temporalFmtSuffix);
-		if (resultFull.status == 200 && resultFiltered.status == 200) {
-			if (Arrays.equals(resultFull.body, resultFiltered.body)) {
-				errors.add("[Req30/A-interval] subset=time(\"" + intervalLow + "\":\"" + intervalHigh
-						+ "\") response body is identical to the full-extent body"
-						+ " — the server does not appear to be applying the temporal filter.");
-			}
+		if (resultFull.status != 200 && resultFull.status != 204) {
+			errors.add("[Req30/A-interval] Full-extent map request returned HTTP " + resultFull.status
+					+ " — check that basicAuth is configured correctly.");
 		}
 		else if (resultFiltered.status != 200 && resultFiltered.status != 204) {
 			errors.add("[Req30/A-interval] Expected HTTP 200 or 204 for subset=time(\"" + intervalLow + "\":\""
 					+ intervalHigh + "\") but got HTTP " + resultFiltered.status + ".");
+		}
+		else if (Arrays.equals(resultFull.body, resultFiltered.body)) {
+			errors.add("[Req30/A-interval] subset=time(\"" + intervalLow + "\":\"" + intervalHigh
+					+ "\") response body is identical to the full-extent body"
+					+ " — the server does not appear to be applying the temporal filter.");
 		}
 		clearMessages();
 		if (!errors.isEmpty()) {

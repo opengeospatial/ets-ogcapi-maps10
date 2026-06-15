@@ -59,6 +59,9 @@ public class CommonFixture {
 		initLogging();
 		rootUri = (URI) testContext.getSuite().getAttribute(SuiteAttribute.IUT.getName());
 		String basicAuth = testContext.getSuite().getParameter("basicAuth");
+		if (basicAuth == null || basicAuth.isEmpty()) {
+			basicAuth = System.getProperty("basicAuth");
+		}
 		if (basicAuth != null && !basicAuth.isEmpty()) {
 			try {
 				String decoded = new String(Base64.getDecoder().decode(basicAuth), StandardCharsets.UTF_8);
