@@ -12,7 +12,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
 import org.opengis.cite.ogcapimaps10.listener.SuiteFixtureListener;
@@ -21,12 +21,12 @@ import org.testng.xml.XmlSuite;
 
 public class SuiteFixtureListenerTest {
 
-	private static XmlSuite xmlSuite;
+	private XmlSuite xmlSuite;
 
-	private static ISuite suite;
+	private ISuite suite;
 
-	@BeforeClass
-	public static void setUpClass() {
+	@Before
+	public void setUp() {
 		xmlSuite = mock(XmlSuite.class);
 		suite = mock(ISuite.class);
 		when(suite.getXmlSuite()).thenReturn(xmlSuite);

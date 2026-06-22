@@ -72,7 +72,6 @@
               <div>
                 <input type="radio" id="collectionsLimitAll" name="collectionsLimit" value="all"
                        onchange="document.getElementById('noOfCollections').disabled=document.getElementById('collectionsLimitAll').checked;" />
-
                 <label for="noOfCollectionsAll">All collections</label>
               </div>
             </p>

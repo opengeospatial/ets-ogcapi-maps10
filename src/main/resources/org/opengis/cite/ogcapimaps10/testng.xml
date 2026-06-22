@@ -83,4 +83,10 @@
     </classes>
   </test>
 
+  <test name="CORS">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.cors.CorsSupport" />
+    </classes>
+  </test>
+
 </suite>
