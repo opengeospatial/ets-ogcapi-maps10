@@ -6,6 +6,7 @@
              xmlns:tec="java:com.occamlab.te.TECore"
              xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
              xmlns:interactive-png="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-png.xml"
+             xmlns:interactive-jpeg="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-jpeg.xml"
 >
 
   <ctl:function name="tns:run-ets-${ets-code}">
@@ -49,7 +50,7 @@
           </div>
           <fieldset style="background:#ccffff">
             <legend style="font-family: sans-serif; color: #000099;
-			                 background-color:#F0F8FF; border-style: solid; 
+			                 background-color:#F0F8FF; border-style: solid;
                        border-width: medium; padding:4px">Implementation under test
             </legend>
             <p>
@@ -96,6 +97,18 @@
               </label>
             </p>
           </fieldset>
+          <fieldset style="background:#fff0e6; margin-top: 10px;">
+            <legend style="font-family: sans-serif; color: #994d00;
+                           background-color:#FFF8F0; border-style: solid;
+                           border-width: medium; padding:4px">JPEG Interactive Tests (A.56)
+            </legend>
+            <p>
+              <input type="checkbox" id="jpegInteractiveEnabled" name="jpegInteractiveEnabled" value="true" />
+              <label for="jpegInteractiveEnabled">
+                <strong>Run JPEG interactive tests</strong> (Part B: color verification, Part C: portrayal consistency)
+              </label>
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -108,8 +121,6 @@
       <!-- PNG Interactive Tests (A.55) -->
       <xsl:variable name="png-interactive-enabled"
                     select="$form-data/values/value[@key='pngInteractiveEnabled'] = 'true'" />
-      <xsl:variable name="iut-url"
-                    select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
 
       <xsl:variable name="png-colors-result">
         <xsl:choose>
@@ -120,10 +131,32 @@
         </xsl:choose>
       </xsl:variable>
 
+      <!-- JPEG Interactive Tests (A.56) -->
+      <xsl:variable name="jpeg-interactive-enabled"
+                    select="$form-data/values/value[@key='jpegInteractiveEnabled'] = 'true'" />
+
+      <xsl:variable name="jpeg-colors-result">
+        <xsl:choose>
+          <xsl:when test="$jpeg-interactive-enabled">
+            <xsl:value-of select="interactive-jpeg:verifyJpegColors($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="png-portrayal-result">
         <xsl:choose>
           <xsl:when test="$png-interactive-enabled">
             <xsl:value-of select="interactive-png:verifyPortrayalConsistency($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="jpeg-portrayal-result">
+        <xsl:choose>
+          <xsl:when test="$jpeg-interactive-enabled">
+            <xsl:value-of select="interactive-jpeg:verifyPortrayalConsistency($iut-url)" />
           </xsl:when>
           <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
@@ -154,6 +187,15 @@
           </entry>
           <entry key="png_portrayal_consistent">
             <xsl:value-of select="$png-portrayal-result" />
+          </entry>
+          <entry key="jpeg_interactive_tests_enabled">
+            <xsl:value-of select="$jpeg-interactive-enabled" />
+          </entry>
+          <entry key="jpeg_colors_represent_features">
+            <xsl:value-of select="$jpeg-colors-result" />
+          </entry>
+          <entry key="jpeg_portrayal_consistent">
+            <xsl:value-of select="$jpeg-portrayal-result" />
           </entry>
         </properties>
       </xsl:variable>

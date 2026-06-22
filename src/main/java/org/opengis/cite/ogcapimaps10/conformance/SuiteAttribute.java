@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.JpegInteractiveTestResult;
 
 import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
@@ -94,7 +95,13 @@ public enum SuiteAttribute {
 	 * Results from interactive tests for PNG content verification. Contains boolean
 	 * results for Part B (color representation) and Part D (portrayal consistency).
 	 */
-	PNG_INTERACTIVE_TEST_RESULT("pngInteractiveTestResult", PngInteractiveTestResult.class);
+	PNG_INTERACTIVE_TEST_RESULT("pngInteractiveTestResult", PngInteractiveTestResult.class),
+
+	/**
+	 * Results from interactive tests for JPEG content verification. Contains boolean
+	 * results for Part B (color representation) and Part C (portrayal consistency).
+	 */
+	JPEG_INTERACTIVE_TEST_RESULT("jpegInteractiveTestResult", JpegInteractiveTestResult.class);
 
 	private final Class attrType;
 
