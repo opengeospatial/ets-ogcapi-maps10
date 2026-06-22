@@ -40,7 +40,7 @@ import io.restassured.response.Response;
  */
 public class ApiOperationIdentifiers extends CommonFixture {
 
-	private static final String CONF_API_OPERATIONS = "http://www.opengis.net/spec/ogcapi-maps-1/1.0/conf/api-operations";
+	private static final String CONF_API_OPERATIONS = "https://www.opengis.net/spec/ogcapi-maps-1/1.0/conf/api-operations";
 
 	private static final String REL_SERVICE_DESC = "service-desc";
 
