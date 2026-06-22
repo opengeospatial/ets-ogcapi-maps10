@@ -47,7 +47,10 @@ public class CollectionDescriptionCrs extends CommonDataFixture {
 	@Test(description = "Implements A.13.2. Abstract Test for Requirement collection description CRS "
 			+ "(Requirement /req/collection-map/desc-crs)")
 	public void verifyCollectionDescriptionCrs() {
-		Response collectionsResponse = init().baseUri(rootUri.toString()).accept("application/json").when().request(GET, collectionResource("collections"));
+		Response collectionsResponse = init().baseUri(rootUri.toString())
+			.accept("application/json")
+			.when()
+			.request(GET, collectionResource("collections"));
 		assertSuccessfulJsonResponse(collectionsResponse, "Collections resource");
 
 		List<Map<String, Object>> collections = collectionsResponse.jsonPath().getList("collections");

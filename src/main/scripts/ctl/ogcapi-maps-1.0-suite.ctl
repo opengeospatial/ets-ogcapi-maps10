@@ -5,6 +5,7 @@
              xmlns:saxon="http://saxon.sf.net/"
              xmlns:tec="java:com.occamlab.te.TECore"
              xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
+             xmlns:interactive-png="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-png.xml"
 >
 
   <ctl:function name="tns:run-ets-${ets-code}">
@@ -83,6 +84,18 @@
               </select>
             </p>
           </fieldset>
+          <fieldset style="background:#e6ffe6; margin-top: 10px;">
+            <legend style="font-family: sans-serif; color: #006600;
+                           background-color:#F0FFF0; border-style: solid;
+                           border-width: medium; padding:4px">PNG Interactive Tests (A.55)
+            </legend>
+            <p>
+              <input type="checkbox" id="pngInteractiveEnabled" name="pngInteractiveEnabled" value="true" />
+              <label for="pngInteractiveEnabled">
+                <strong>Run PNG interactive tests</strong> (Part B: color verification, Part D: portrayal consistency)
+              </label>
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -92,6 +105,29 @@
       </xsl:variable>
       <xsl:variable name="iut-url" select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
       <xsl:variable name="tile-matrix-set" select="$form-data/values/value[@key='tileMatrixSet']" />
+      <!-- PNG Interactive Tests (A.55) -->
+      <xsl:variable name="png-interactive-enabled"
+                    select="$form-data/values/value[@key='pngInteractiveEnabled'] = 'true'" />
+      <xsl:variable name="iut-url"
+                    select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
+
+      <xsl:variable name="png-colors-result">
+        <xsl:choose>
+          <xsl:when test="$png-interactive-enabled">
+            <xsl:value-of select="interactive-png:verifyPngColors($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="png-portrayal-result">
+        <xsl:choose>
+          <xsl:when test="$png-interactive-enabled">
+            <xsl:value-of select="interactive-png:verifyPortrayalConsistency($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
 
       <xsl:variable name="test-run-props">
         <properties version="1.0">
@@ -109,6 +145,15 @@
           <!-- TileMatrixSet selection -->
           <entry key="tile_matrix_set">
             <xsl:value-of select="$tile-matrix-set" />
+          </entry>
+          <entry key="png_interactive_tests_enabled">
+            <xsl:value-of select="$png-interactive-enabled" />
+          </entry>
+          <entry key="png_colors_represent_features">
+            <xsl:value-of select="$png-colors-result" />
+          </entry>
+          <entry key="png_portrayal_consistent">
+            <xsl:value-of select="$png-portrayal-result" />
           </entry>
         </properties>
       </xsl:variable>

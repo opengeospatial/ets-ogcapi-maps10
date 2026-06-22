@@ -23,7 +23,24 @@ public enum TestRunArg {
 	 * @see <a href="https://docs.ogc.org/is/17-083r4/17-083r4.html#toc49">OGC Two
 	 * Dimensional Tile Matrix Set and Tile Set Metadata</a>
 	 */
-	TILE_MATRIX_SET;
+	TILE_MATRIX_SET,
+	/**
+	 * Whether interactive tests for PNG content were enabled by the user. true if the
+	 * user checked the "Run PNG interactive tests" checkbox, false otherwise.
+	 */
+	PNG_INTERACTIVE_TESTS_ENABLED,
+
+	/**
+	 * Result of interactive test for PNG Part B: whether the colors of the PNG correctly
+	 * represent geospatial features or coverage values. true if passed, false otherwise.
+	 */
+	PNG_COLORS_REPRESENT_FEATURES,
+
+	/**
+	 * Result of interactive test for PNG Part D: whether maps representing parts of the
+	 * same resource follow the same portrayal rules. true if passed, false otherwise.
+	 */
+	PNG_PORTRAYAL_CONSISTENT;
 
 	/** {@inheritDoc} */
 	@Override
