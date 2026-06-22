@@ -55,6 +55,7 @@
   <test name="Styled Map">
     <classes>
       <class name="org.opengis.cite.ogcapimaps10.conformance.styledmap.StyledMapLinks" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.styledmap.StyledMapOperation" />
     </classes>
   </test>
 
