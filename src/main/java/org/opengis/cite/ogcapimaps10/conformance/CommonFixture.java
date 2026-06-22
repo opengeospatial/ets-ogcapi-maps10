@@ -4,7 +4,10 @@ import static io.restassured.RestAssured.given;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.RequestLimitFilter;
@@ -36,6 +39,16 @@ public class CommonFixture {
 	protected URI rootUri;
 
 	/**
+	 * Base64-encoded "Basic &lt;credentials&gt;" header value, or {@code null} when no
+	 * basic authentication is configured.
+	 */
+	protected String basicAuthHeader = null;
+
+	private String basicAuthUser = null;
+
+	private String basicAuthPassword = null;
+
+	/**
 	 * Initializes the common test fixture with a client component for interacting with
 	 * HTTP endpoints.
 	 * @param testContext The test context that contains all the information for a test
@@ -45,6 +58,37 @@ public class CommonFixture {
 	public void initCommonFixture(ITestContext testContext) {
 		initLogging();
 		rootUri = (URI) testContext.getSuite().getAttribute(SuiteAttribute.IUT.getName());
+		String basicAuth = testContext.getSuite().getParameter("basicAuth");
+		if (basicAuth == null || basicAuth.isEmpty()) {
+			basicAuth = System.getProperty("basicAuth");
+		}
+		if (basicAuth != null && !basicAuth.isEmpty()) {
+			try {
+				String decoded = new String(Base64.getDecoder().decode(basicAuth), StandardCharsets.UTF_8);
+				basicAuthHeader = "Basic " + basicAuth;
+				int colon = decoded.indexOf(':');
+				basicAuthUser = colon > 0 ? decoded.substring(0, colon) : decoded;
+				basicAuthPassword = colon > 0 ? decoded.substring(colon + 1) : "";
+			}
+			catch (IllegalArgumentException e) {
+				basicAuthHeader = "Basic "
+						+ Base64.getEncoder().encodeToString(basicAuth.getBytes(StandardCharsets.UTF_8));
+				int colon = basicAuth.indexOf(':');
+				basicAuthUser = colon > 0 ? basicAuth.substring(0, colon) : basicAuth;
+				basicAuthPassword = colon > 0 ? basicAuth.substring(colon + 1) : "";
+			}
+		}
+	}
+
+	/**
+	 * Sets the {@code Authorization: Basic} header on the given connection if basic
+	 * authentication has been configured via the {@code basicAuth} suite parameter.
+	 * @param conn the connection to authenticate
+	 */
+	protected void applyAuth(HttpURLConnection conn) {
+		if (basicAuthHeader != null) {
+			conn.setRequestProperty("Authorization", basicAuthHeader);
+		}
 	}
 
 	/**
@@ -86,11 +130,16 @@ public class CommonFixture {
 	protected RequestSpecification init() {
 		JsonConfig jsonConfig = JsonConfig.jsonConfig().numberReturnType(NumberReturnType.DOUBLE);
 		RestAssuredConfig config = RestAssuredConfig.newConfig().jsonConfig(jsonConfig);
-		return given().filters(new RequestLimitFilter(), requestLoggingFilter, responseLoggingFilter)
+		RequestSpecification spec = given()
+			.filters(new RequestLimitFilter(), requestLoggingFilter, responseLoggingFilter)
 			.log()
 			.all()
 			.with()
 			.config(config);
+		if (basicAuthUser != null) {
+			spec = spec.auth().preemptive().basic(basicAuthUser, basicAuthPassword);
+		}
+		return spec;
 	}
 
 	/**
