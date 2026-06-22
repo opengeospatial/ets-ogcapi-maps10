@@ -48,6 +48,7 @@
    <classes>
      <class name="org.opengis.cite.ogcapimaps10.conformance.collectionmap.CollectionDescriptionLinks" />
      <class name="org.opengis.cite.ogcapimaps10.conformance.collectionmap.CollectionDescriptionCrs" />
+     <class name="org.opengis.cite.ogcapimaps10.conformance.collectionmap.CollectionMapOperation" />
    </classes>
   </test>
 
