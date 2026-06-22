@@ -12,6 +12,7 @@ import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
 import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.JpegInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.TiffInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
 import org.opengis.cite.ogcapimaps10.util.URIUtils;
@@ -105,6 +106,10 @@ public class SuiteFixtureListener implements ISuiteListener {
 		// Parse and set JPEG interactive test results
 		JpegInteractiveTestResult jpegInteractiveTestResult = parseJpegInteractiveTestResults(params);
 		suite.setAttribute(SuiteAttribute.JPEG_INTERACTIVE_TEST_RESULT.getName(), jpegInteractiveTestResult);
+
+		// Parse and set TIFF interactive test results
+		TiffInteractiveTestResult tiffInteractiveTestResult = parseTiffInteractiveTestResults(params);
+		suite.setAttribute(SuiteAttribute.TIFF_INTERACTIVE_TEST_RESULT.getName(), tiffInteractiveTestResult);
 	}
 
 	/**
@@ -129,6 +134,18 @@ public class SuiteFixtureListener implements ISuiteListener {
 		boolean colorsRepresentFeatures = parseBooleanParam(params, TestRunArg.JPEG_COLORS_REPRESENT_FEATURES);
 		boolean portrayalConsistent = parseBooleanParam(params, TestRunArg.JPEG_PORTRAYAL_CONSISTENT);
 		return new JpegInteractiveTestResult(enabled, colorsRepresentFeatures, portrayalConsistent);
+
+	}
+
+	/**
+	 * Parses TIFF interactive test results from the test run parameters.
+	 * @param params The test run parameters map.
+	 * @return A TiffInteractiveTestResult containing the parsed boolean results.
+	 */
+	private TiffInteractiveTestResult parseTiffInteractiveTestResults(Map<String, String> params) {
+		boolean enabled = parseBooleanParam(params, TestRunArg.TIFF_INTERACTIVE_TESTS_ENABLED);
+		boolean portrayalConsistent = parseBooleanParam(params, TestRunArg.TIFF_PORTRAYAL_CONSISTENT);
+		return new TiffInteractiveTestResult(enabled, portrayalConsistent);
 	}
 
 	/**

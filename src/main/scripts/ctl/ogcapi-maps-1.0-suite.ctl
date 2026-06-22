@@ -7,6 +7,7 @@
              xmlns:tng="java:org.opengis.cite.ogcapimaps10.TestNGController"
              xmlns:interactive-png="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-png.xml"
              xmlns:interactive-jpeg="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-jpeg.xml"
+             xmlns:interactive-tiff="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-tiff.xml"
 >
 
   <ctl:function name="tns:run-ets-${ets-code}">
@@ -109,6 +110,18 @@
               </label>
             </p>
           </fieldset>
+          <fieldset style="background:#e6ffe6; margin-top: 10px;">
+            <legend style="font-family: sans-serif; color: #006600;
+                           background-color:#F0FFF0; border-style: solid;
+                           border-width: medium; padding:4px">TIFF Interactive Tests (A.58)
+            </legend>
+            <p>
+              <input type="checkbox" id="tiffInteractiveEnabled" name="tiffInteractiveEnabled" value="true" />
+              <label for="tiffInteractiveEnabled">
+                <strong>Run TIFF interactive tests</strong> (Part C: portrayal consistency)
+              </label>
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -162,6 +175,19 @@
         </xsl:choose>
       </xsl:variable>
 
+      <!-- TIFF Interactive Tests (A.58) -->
+      <xsl:variable name="tiff-interactive-enabled"
+                    select="$form-data/values/value[@key='tiffInteractiveEnabled'] = 'true'" />
+
+      <xsl:variable name="tiff-portrayal-result">
+        <xsl:choose>
+          <xsl:when test="$tiff-interactive-enabled">
+            <xsl:value-of select="interactive-tiff:verifyPortrayalConsistency($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
@@ -196,6 +222,12 @@
           </entry>
           <entry key="jpeg_portrayal_consistent">
             <xsl:value-of select="$jpeg-portrayal-result" />
+          </entry>
+          <entry key="tiff_interactive_tests_enabled">
+            <xsl:value-of select="$tiff-interactive-enabled" />
+          </entry>
+          <entry key="tiff_portrayal_consistent">
+            <xsl:value-of select="$tiff-portrayal-result" />
           </entry>
         </properties>
       </xsl:variable>
