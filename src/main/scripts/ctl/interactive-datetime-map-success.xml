@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package xmlns:interactive-datetime-map-success="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-datetime-map-success.xml"
+             xmlns:ctl="http://www.occamlab.com/ctl"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             xmlns:dmsitu="java:org.opengis.cite.ogcapimaps10.util.interactive.DatetimeMapSuccessInteractiveTestUtils">
+
+  <!--
+    Interactive test function for A.32 datetime map-success content verification
+    (Req 32/A).
+
+    Displays two map images side-by-side:
+      Map 1 - subset=time("<midpoint of collection extent>") + f=png  (temporal snapshot)
+      Map 2 - f=png (no temporal filter, full extent)
+
+    Asks the user to confirm that the content of Map 1 is consistent with the
+    requested time instant, proving that the server returns a map whose content
+    reflects the requested datetime (Req 32/A).
+  -->
+
+  <ctl:function name="interactive-datetime-map-success:verifyDatetimeMapSuccess">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>The test result: "true" if the user confirmed temporal consistency, "false" otherwise.</ctl:return>
+    <ctl:description>
+      Interactive test for A.32 (Req 32/A): Verify that the map content returned for a
+      subset=time(...) request is consistent with the requested datetime.
+    </ctl:description>
+    <ctl:code>
+
+      <!-- Build Map 1: subset-filtered temporal snapshot -->
+      <xsl:variable name="map-1-raw">
+        <xsl:value-of select="dmsitu:buildInstantSubsetMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Build Map 2: full-extent map (no filter) -->
+      <xsl:variable name="map-2-raw">
+        <xsl:value-of select="dmsitu:buildFullExtentMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <!-- Retrieve the instant string to display to the tester -->
+      <xsl:variable name="instant-str">
+        <xsl:value-of select="dmsitu:getInstant($iut.url)" />
+      </xsl:variable>
+
+      <!-- Detect NOT_FOUND sentinel -->
+      <xsl:variable name="not-found" select="starts-with($map-1-raw, 'NOT_FOUND:')" />
+
+      <xsl:variable name="map-1-url">
+        <xsl:choose>
+          <xsl:when test="$not-found">
+            <xsl:value-of select="substring-after($map-1-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-1-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="map-2-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-2-raw, 'NOT_FOUND:')">
+            <xsl:value-of select="substring-after($map-2-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-2-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- Show form and collect user answer -->
+      <xsl:variable name="form-values">
+        <ctl:form width="1000" height="900" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Datetime Map-Success Content Verification (A.32 - Req 32/A)</h3>
+          <p>
+            Two maps have been requested from the same temporal collection.
+            <strong>Map 1</strong> is filtered to a single time instant
+            (<code><xsl:value-of select="$instant-str" /></code>) using the
+            <code>subset=time(...)</code> parameter.
+            <strong>Map 2</strong> shows the full temporal extent with no filter applied.
+          </p>
+          <p>
+            Per Req 32/A, the content of the response SHALL be consistent with the
+            requested datetime. Please confirm that <strong>Map 1</strong> appears to
+            show data from around <strong><xsl:value-of select="$instant-str" /></strong>
+            rather than the default or full temporal extent.
+          </p>
+
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
+              [!] Warning: Could not discover a temporal collection map endpoint automatically.
+              The URLs below may not be valid. Please verify manually.
+            </p>
+          </xsl:if>
+
+          <!-- Side-by-side map previews -->
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <!-- Map 1: subset-filtered temporal snapshot -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map 1</strong> - Subset-filtered
+                  (<code>subset=time("<xsl:value-of select="$instant-str" />")</code>)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-1-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-1-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-1-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map 1 - temporal snapshot</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-1-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-1-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+
+              <!-- Map 2: full extent reference -->
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map 2</strong> - Full temporal extent (no filter)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-2-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-2-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-2-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map 2 - full temporal extent</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('map-2-error').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="map-2-error" style="display:none; color:#856404; background:#fff3cd;
+                                               border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <hr style="margin-top:16px;" />
+          <p style="margin-top:16px;">
+            <strong>Question:</strong> Does <strong>Map 1</strong> appear to show data
+            consistent with the requested time instant
+            (<strong><xsl:value-of select="$instant-str" /></strong>),
+            rather than the default or full temporal extent shown in Map 2?
+          </p>
+          <p style="font-size:0.9em; color:#555;">
+            A "yes" answer confirms that the server response is consistent with the
+            requested datetime (Req 32/A). Click "no" if the map clearly shows data
+            from a different time period or looks identical to the full-extent map.
+          </p>
+          <p>
+            <input type="submit" name="submit" value="yes"
+                   style="margin-right:12px; padding:6px 24px;" />
+            <input type="submit" name="submit" value="no"
+                   style="padding:6px 24px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+
+      <!-- Return true/false based on user answer -->
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit'] = 'yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>

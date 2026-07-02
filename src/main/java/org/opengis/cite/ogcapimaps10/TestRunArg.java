@@ -72,7 +72,20 @@ public enum TestRunArg {
 	 * same resource follow the same portrayal rules or represent data with the same
 	 * reference and units of measure. true if passed, false otherwise.
 	 */
-	TIFF_PORTRAYAL_CONSISTENT;
+	TIFF_PORTRAYAL_CONSISTENT,
+
+	/**
+	 * Whether interactive tests for datetime map-success were enabled by the user. true
+	 * if the user checked the "Run datetime interactive tests" checkbox, false otherwise.
+	 */
+	DATETIME_INTERACTIVE_TESTS_ENABLED,
+
+	/**
+	 * Result of interactive test for datetime map-success: whether the map returned for a
+	 * specific subset=time(...) request visually reflects data from the requested time
+	 * period. true if passed, false otherwise.
+	 */
+	DATETIME_TEMPORALLY_CONSISTENT;
 
 	/** {@inheritDoc} */
 	@Override

@@ -5,8 +5,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.DatetimeMapSuccessInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.JpegInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.TiffInteractiveTestResult;
 
 import com.reprezen.kaizen.oasparser.model3.OpenApi3;
@@ -108,7 +109,13 @@ public enum SuiteAttribute {
 	 * Results from interactive tests for TIFF content verification. Contains boolean
 	 * results for Part B (palette/RGB color model) and Part C (portrayal consistency).
 	 */
-	TIFF_INTERACTIVE_TEST_RESULT("tiffInteractiveTestResult", TiffInteractiveTestResult.class);
+	TIFF_INTERACTIVE_TEST_RESULT("tiffInteractiveTestResult", TiffInteractiveTestResult.class),
+
+	/**
+	 * Results from interactive tests for datetime map-success verification. Contains a
+	 * boolean result for temporal consistency of the map response.
+	 */
+	DATETIME_INTERACTIVE_TEST_RESULT("datetimeInteractiveTestResult", DatetimeMapSuccessInteractiveTestResult.class);
 
 	private final Class attrType;
 

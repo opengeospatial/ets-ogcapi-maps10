@@ -8,6 +8,7 @@
              xmlns:interactive-png="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-png.xml"
              xmlns:interactive-jpeg="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-jpeg.xml"
              xmlns:interactive-tiff="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-tiff.xml"
+             xmlns:interactive-datetime-map-success="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-datetime-map-success.xml"
 >
 
   <ctl:function name="tns:run-ets-${ets-code}">
@@ -121,6 +122,26 @@
               </label>
             </p>
           </fieldset>
+          <fieldset style="background:#e6f0ff; margin-top: 10px;">
+            <legend style="font-family: sans-serif; color: #003399;
+                           background-color:#F0F4FF; border-style: solid;
+                           border-width: medium; padding:4px">Datetime Interactive Tests (A.32)
+            </legend>
+            <p>
+              <input type="checkbox" id="datetimeMapSuccessInteractiveEnabled"
+                     name="datetimeMapSuccessInteractiveEnabled" value="true" />
+              <label for="datetimeMapSuccessInteractiveEnabled">
+                <strong>Run Datetime Map-Success interactive test</strong>
+                (A.32, Req 32/A: confirm map content is consistent with requested datetime)
+              </label>
+            </p>
+            <p style="font-size:0.9em; color:#555;">
+              When enabled, you will be shown two map images side-by-side - one filtered
+              to a specific time instant using the subset=time(...) parameter, and one
+              showing the full temporal extent - and asked to confirm that the filtered
+              map content is consistent with the requested datetime (Req 32/A).
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -187,6 +208,21 @@
         </xsl:choose>
       </xsl:variable>
 
+      <xsl:variable name="datetime-map-success-interactive-enabled"
+                    select="$form-data/values/value[@key='datetimeMapSuccessInteractiveEnabled'] = 'true'" />
+
+      <!-- Run interactive datetime map-success verification if enabled -->
+      <xsl:variable name="datetime-map-success-result">
+        <xsl:choose>
+          <xsl:when test="$datetime-map-success-interactive-enabled">
+            <ctl:call-function name="interactive-datetime-map-success:verifyDatetimeMapSuccess">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
@@ -227,6 +263,13 @@
           </entry>
           <entry key="tiff_portrayal_consistent">
             <xsl:value-of select="$tiff-portrayal-result" />
+          </entry>
+          <!-- A.32 interactive datetime map-success verification -->
+          <entry key="datetime_interactive_tests_enabled">
+            <xsl:value-of select="$datetime-map-success-interactive-enabled" />
+          </entry>
+          <entry key="datetime_temporally_consistent">
+            <xsl:value-of select="$datetime-map-success-result" />
           </entry>
         </properties>
       </xsl:variable>

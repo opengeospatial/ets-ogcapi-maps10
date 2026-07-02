@@ -4,6 +4,7 @@
   <parameter name="iut" value="https://demo.pygeoapi.io/stable" />
   <parameter name="ics" value="" />
   <parameter name="noofcollections" value="5" />
+  <parameter name="basicAuth" value="" />
 
   <listeners>
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestRunListener" />
@@ -86,6 +87,12 @@
   <test name="CORS">
     <classes>
       <class name="org.opengis.cite.ogcapimaps10.conformance.cors.CorsSupport" />
+    </classes>
+  </test>
+
+  <test name="Date and Time">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.datetime.DatetimeMapSuccess" />
     </classes>
   </test>
 

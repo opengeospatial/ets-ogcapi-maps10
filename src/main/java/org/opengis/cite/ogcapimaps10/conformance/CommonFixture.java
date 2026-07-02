@@ -4,7 +4,10 @@ import static io.restassured.RestAssured.given;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.RequestLimitFilter;
@@ -35,6 +38,12 @@ public class CommonFixture {
 
 	protected URI rootUri;
 
+	protected String basicAuthUser;
+
+	protected String basicAuthPassword;
+
+	protected String basicAuthHeader;
+
 	/**
 	 * Initializes the common test fixture with a client component for interacting with
 	 * HTTP endpoints.
@@ -45,6 +54,18 @@ public class CommonFixture {
 	public void initCommonFixture(ITestContext testContext) {
 		initLogging();
 		rootUri = (URI) testContext.getSuite().getAttribute(SuiteAttribute.IUT.getName());
+		if (testContext.getSuite().getXmlSuite() != null) {
+			String basicAuth = testContext.getSuite().getXmlSuite().getParameter("basicAuth");
+			if (basicAuth != null && !basicAuth.isEmpty()) {
+				basicAuthHeader = "Basic " + basicAuth;
+				String decoded = new String(Base64.getDecoder().decode(basicAuth), StandardCharsets.UTF_8);
+				int colon = decoded.indexOf(':');
+				if (colon > 0) {
+					basicAuthUser = decoded.substring(0, colon);
+					basicAuthPassword = decoded.substring(colon + 1);
+				}
+			}
+		}
 	}
 
 	/**
@@ -86,11 +107,27 @@ public class CommonFixture {
 	protected RequestSpecification init() {
 		JsonConfig jsonConfig = JsonConfig.jsonConfig().numberReturnType(NumberReturnType.DOUBLE);
 		RestAssuredConfig config = RestAssuredConfig.newConfig().jsonConfig(jsonConfig);
-		return given().filters(new RequestLimitFilter(), requestLoggingFilter, responseLoggingFilter)
+		RequestSpecification spec = given()
+			.filters(new RequestLimitFilter(), requestLoggingFilter, responseLoggingFilter)
 			.log()
 			.all()
 			.with()
 			.config(config);
+		if (basicAuthUser != null && basicAuthPassword != null) {
+			spec = spec.auth().preemptive().basic(basicAuthUser, basicAuthPassword);
+		}
+		return spec;
+	}
+
+	/**
+	 * Applies basic authentication to an {@link HttpURLConnection} if credentials have
+	 * been configured via the {@code basicAuth} suite parameter.
+	 * @param conn the connection to authenticate
+	 */
+	protected void applyAuth(HttpURLConnection conn) {
+		if (basicAuthHeader != null) {
+			conn.setRequestProperty("Authorization", basicAuthHeader);
+		}
 	}
 
 	/**

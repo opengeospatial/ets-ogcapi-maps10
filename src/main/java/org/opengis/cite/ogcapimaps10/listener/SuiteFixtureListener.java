@@ -10,8 +10,9 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.DatetimeMapSuccessInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.JpegInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.TiffInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
@@ -110,6 +111,11 @@ public class SuiteFixtureListener implements ISuiteListener {
 		// Parse and set TIFF interactive test results
 		TiffInteractiveTestResult tiffInteractiveTestResult = parseTiffInteractiveTestResults(params);
 		suite.setAttribute(SuiteAttribute.TIFF_INTERACTIVE_TEST_RESULT.getName(), tiffInteractiveTestResult);
+
+		// Parse and set datetime map-success interactive test results
+		DatetimeMapSuccessInteractiveTestResult datetimeInteractiveTestResult = parseDatetimeInteractiveTestResults(
+				params);
+		suite.setAttribute(SuiteAttribute.DATETIME_INTERACTIVE_TEST_RESULT.getName(), datetimeInteractiveTestResult);
 	}
 
 	/**
@@ -146,6 +152,18 @@ public class SuiteFixtureListener implements ISuiteListener {
 		boolean enabled = parseBooleanParam(params, TestRunArg.TIFF_INTERACTIVE_TESTS_ENABLED);
 		boolean portrayalConsistent = parseBooleanParam(params, TestRunArg.TIFF_PORTRAYAL_CONSISTENT);
 		return new TiffInteractiveTestResult(enabled, portrayalConsistent);
+	}
+
+	/**
+	 * Parses datetime map-success interactive test results from the test run parameters.
+	 * @param params The test run parameters map.
+	 * @return A DatetimeMapSuccessInteractiveTestResult containing the parsed boolean
+	 * results.
+	 */
+	private DatetimeMapSuccessInteractiveTestResult parseDatetimeInteractiveTestResults(Map<String, String> params) {
+		boolean enabled = parseBooleanParam(params, TestRunArg.DATETIME_INTERACTIVE_TESTS_ENABLED);
+		boolean temporallyConsistent = parseBooleanParam(params, TestRunArg.DATETIME_TEMPORALLY_CONSISTENT);
+		return new DatetimeMapSuccessInteractiveTestResult(enabled, temporallyConsistent);
 	}
 
 	/**
