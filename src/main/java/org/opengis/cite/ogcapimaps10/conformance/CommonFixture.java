@@ -4,7 +4,10 @@ import static io.restassured.RestAssured.given;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.RequestLimitFilter;
@@ -35,6 +38,13 @@ public class CommonFixture {
 
 	protected URI rootUri;
 
+	/** Base64-encoded Basic auth header value, or null if not configured. */
+	protected String basicAuthHeader = null;
+
+	private String basicAuthUser = null;
+
+	private String basicAuthPassword = null;
+
 	/**
 	 * Initializes the common test fixture with a client component for interacting with
 	 * HTTP endpoints.
@@ -45,6 +55,33 @@ public class CommonFixture {
 	public void initCommonFixture(ITestContext testContext) {
 		initLogging();
 		rootUri = (URI) testContext.getSuite().getAttribute(SuiteAttribute.IUT.getName());
+		String basicAuth = testContext.getSuite().getParameter("basicAuth");
+		if (basicAuth == null || basicAuth.isEmpty()) {
+			basicAuth = System.getProperty("basicAuth");
+		}
+		if (basicAuth != null && !basicAuth.isEmpty()) {
+			try {
+				String decoded = new String(Base64.getDecoder().decode(basicAuth), StandardCharsets.UTF_8);
+				basicAuthHeader = "Basic " + basicAuth;
+				int colon = decoded.indexOf(':');
+				basicAuthUser = colon > 0 ? decoded.substring(0, colon) : decoded;
+				basicAuthPassword = colon > 0 ? decoded.substring(colon + 1) : "";
+			}
+			catch (Exception e) {
+				// invalid base64 — leave basicAuthHeader null
+			}
+		}
+	}
+
+	/**
+	 * Applies HTTP Basic authentication to a connection if credentials were supplied via
+	 * the {@code basicAuth} suite parameter.
+	 * @param conn the connection to authenticate
+	 */
+	protected void applyAuth(HttpURLConnection conn) {
+		if (basicAuthHeader != null) {
+			conn.setRequestProperty("Authorization", basicAuthHeader);
+		}
 	}
 
 	/**
