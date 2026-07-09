@@ -90,4 +90,10 @@
     </classes>
   </test>
 
+  <test name="API Operation Identifiers">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.apioperations.ApiOperationIdentifiers" />
+    </classes>
+  </test>
+
 </suite>
