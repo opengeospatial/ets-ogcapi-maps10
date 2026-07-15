@@ -4,6 +4,7 @@
   <parameter name="iut" value="https://demo.pygeoapi.io/stable" />
   <parameter name="ics" value="" />
   <parameter name="noofcollections" value="5" />
+  <parameter name="basicAuth" value="" />
 
   <listeners>
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestRunListener" />
@@ -75,6 +76,13 @@
   <test name="TIFF">
     <classes>
       <class name="org.opengis.cite.ogcapimaps10.conformance.tiff.TIFFmapContent" />
+    </classes>
+  </test>
+
+  <test name="General Subsetting">
+    <classes>
+      <!-- <class name="org.opengis.cite.ogcapimaps10.conformance.generalsub.UniformAdditionalDimensions" /> -->
+      <class name="org.opengis.cite.ogcapimaps10.conformance.generalsub.SubsetParameter" />
     </classes>
   </test>
 
