@@ -72,7 +72,29 @@ public enum TestRunArg {
 	 * same resource follow the same portrayal rules or represent data with the same
 	 * reference and units of measure. true if passed, false otherwise.
 	 */
-	TIFF_PORTRAYAL_CONSISTENT;
+	TIFF_PORTRAYAL_CONSISTENT,
+
+	/**
+	 * Whether interactive tests for collections response were enabled by the user. true
+	 * if the user checked the "Run collections response interactive tests" checkbox,
+	 * false otherwise.
+	 */
+	COLLECTIONS_RESPONSE_INTERACTIVE_ENABLED,
+
+	/**
+	 * Result of interactive test for A.36 Req 36/A: whether the filtered map
+	 * (collections=id1) visually differs from the default map (no parameter), proving
+	 * only the specified collection is rendered. true if passed, false otherwise.
+	 */
+	COLLECTIONS_RESPONSE_RESULT_FILTER_CORRECT,
+
+	/**
+	 * Result of interactive test for A.36 Req 36/B: whether the forward-order map
+	 * (collections=id1,id2) visually differs from the reverse-order map
+	 * (collections=id2,id1) in layer stacking, proving draw order is respected. true if
+	 * passed, false otherwise.
+	 */
+	COLLECTIONS_RESPONSE_RESULT_DRAW_ORDER_CORRECT;
 
 	/** {@inheritDoc} */
 	@Override

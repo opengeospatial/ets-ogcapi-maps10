@@ -8,6 +8,7 @@
              xmlns:interactive-png="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-png.xml"
              xmlns:interactive-jpeg="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-jpeg.xml"
              xmlns:interactive-tiff="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-tiff.xml"
+             xmlns:interactive-collections-response="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-collections-response.xml"
 >
 
   <ctl:function name="tns:run-ets-${ets-code}">
@@ -121,6 +122,19 @@
               </label>
             </p>
           </fieldset>
+          <fieldset style="background:#e6e6ff; margin-top: 10px;">
+            <legend style="font-family: sans-serif; color: #000099;
+                           background-color:#F0F0FF; border-style: solid;
+                           border-width: medium; padding:4px">Collections Response Interactive Tests (A.36)
+            </legend>
+            <p>
+              <input type="checkbox" id="collectionsResponseInteractiveEnabled" name="collectionsResponseInteractiveEnabled" value="true" />
+              <label for="collectionsResponseInteractiveEnabled">
+                <strong>Run collections response interactive tests</strong>
+                (Req 36/A: filter verification, Req 36/B: draw order verification)
+              </label>
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -187,6 +201,28 @@
         </xsl:choose>
       </xsl:variable>
 
+      <!-- Collections Response Interactive Tests (A.36) -->
+      <xsl:variable name="collections-response-interactive-enabled"
+                    select="$form-data/values/value[@key='collectionsResponseInteractiveEnabled'] = 'true'" />
+
+      <xsl:variable name="collections-response-filter-result">
+        <xsl:choose>
+          <xsl:when test="$collections-response-interactive-enabled">
+            <xsl:value-of select="interactive-collections-response:verifyCollectionsFilter($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="collections-response-draw-order-result">
+        <xsl:choose>
+          <xsl:when test="$collections-response-interactive-enabled">
+            <xsl:value-of select="interactive-collections-response:verifyCollectionsDrawOrder($iut-url)" />
+          </xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
@@ -227,6 +263,15 @@
           </entry>
           <entry key="tiff_portrayal_consistent">
             <xsl:value-of select="$tiff-portrayal-result" />
+          </entry>
+          <entry key="collections_response_interactive_enabled">
+            <xsl:value-of select="$collections-response-interactive-enabled" />
+          </entry>
+          <entry key="collections_response_result_filter_correct">
+            <xsl:value-of select="$collections-response-filter-result" />
+          </entry>
+          <entry key="collections_response_result_draw_order_correct">
+            <xsl:value-of select="$collections-response-draw-order-result" />
           </entry>
         </properties>
       </xsl:variable>

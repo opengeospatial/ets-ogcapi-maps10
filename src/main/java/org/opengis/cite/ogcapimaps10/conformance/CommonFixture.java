@@ -4,7 +4,10 @@ import static io.restassured.RestAssured.given;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.RequestLimitFilter;
@@ -35,6 +38,12 @@ public class CommonFixture {
 
 	protected URI rootUri;
 
+	protected String basicAuthHeader = null;
+
+	private String basicAuthUser = null;
+
+	private String basicAuthPassword = null;
+
 	/**
 	 * Initializes the common test fixture with a client component for interacting with
 	 * HTTP endpoints.
@@ -45,6 +54,25 @@ public class CommonFixture {
 	public void initCommonFixture(ITestContext testContext) {
 		initLogging();
 		rootUri = (URI) testContext.getSuite().getAttribute(SuiteAttribute.IUT.getName());
+		String basicAuth = testContext.getSuite().getParameter("basicAuth");
+		if (basicAuth == null) {
+			basicAuth = System.getProperty("basicAuth");
+		}
+		if (basicAuth != null && !basicAuth.isEmpty()) {
+			try {
+				byte[] decoded = Base64.getDecoder().decode(basicAuth);
+				String credentials = new String(decoded, StandardCharsets.UTF_8);
+				int colon = credentials.indexOf(':');
+				if (colon > 0) {
+					basicAuthUser = credentials.substring(0, colon);
+					basicAuthPassword = credentials.substring(colon + 1);
+				}
+				basicAuthHeader = "Basic " + basicAuth;
+			}
+			catch (Exception e) {
+				// ignore malformed auth
+			}
+		}
 	}
 
 	/**
@@ -75,6 +103,17 @@ public class CommonFixture {
 	 */
 	public String getResponse() {
 		return responseOutputStream.toString();
+	}
+
+	/**
+	 * Applies the basic authentication header to an {@link HttpURLConnection} if
+	 * credentials were provided via the {@code basicAuth} suite parameter.
+	 * @param conn the connection to configure
+	 */
+	protected void applyAuth(HttpURLConnection conn) {
+		if (basicAuthHeader != null) {
+			conn.setRequestProperty("Authorization", basicAuthHeader);
+		}
 	}
 
 	/**

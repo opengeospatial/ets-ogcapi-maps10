@@ -5,8 +5,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.CollectionsResponseInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.JpegInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.TiffInteractiveTestResult;
 
 import com.reprezen.kaizen.oasparser.model3.OpenApi3;
@@ -108,7 +109,14 @@ public enum SuiteAttribute {
 	 * Results from interactive tests for TIFF content verification. Contains boolean
 	 * results for Part B (palette/RGB color model) and Part C (portrayal consistency).
 	 */
-	TIFF_INTERACTIVE_TEST_RESULT("tiffInteractiveTestResult", TiffInteractiveTestResult.class);
+	TIFF_INTERACTIVE_TEST_RESULT("tiffInteractiveTestResult", TiffInteractiveTestResult.class),
+
+	/**
+	 * Results from interactive tests for collections response verification (A.36).
+	 * Contains boolean results for Req 36/A (filter applied) and Req 36/B (draw order).
+	 */
+	COLLECTIONS_RESPONSE_INTERACTIVE_TEST_RESULT("collectionsResponseInteractiveTestResult",
+			CollectionsResponseInteractiveTestResult.class);
 
 	private final Class attrType;
 

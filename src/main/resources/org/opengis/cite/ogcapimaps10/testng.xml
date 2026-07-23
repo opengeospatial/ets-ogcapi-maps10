@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="ogcapi-maps-1.0-${version}" verbose="0" configfailurepolicy="continue">
-  <parameter name="iut" value="https://demo.pygeoapi.io/stable" />
+  <parameter name="iut" value="https://maps.gnosis.earth/ogcapi" />
   <parameter name="ics" value="" />
   <parameter name="noofcollections" value="5" />
+  <parameter name="basicAuth" value="" />
+  <parameter name="collections_response_interactive_enabled" value="true" />
+  <parameter name="collections_response_result_filter_correct" value="true" />
+  <parameter name="collections_response_result_draw_order_correct" value="true" />
 
   <listeners>
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestRunListener" />
@@ -93,6 +97,12 @@
   <test name="API Operation Identifiers">
     <classes>
       <class name="org.opengis.cite.ogcapimaps10.conformance.apioperations.ApiOperationIdentifiers" />
+    </classes>
+  </test>
+
+  <test name="Collections Response">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.collectionsselection.CollectionsResponse" />
     </classes>
   </test>
 

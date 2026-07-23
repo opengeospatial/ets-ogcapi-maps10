@@ -10,8 +10,9 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.CollectionsResponseInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.JpegInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.TiffInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
@@ -110,6 +111,12 @@ public class SuiteFixtureListener implements ISuiteListener {
 		// Parse and set TIFF interactive test results
 		TiffInteractiveTestResult tiffInteractiveTestResult = parseTiffInteractiveTestResults(params);
 		suite.setAttribute(SuiteAttribute.TIFF_INTERACTIVE_TEST_RESULT.getName(), tiffInteractiveTestResult);
+
+		// Parse and set collections response interactive test results (A.36)
+		CollectionsResponseInteractiveTestResult collectionsResponseResult = parseCollectionsResponseInteractiveResults(
+				params);
+		suite.setAttribute(SuiteAttribute.COLLECTIONS_RESPONSE_INTERACTIVE_TEST_RESULT.getName(),
+				collectionsResponseResult);
 	}
 
 	/**
@@ -146,6 +153,19 @@ public class SuiteFixtureListener implements ISuiteListener {
 		boolean enabled = parseBooleanParam(params, TestRunArg.TIFF_INTERACTIVE_TESTS_ENABLED);
 		boolean portrayalConsistent = parseBooleanParam(params, TestRunArg.TIFF_PORTRAYAL_CONSISTENT);
 		return new TiffInteractiveTestResult(enabled, portrayalConsistent);
+	}
+
+	/**
+	 * Parses collections response interactive test results from the test run parameters.
+	 * @param params The test run parameters map.
+	 * @return A CollectionsResponseInteractiveTestResult containing the parsed results.
+	 */
+	private CollectionsResponseInteractiveTestResult parseCollectionsResponseInteractiveResults(
+			Map<String, String> params) {
+		boolean enabled = parseBooleanParam(params, TestRunArg.COLLECTIONS_RESPONSE_INTERACTIVE_ENABLED);
+		boolean filterCorrect = parseBooleanParam(params, TestRunArg.COLLECTIONS_RESPONSE_RESULT_FILTER_CORRECT);
+		boolean drawOrderCorrect = parseBooleanParam(params, TestRunArg.COLLECTIONS_RESPONSE_RESULT_DRAW_ORDER_CORRECT);
+		return new CollectionsResponseInteractiveTestResult(enabled, filterCorrect, drawOrderCorrect);
 	}
 
 	/**

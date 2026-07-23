@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package
+    xmlns:interactive-collections-response="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-collections-response.xml"
+    xmlns:ctl="http://www.occamlab.com/ctl"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:critu="java:org.opengis.cite.ogcapimaps10.util.interactive.CollectionsResponseInteractiveTestUtils">
+
+  <!--
+    Interactive test function for A.36 Req 36/A (collections filter verification).
+
+    Displays two map images side-by-side:
+      Map 1 - collections=id1   : server should render only collection id1
+      Map 2 - no parameter      : server renders all available collections (default)
+
+    Asks the tester to confirm that Map 1 and Map 2 appear visually different,
+    proving that the server restricts rendering to only the specified collection (Req 36/A).
+  -->
+  <ctl:function name="interactive-collections-response:verifyCollectionsFilter">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>true if the tester confirmed the filtered map differs from the default, false otherwise.</ctl:return>
+    <ctl:description>
+      Interactive test for A.36 (Req 36/A): Verify that the server uses only the
+      specified collection when generating the map response.
+    </ctl:description>
+    <ctl:code>
+
+      <xsl:variable name="map-1-raw">
+        <xsl:value-of select="critu:buildFilteredMapUrl($iut.url)" />
+      </xsl:variable>
+      <xsl:variable name="map-2-raw">
+        <xsl:value-of select="critu:buildDefaultMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <xsl:variable name="not-found" select="starts-with($map-1-raw, 'NOT_FOUND:')" />
+
+      <xsl:variable name="map-1-url">
+        <xsl:choose>
+          <xsl:when test="$not-found">
+            <xsl:value-of select="substring-after($map-1-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-1-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="map-2-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-2-raw, 'NOT_FOUND:')">
+            <xsl:value-of select="substring-after($map-2-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-2-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="form-values">
+        <ctl:form width="1100" height="950" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Collections Filter Verification - A.36 Req 36/A</h3>
+          <p>
+            Two maps have been requested from the same dataset map endpoint.
+            <strong>Map 1</strong> is filtered to a single collection using the
+            <code>collections</code> parameter.
+            <strong>Map 2</strong> is the default response with no filter applied.
+          </p>
+          <p>
+            Per Req 36/A, only the collections enumerated in the <code>collections</code>
+            parameter shall be used to generate the map response. If the server correctly
+            applies the filter, <strong>Map 1</strong> and <strong>Map 2</strong> should
+            appear visually different.
+          </p>
+
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
+              [!] Warning: Could not discover a dataset map endpoint or collection IDs automatically.
+              The URLs below may not be valid. Please verify manually.
+            </p>
+          </xsl:if>
+
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map 1</strong> - Filtered (collections=id1)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-1-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-1-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-1-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map 1 - filtered to one collection</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('m1err').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="m1err" style="display:none; color:#856404; background:#fff3cd; border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed inline. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map 2</strong> - Default (no collections parameter)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-2-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-2-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-2-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map 2 - default, all collections</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('m2err').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="m2err" style="display:none; color:#856404; background:#fff3cd; border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed inline. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <hr style="margin-top:16px;" />
+          <p style="margin-top:16px;">
+            <strong>Question:</strong> Do <strong>Map 1</strong> (filtered to one collection)
+            and <strong>Map 2</strong> (all collections) appear visually different, indicating
+            that the server correctly restricted rendering to only the specified collection
+            (Req 36/A)?
+          </p>
+          <p>
+            <input type="submit" name="submit" value="yes" style="margin-right:12px; padding:6px 24px;" />
+            <input type="submit" name="submit" value="no" style="padding:6px 24px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit'] = 'yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+
+    </ctl:code>
+  </ctl:function>
+
+  <!--
+    Interactive test function for A.36 Req 36/B (draw order verification).
+
+    Displays two map images side-by-side:
+      Map 1 - collections=id1,id2 : id1 below, id2 above (forward order)
+      Map 2 - collections=id2,id1 : id2 below, id1 above (reverse order)
+
+    Asks the tester to confirm that Map 1 and Map 2 appear visually different in
+    layer stacking, proving the server respects left-to-right draw order (Req 36/B).
+  -->
+  <ctl:function name="interactive-collections-response:verifyCollectionsDrawOrder">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>true if the tester confirmed the draw order differs between the two maps, false otherwise.</ctl:return>
+    <ctl:description>
+      Interactive test for A.36 (Req 36/B): Verify that the server renders collections
+      in the declared left-to-right draw order (leftmost at the bottom, rightmost at the top).
+    </ctl:description>
+    <ctl:code>
+
+      <xsl:variable name="map-1-raw">
+        <xsl:value-of select="critu:buildForwardOrderMapUrl($iut.url)" />
+      </xsl:variable>
+      <xsl:variable name="map-2-raw">
+        <xsl:value-of select="critu:buildReverseOrderMapUrl($iut.url)" />
+      </xsl:variable>
+
+      <xsl:variable name="not-found" select="starts-with($map-1-raw, 'NOT_FOUND:')" />
+
+      <xsl:variable name="map-1-url">
+        <xsl:choose>
+          <xsl:when test="$not-found">
+            <xsl:value-of select="substring-after($map-1-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-1-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="map-2-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-2-raw, 'NOT_FOUND:')">
+            <xsl:value-of select="substring-after($map-2-raw, 'NOT_FOUND:')" />
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-2-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="form-values">
+        <ctl:form width="1100" height="950" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Draw Order Verification - A.36 Req 36/B</h3>
+          <p>
+            Two maps have been requested from the same dataset map endpoint using the
+            <code>collections</code> parameter, but with the collection order reversed.
+            <strong>Map 1</strong> uses forward order (id1 below, id2 above).
+            <strong>Map 2</strong> uses reverse order (id2 below, id1 above).
+          </p>
+          <p>
+            Per Req 36/B, when multiple collections are listed, they shall be rendered
+            sequentially from first to last, with the leftmost collection at the bottom
+            of the display stack and the rightmost at the top. If the server correctly
+            applies the draw order, <strong>Map 1</strong> and <strong>Map 2</strong>
+            should appear visually different.
+          </p>
+
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545; background:#fff3cd; border:1px solid #ffc107; padding:8px;">
+              [!] Warning: Could not discover a dataset map endpoint or at least 2 collection
+              IDs automatically. The URLs below may not be valid. Please verify manually.
+            </p>
+          </xsl:if>
+
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map 1</strong> - Forward order (id1 below, id2 above)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-1-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-1-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-1-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map 1 - forward order</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('m1err').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="m1err" style="display:none; color:#856404; background:#fff3cd; border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed inline. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+              <td style="width:50%; padding:8px; vertical-align:top;">
+                <p><strong>Map 2</strong> - Reverse order (id2 below, id1 above)</p>
+                <p style="font-size:0.85em; word-break:break-all;">
+                  <xsl:element name="a">
+                    <xsl:attribute name="href"><xsl:value-of select="$map-2-url" /></xsl:attribute>
+                    <xsl:attribute name="target">_blank</xsl:attribute>
+                    <xsl:value-of select="$map-2-url" />
+                  </xsl:element>
+                </p>
+                <div style="border:1px solid #ccc; padding:4px; background:#f9f9f9; min-height:200px;">
+                  <xsl:element name="img">
+                    <xsl:attribute name="src"><xsl:value-of select="$map-2-url" /></xsl:attribute>
+                    <xsl:attribute name="alt">Map 2 - reverse order</xsl:attribute>
+                    <xsl:attribute name="style">max-width:100%; border:1px solid #999;</xsl:attribute>
+                    <xsl:attribute name="onerror">this.style.display='none';document.getElementById('m2err').style.display='block';</xsl:attribute>
+                  </xsl:element>
+                  <div id="m2err" style="display:none; color:#856404; background:#fff3cd; border:1px solid #ffc107; padding:8px; font-size:0.85em;">
+                    Image cannot be displayed inline. Open the link above in a new tab.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <hr style="margin-top:16px;" />
+          <p style="margin-top:16px;">
+            <strong>Question:</strong> Do <strong>Map 1</strong> (forward order) and
+            <strong>Map 2</strong> (reverse order) appear visually different in how the
+            collection layers are stacked, indicating that the server correctly applies
+            the declared left-to-right draw order (Req 36/B)?
+          </p>
+          <p>
+            <input type="submit" name="submit" value="yes" style="margin-right:12px; padding:6px 24px;" />
+            <input type="submit" name="submit" value="no" style="padding:6px 24px;" />
+          </p>
+        </ctl:form>
+      </xsl:variable>
+
+      <xsl:choose>
+        <xsl:when test="$form-values/values/value[@key='submit'] = 'yes'">
+          <xsl:text>true</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text>false</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
+
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>
