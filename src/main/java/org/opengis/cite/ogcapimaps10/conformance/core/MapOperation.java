@@ -55,6 +55,7 @@ public class MapOperation extends CommonFixture {
 		HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
 		connection.setRequestMethod("GET");
 		connection.setRequestProperty("Accept", "application/json");
+		applyAuth(connection);
 
 		Map<String, Object> data = objectMapper.readValue(connection.getInputStream(), Map.class);
 		List<Map<String, Object>> collectionsList = (List<Map<String, Object>>) data.get("collections");
@@ -84,6 +85,7 @@ public class MapOperation extends CommonFixture {
 			mapConnection.setRequestMethod("GET");
 			mapConnection.setConnectTimeout(5000);
 			mapConnection.setReadTimeout(5000);
+			applyAuth(mapConnection);
 
 			// Get response headers
 			Map<String, List<String>> headers = mapConnection.getHeaderFields();

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="ogcapi-maps-1.0-${version}" verbose="0" configfailurepolicy="continue">
-  <parameter name="iut" value="https://demo.pygeoapi.io/stable" />
+  <parameter name="iut" value="https://maps.gnosis.earth/ogcapi" />
+  <parameter name="basicAuth" value="" />
   <parameter name="ics" value="" />
   <parameter name="noofcollections" value="5" />
 
@@ -19,6 +20,12 @@
      <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapResponse" />
      <class name="org.opengis.cite.ogcapimaps10.conformance.core.MapConformanceSuccess" />
    </classes>
+  </test>
+
+  <test name="Collections Selection">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.collectionSelection.CollectionsParameterTest" />
+    </classes>
   </test>
 
   <test name="Map Tilesets">
