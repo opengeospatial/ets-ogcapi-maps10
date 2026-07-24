@@ -310,6 +310,7 @@ public class WidthDefinitionTest extends CommonFixture {
 			conn.setRequestProperty("Accept", "application/json");
 			conn.setConnectTimeout(10000);
 			conn.setReadTimeout(10000);
+			applyAuth(conn);
 			if (conn.getResponseCode() == 200) {
 				try (InputStream is = conn.getInputStream()) {
 					return OBJECT_MAPPER.readValue(is, new TypeReference<Map<String, Object>>() {
@@ -330,6 +331,7 @@ public class WidthDefinitionTest extends CommonFixture {
 			conn.setRequestMethod("GET");
 			conn.setConnectTimeout(10000);
 			conn.setReadTimeout(10000);
+			applyAuth(conn);
 			return conn.getResponseCode();
 		}
 		catch (Exception e) {
@@ -344,6 +346,7 @@ public class WidthDefinitionTest extends CommonFixture {
 			conn.setRequestMethod("GET");
 			conn.setConnectTimeout(10000);
 			conn.setReadTimeout(30000);
+			applyAuth(conn);
 			if (conn.getResponseCode() == 200) {
 				try (InputStream is = conn.getInputStream(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 					byte[] buf = new byte[8192];
