@@ -125,7 +125,7 @@
           <fieldset style="background:#ffffcc">
             <legend style="font-family: sans-serif; color: #000099;
                            background-color:#F0F8FF; border-style: solid;
-                           border-width: medium; padding:4px">Interactive Tests (A.37 Orientation)
+                           border-width: medium; padding:4px">Orientation Interactive Tests (A.37)
             </legend>
             <p>
               <input type="checkbox" id="runOrientationInteractiveTests"
