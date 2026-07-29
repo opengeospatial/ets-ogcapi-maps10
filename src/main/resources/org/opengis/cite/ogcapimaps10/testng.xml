@@ -5,6 +5,12 @@
   <parameter name="basicAuth" value="" />
   <parameter name="ics" value="" />
   <parameter name="noofcollections" value="5" />
+  <parameter name="orientation_interactive_enabled" value="" />
+  <parameter name="orientation_result_row5_rotation_ccw" value="" />
+  <parameter name="orientation_result_row7_default_equals_zero" value="" />
+  <parameter name="orientation_result_row8_pivot_center" value="" />
+  <parameter name="orientation_result_row9_pivot_bbox_center" value="" />
+  <parameter name="orientation_result_row11_no_empty_corners" value="" />
 
   <listeners>
     <listener class-name="org.opengis.cite.ogcapimaps10.listener.TestRunListener" />
@@ -100,6 +106,14 @@
   <test name="API Operation Identifiers">
     <classes>
       <class name="org.opengis.cite.ogcapimaps10.conformance.apioperations.ApiOperationIdentifiers" />
+    </classes>
+  </test>
+
+
+  <test name="A.11 Conformance Class Orientation">
+    <classes>
+      <class name="org.opengis.cite.ogcapimaps10.conformance.SuitePreconditions" />
+      <class name="org.opengis.cite.ogcapimaps10.conformance.orientation.OrientationDefinitionTest" />
     </classes>
   </test>
 

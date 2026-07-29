@@ -8,7 +8,8 @@
              xmlns:interactive-png="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-png.xml"
              xmlns:interactive-jpeg="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-jpeg.xml"
              xmlns:interactive-tiff="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-tiff.xml"
->
+             xmlns:iori="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-orientation.xml"
+             xmlns:oditu="java:org.opengis.cite.ogcapimaps10.util.interactive.OrientationInteractiveTestUtils">
 
   <ctl:function name="tns:run-ets-${ets-code}">
     <ctl:param name="testRunArgs">A Document node containing test run arguments (as XML properties).</ctl:param>
@@ -121,6 +122,24 @@
               </label>
             </p>
           </fieldset>
+          <fieldset style="background:#ffffcc">
+            <legend style="font-family: sans-serif; color: #000099;
+                           background-color:#F0F8FF; border-style: solid;
+                           border-width: medium; padding:4px">Interactive Tests (A.37 Orientation)
+            </legend>
+            <p>
+              <input type="checkbox" id="runOrientationInteractiveTests"
+                     name="runOrientationInteractiveTests" value="true" />
+              <label for="runOrientationInteractiveTests">
+                Enable interactive visual verification for orientation parameter (A.37, Req 37/A, B)
+              </label>
+            </p>
+            <p style="font-size:0.9em; color:#555;">
+              When enabled, two maps will be shown side-by-side - one north-up (default)
+              and one rotated 45 degrees counterclockwise - and you will be asked to
+              confirm that the server correctly rotates the map content.
+            </p>
+          </fieldset>
           <p>
             <input class="form-button" type="submit" value="Start" />
             |
@@ -130,6 +149,11 @@
       </xsl:variable>
       <xsl:variable name="iut-url" select="normalize-space($form-data/values/value[@key='ogc-api-maps-uri'])" />
       <xsl:variable name="tile-matrix-set" select="$form-data/values/value[@key='tileMatrixSet']" />
+      <xsl:variable name="orientation-supported"
+                    select="oditu:isOrientationSupported($iut-url)" />
+      <xsl:variable name="run-orientation-interactive"
+                    select="$form-data/values/value[@key='runOrientationInteractiveTests'] = 'true'
+                            and $orientation-supported = 'true'" />
       <!-- PNG Interactive Tests (A.55) -->
       <xsl:variable name="png-interactive-enabled"
                     select="$form-data/values/value[@key='pngInteractiveEnabled'] = 'true'" />
@@ -187,6 +211,28 @@
         </xsl:choose>
       </xsl:variable>
 
+      <!-- Run interactive orientation verification if enabled -->
+      <!-- Returns compound string: "row5|row7|row8|row9|row11" -->
+      <xsl:variable name="orientation-result">
+        <xsl:choose>
+          <xsl:when test="$run-orientation-interactive">
+            <ctl:call-function name="iori:verifyOrientation">
+              <ctl:with-param name="iut.url" select="$iut-url" />
+            </ctl:call-function>
+          </xsl:when>
+          <xsl:otherwise>false|false|false|false|false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <!-- Parse compound result into individual row values -->
+      <xsl:variable name="ori-rest1" select="substring-after($orientation-result, '|')" />
+      <xsl:variable name="ori-rest2" select="substring-after($ori-rest1, '|')" />
+      <xsl:variable name="ori-rest3" select="substring-after($ori-rest2, '|')" />
+      <xsl:variable name="ori-row5"  select="substring-before($orientation-result, '|')" />
+      <xsl:variable name="ori-row7"  select="substring-before($ori-rest1, '|')" />
+      <xsl:variable name="ori-row8"  select="substring-before($ori-rest2, '|')" />
+      <xsl:variable name="ori-row9"  select="substring-before($ori-rest3, '|')" />
+      <xsl:variable name="ori-row11" select="substring-after($ori-rest3, '|')" />
+
       <xsl:variable name="test-run-props">
         <properties version="1.0">
           <entry key="iut">
@@ -227,6 +273,24 @@
           </entry>
           <entry key="tiff_portrayal_consistent">
             <xsl:value-of select="$tiff-portrayal-result" />
+          </entry>
+          <entry key="orientation_interactive_enabled">
+            <xsl:value-of select="$run-orientation-interactive" />
+          </entry>
+          <entry key="orientation_result_row5_rotation_ccw">
+            <xsl:value-of select="$ori-row5" />
+          </entry>
+          <entry key="orientation_result_row7_default_equals_zero">
+            <xsl:value-of select="$ori-row7" />
+          </entry>
+          <entry key="orientation_result_row8_pivot_center">
+            <xsl:value-of select="$ori-row8" />
+          </entry>
+          <entry key="orientation_result_row9_pivot_bbox_center">
+            <xsl:value-of select="$ori-row9" />
+          </entry>
+          <entry key="orientation_result_row11_no_empty_corners">
+            <xsl:value-of select="$ori-row11" />
           </entry>
         </properties>
       </xsl:variable>

@@ -10,8 +10,9 @@ import java.util.logging.Level;
 
 import org.opengis.cite.ogcapimaps10.TestRunArg;
 import org.opengis.cite.ogcapimaps10.conformance.SuiteAttribute;
-import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.JpegInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.OrientationInteractiveTestResult;
+import org.opengis.cite.ogcapimaps10.domain.PngInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.domain.TiffInteractiveTestResult;
 import org.opengis.cite.ogcapimaps10.util.ClientUtils;
 import org.opengis.cite.ogcapimaps10.util.TestSuiteLogger;
@@ -110,6 +111,8 @@ public class SuiteFixtureListener implements ISuiteListener {
 		// Parse and set TIFF interactive test results
 		TiffInteractiveTestResult tiffInteractiveTestResult = parseTiffInteractiveTestResults(params);
 		suite.setAttribute(SuiteAttribute.TIFF_INTERACTIVE_TEST_RESULT.getName(), tiffInteractiveTestResult);
+
+		parseOrientationInteractiveResults(suite);
 	}
 
 	/**
@@ -158,6 +161,34 @@ public class SuiteFixtureListener implements ISuiteListener {
 		String value = params.get(arg.toString());
 		return value != null && Boolean.parseBoolean(value);
 
+	}
+
+	/**
+	 * Parses the interactive test parameters for A.37 orientation verification (Req
+	 * 37/A–D) and stores the result as a suite attribute.
+	 * @param suite the TestNG suite instance
+	 */
+	private void parseOrientationInteractiveResults(ISuite suite) {
+		Map<String, String> params = suite.getXmlSuite().getParameters();
+		String enabledStr = params.get(TestRunArg.ORIENTATION_INTERACTIVE_ENABLED.toString());
+		boolean enabled = "true".equalsIgnoreCase(enabledStr);
+		boolean row5 = false;
+		boolean row7 = false;
+		boolean row8 = false;
+		boolean row9 = false;
+		boolean row11 = false;
+		if (enabled) {
+			row5 = "true".equalsIgnoreCase(params.get(TestRunArg.ORIENTATION_RESULT_ROW5_ROTATION_CCW.toString()));
+			row7 = "true"
+				.equalsIgnoreCase(params.get(TestRunArg.ORIENTATION_RESULT_ROW7_DEFAULT_EQUALS_ZERO.toString()));
+			row8 = "true".equalsIgnoreCase(params.get(TestRunArg.ORIENTATION_RESULT_ROW8_PIVOT_CENTER.toString()));
+			row9 = "true".equalsIgnoreCase(params.get(TestRunArg.ORIENTATION_RESULT_ROW9_PIVOT_BBOX_CENTER.toString()));
+			row11 = "true"
+				.equalsIgnoreCase(params.get(TestRunArg.ORIENTATION_RESULT_ROW11_NO_EMPTY_CORNERS.toString()));
+		}
+		OrientationInteractiveTestResult result = new OrientationInteractiveTestResult(enabled, row5, row7, row8, row9,
+				row11);
+		suite.setAttribute(SuiteAttribute.ORIENTATION_INTERACTIVE_TEST_RESULT.getName(), result);
 	}
 
 	/**

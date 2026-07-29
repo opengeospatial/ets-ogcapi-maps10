@@ -13,6 +13,8 @@ import com.reprezen.kaizen.oasparser.model3.OpenApi3;
 
 import jakarta.ws.rs.client.Client;
 
+import org.opengis.cite.ogcapimaps10.domain.OrientationInteractiveTestResult;
+
 /**
  * An enumerated type defining ISuite attributes that may be set to constitute a shared
  * test fixture.
@@ -108,7 +110,13 @@ public enum SuiteAttribute {
 	 * Results from interactive tests for TIFF content verification. Contains boolean
 	 * results for Part B (palette/RGB color model) and Part C (portrayal consistency).
 	 */
-	TIFF_INTERACTIVE_TEST_RESULT("tiffInteractiveTestResult", TiffInteractiveTestResult.class);
+	TIFF_INTERACTIVE_TEST_RESULT("tiffInteractiveTestResult", TiffInteractiveTestResult.class),
+
+	/**
+	 * Pre-collected interactive verification result for A.37 orientation (Req 37/A-D);
+	 * set by SuiteFixtureListener before TestNG runs.
+	 */
+	ORIENTATION_INTERACTIVE_TEST_RESULT("orientationInteractiveTestResult", OrientationInteractiveTestResult.class);
 
 	private final Class attrType;
 

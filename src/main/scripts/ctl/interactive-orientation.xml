@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ctl:package xmlns:interactive="http://www.opengis.net/cite/ogcapi-maps-1.0/ctl/interactive-orientation.xml"
+             xmlns:ctl="http://www.occamlab.com/ctl"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             xmlns:oditu="java:org.opengis.cite.ogcapimaps10.util.interactive.OrientationInteractiveTestUtils">
+
+  <!--
+    Interactive test function for A.37 orientation-definition verification (Req 37/A-D).
+
+    Five sequential forms are presented to the tester:
+      Form 1 (row 5,  Req 37/A): Map A (default) vs Map B (orientation=45) - rotation direction CCW
+      Form 2 (row 7,  Req 37/B): Map A (default) vs Map C (orientation=0)  - default equals zero
+      Form 3 (row 8,  Req 37/C): Map A vs Map B - rotation pivot at map center (no bbox)
+      Form 4 (row 9,  Req 37/C): Map A vs Map D (orientation=45+bbox) - pivot at bbox center  [if subsetting]
+      Form 5 (row 11, Req 37/D): Map D - no empty/transparent corners after bbox rotation      [if subsetting]
+
+    Returns a pipe-delimited compound result: "row5|row7|row8|row9|row11"
+    where each token is "true", "false", or "skip" (when not applicable).
+  -->
+
+  <ctl:function name="interactive:verifyOrientation">
+    <ctl:param name="iut.url">The API landing page URL.</ctl:param>
+    <ctl:return>Pipe-delimited results for rows 5, 7, 8, 9, 11 (e.g. "true|true|true|skip|skip").</ctl:return>
+    <ctl:description>
+      Interactive test for A.37 (Req 37/A-D): Five sequential forms verifying rotation
+      direction, default equivalence, pivot at map center, pivot at bbox center, and no
+      empty corners.
+    </ctl:description>
+    <ctl:code>
+
+      <!-- Detect spatial subsetting support -->
+      <xsl:variable name="supports-subsetting">
+        <xsl:value-of select="oditu:isSubsettingSupported($iut.url)" />
+      </xsl:variable>
+
+      <!-- Build map URLs -->
+      <xsl:variable name="map-default-raw" select="oditu:buildDefaultOrientationMapUrl($iut.url)" />
+      <xsl:variable name="map-45-raw"      select="oditu:buildRotatedMapUrl($iut.url)" />
+      <xsl:variable name="map-zero-raw"    select="oditu:buildZeroOrientationMapUrl($iut.url)" />
+      <xsl:variable name="map-bbox-raw"    select="oditu:buildBboxOrientationMapUrl($iut.url)" />
+      <xsl:variable name="not-found"       select="starts-with($map-default-raw, 'NOT_FOUND:')" />
+
+      <!-- Strip NOT_FOUND: prefix -->
+      <xsl:variable name="map-default-url">
+        <xsl:choose>
+          <xsl:when test="$not-found"><xsl:value-of select="substring-after($map-default-raw, 'NOT_FOUND:')" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-default-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="map-45-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-45-raw, 'NOT_FOUND:')"><xsl:value-of select="substring-after($map-45-raw, 'NOT_FOUND:')" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-45-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="map-zero-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-zero-raw, 'NOT_FOUND:')"><xsl:value-of select="substring-after($map-zero-raw, 'NOT_FOUND:')" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-zero-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+      <xsl:variable name="map-bbox-url">
+        <xsl:choose>
+          <xsl:when test="starts-with($map-bbox-raw, 'NOT_FOUND:')"><xsl:value-of select="substring-after($map-bbox-raw, 'NOT_FOUND:')" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="$map-bbox-raw" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- ================================================================
+           FORM 1 - Row 5 (Req 37/A): Rotation direction CCW
+           Map A (no orientation) vs Map B (orientation=45)
+           ================================================================ -->
+      <xsl:variable name="form1">
+        <ctl:form width="1000" height="720" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Check 1 of 5 - Rotation Direction (Req 37/A)</h3>
+          <p>
+            <strong>Map A</strong> is the default north-up map (no orientation parameter).
+            <strong>Map B</strong> uses <code>orientation=45</code>, which should rotate the
+            geographic content <strong>45 degrees counterclockwise</strong> - features near
+            the top of Map A should shift toward the upper-left in Map B.
+          </p>
+          <xsl:if test="$not-found">
+            <p style="color:#dc3545;background:#fff3cd;border:1px solid #ffc107;padding:8px;">
+              [!] Could not locate a map endpoint automatically. Verify the URLs below manually.
+            </p>
+          </xsl:if>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="width:50%;padding:8px;vertical-align:top;">
+                <p><strong>Map A</strong> - no orientation (north-up)</p>
+                <p style="font-size:0.85em;word-break:break-all;">
+                  <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-default-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-default-url"/></xsl:element>
+                </p>
+                <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                  <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-default-url"/></xsl:attribute><xsl:attribute name="alt">Map A - default north-up</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                </div>
+              </td>
+              <td style="width:50%;padding:8px;vertical-align:top;">
+                <p><strong>Map B</strong> - orientation=45</p>
+                <p style="font-size:0.85em;word-break:break-all;">
+                  <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-45-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-45-url"/></xsl:element>
+                </p>
+                <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                  <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-45-url"/></xsl:attribute><xsl:attribute name="alt">Map B - orientation=45</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                </div>
+              </td>
+            </tr>
+          </table>
+          <hr/>
+          <p><strong>Does Map B appear rotated 45 degrees counterclockwise relative to Map A?</strong></p>
+          <p>
+            <input type="submit" name="submit" value="yes" style="margin-right:12px;padding:6px 24px;"/>
+            <input type="submit" name="submit" value="no"  style="padding:6px 24px;"/>
+          </p>
+        </ctl:form>
+      </xsl:variable>
+      <xsl:variable name="row5-result">
+        <xsl:choose>
+          <xsl:when test="$form1/values/value[@key='submit'] = 'yes'">true</xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- ================================================================
+           FORM 2 - Row 7 (Req 37/B): Default equals orientation=0
+           Map A (no orientation) vs Map C (orientation=0)
+           ================================================================ -->
+      <xsl:variable name="form2">
+        <ctl:form width="1000" height="720" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Check 2 of 5 - Default Equals Zero (Req 37/B)</h3>
+          <p>
+            <strong>Map A</strong> omits the orientation parameter entirely.
+            <strong>Map C</strong> uses <code>orientation=0</code> explicitly.
+            Both should appear <strong>visually identical</strong> (north-up).
+          </p>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="width:50%;padding:8px;vertical-align:top;">
+                <p><strong>Map A</strong> - no orientation parameter</p>
+                <p style="font-size:0.85em;word-break:break-all;">
+                  <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-default-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-default-url"/></xsl:element>
+                </p>
+                <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                  <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-default-url"/></xsl:attribute><xsl:attribute name="alt">Map A - no orientation</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                </div>
+              </td>
+              <td style="width:50%;padding:8px;vertical-align:top;">
+                <p><strong>Map C</strong> - orientation=0</p>
+                <p style="font-size:0.85em;word-break:break-all;">
+                  <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-zero-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-zero-url"/></xsl:element>
+                </p>
+                <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                  <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-zero-url"/></xsl:attribute><xsl:attribute name="alt">Map C - orientation=0</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                </div>
+              </td>
+            </tr>
+          </table>
+          <hr/>
+          <p><strong>Do Map A and Map C appear visually identical?</strong></p>
+          <p>
+            <input type="submit" name="submit" value="yes" style="margin-right:12px;padding:6px 24px;"/>
+            <input type="submit" name="submit" value="no"  style="padding:6px 24px;"/>
+          </p>
+        </ctl:form>
+      </xsl:variable>
+      <xsl:variable name="row7-result">
+        <xsl:choose>
+          <xsl:when test="$form2/values/value[@key='submit'] = 'yes'">true</xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- ================================================================
+           FORM 3 - Row 8 (Req 37/C): Pivot at map center (no bbox)
+           Map A (no orientation) vs Map B (orientation=45, no bbox)
+           ================================================================ -->
+      <xsl:variable name="form3">
+        <ctl:form width="1000" height="720" xmlns="http://www.w3.org/1999/xhtml">
+          <h3>Check 3 of 5 - Rotation Pivot at Map Center (Req 37/C)</h3>
+          <p>
+            When no bbox is specified, the rotation pivot must be the
+            <strong>center of the map extent</strong>. Compare Map A (north-up) with
+            Map B (orientation=45). A geographic feature at the center of Map A should
+            remain at (or very near) the <strong>center of Map B</strong> after rotation.
+          </p>
+          <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+            <tr>
+              <td style="width:50%;padding:8px;vertical-align:top;">
+                <p><strong>Map A</strong> - no orientation (center reference)</p>
+                <p style="font-size:0.85em;word-break:break-all;">
+                  <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-default-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-default-url"/></xsl:element>
+                </p>
+                <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                  <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-default-url"/></xsl:attribute><xsl:attribute name="alt">Map A - no orientation</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                </div>
+              </td>
+              <td style="width:50%;padding:8px;vertical-align:top;">
+                <p><strong>Map B</strong> - orientation=45 (pivot must be at center)</p>
+                <p style="font-size:0.85em;word-break:break-all;">
+                  <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-45-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-45-url"/></xsl:element>
+                </p>
+                <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                  <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-45-url"/></xsl:attribute><xsl:attribute name="alt">Map B - orientation=45 no bbox</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                </div>
+              </td>
+            </tr>
+          </table>
+          <hr/>
+          <p><strong>Does the central geographic feature of Map A remain at or near the center of Map B?</strong></p>
+          <p>
+            <input type="submit" name="submit" value="yes" style="margin-right:12px;padding:6px 24px;"/>
+            <input type="submit" name="submit" value="no"  style="padding:6px 24px;"/>
+          </p>
+        </ctl:form>
+      </xsl:variable>
+      <xsl:variable name="row8-result">
+        <xsl:choose>
+          <xsl:when test="$form3/values/value[@key='submit'] = 'yes'">true</xsl:when>
+          <xsl:otherwise>false</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- ================================================================
+           FORM 4 - Row 9 (Req 37/C): Pivot at bbox center  [conditional]
+           FORM 5 - Row 11 (Req 37/D): No empty corners      [conditional]
+           Both forms shown only when spatial subsetting is supported.
+           ================================================================ -->
+      <xsl:variable name="row9-result">
+        <xsl:choose>
+          <xsl:when test="$supports-subsetting = 'true'">
+            <xsl:variable name="form4">
+              <ctl:form width="1000" height="720" xmlns="http://www.w3.org/1999/xhtml">
+                <h3>Check 4 of 5 - Rotation Pivot at BBox Center (Req 37/C)</h3>
+                <p>
+                  When a <code>bbox</code> is specified, the rotation pivot must be the
+                  <strong>geographic center of that bbox</strong>.
+                  <strong>Map D</strong> uses <code>orientation=45&amp;bbox=-180,-90,180,90</code>.
+                  The geographic center of the bbox (0N, 0E) should remain at
+                  the center of the output image.
+                </p>
+                <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                  <tr>
+                    <td style="width:50%;padding:8px;vertical-align:top;">
+                      <p><strong>Map A</strong> - no orientation (center reference)</p>
+                      <p style="font-size:0.85em;word-break:break-all;">
+                        <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-default-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-default-url"/></xsl:element>
+                      </p>
+                      <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                        <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-default-url"/></xsl:attribute><xsl:attribute name="alt">Map A - no orientation</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                      </div>
+                    </td>
+                    <td style="width:50%;padding:8px;vertical-align:top;">
+                      <p><strong>Map D</strong> - orientation=45 + bbox=-180,-90,180,90</p>
+                      <p style="font-size:0.85em;word-break:break-all;">
+                        <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-bbox-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-bbox-url"/></xsl:element>
+                      </p>
+                      <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                        <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-bbox-url"/></xsl:attribute><xsl:attribute name="alt">Map D - orientation=45 with bbox</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <hr/>
+                <p><strong>Does the geographic center of the bbox (0N 0E) remain at the center of Map D after rotation?</strong></p>
+                <p>
+                  <input type="submit" name="submit" value="yes" style="margin-right:12px;padding:6px 24px;"/>
+                  <input type="submit" name="submit" value="no"  style="padding:6px 24px;"/>
+                </p>
+              </ctl:form>
+            </xsl:variable>
+            <xsl:choose>
+              <xsl:when test="$form4/values/value[@key='submit'] = 'yes'">true</xsl:when>
+              <xsl:otherwise>false</xsl:otherwise>
+            </xsl:choose>
+          </xsl:when>
+          <xsl:otherwise>skip</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <xsl:variable name="row11-result">
+        <xsl:choose>
+          <xsl:when test="$supports-subsetting = 'true'">
+            <xsl:variable name="form5">
+              <ctl:form width="1000" height="720" xmlns="http://www.w3.org/1999/xhtml">
+                <h3>Check 5 of 5 - No Empty Corners (Req 37/D)</h3>
+                <p>
+                  When <code>orientation</code> is combined with <code>bbox</code>, the server
+                  must rotate the <strong>corners of the clipping box in data space</strong>
+                  before rendering - not rotate an already-rendered image in pixel space.
+                  A pixel-space rotation would leave <strong>empty or transparent triangular
+                  corners</strong> in the output. Confirm that <strong>Map D</strong> has
+                  no such empty areas.
+                </p>
+                <table style="width:100%;border-collapse:collapse;">
+                  <tr>
+                    <td style="width:100%;padding:8px;vertical-align:top;">
+                      <p><strong>Map D</strong> - orientation=45 + bbox=-180,-90,180,90</p>
+                      <p style="font-size:0.85em;word-break:break-all;">
+                        <xsl:element name="a"><xsl:attribute name="href"><xsl:value-of select="$map-bbox-url"/></xsl:attribute><xsl:attribute name="target">_blank</xsl:attribute><xsl:value-of select="$map-bbox-url"/></xsl:element>
+                      </p>
+                      <div style="border:1px solid #ccc;padding:4px;min-height:200px;">
+                        <xsl:element name="img"><xsl:attribute name="src"><xsl:value-of select="$map-bbox-url"/></xsl:attribute><xsl:attribute name="alt">Map D - orientation=45 with bbox</xsl:attribute><xsl:attribute name="style">max-width:100%;</xsl:attribute></xsl:element>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+                <hr/>
+                <p><strong>Does Map D have no empty or transparent corners?</strong></p>
+                <p>
+                  <input type="submit" name="submit" value="yes" style="margin-right:12px;padding:6px 24px;"/>
+                  <input type="submit" name="submit" value="no"  style="padding:6px 24px;"/>
+                </p>
+              </ctl:form>
+            </xsl:variable>
+            <xsl:choose>
+              <xsl:when test="$form5/values/value[@key='submit'] = 'yes'">true</xsl:when>
+              <xsl:otherwise>false</xsl:otherwise>
+            </xsl:choose>
+          </xsl:when>
+          <xsl:otherwise>skip</xsl:otherwise>
+        </xsl:choose>
+      </xsl:variable>
+
+      <!-- Return compound result -->
+      <xsl:value-of select="concat($row5-result, '|', $row7-result, '|', $row8-result, '|', $row9-result, '|', $row11-result)" />
+
+    </ctl:code>
+  </ctl:function>
+
+</ctl:package>

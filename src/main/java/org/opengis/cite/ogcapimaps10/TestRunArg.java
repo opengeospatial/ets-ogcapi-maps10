@@ -72,7 +72,43 @@ public enum TestRunArg {
 	 * same resource follow the same portrayal rules or represent data with the same
 	 * reference and units of measure. true if passed, false otherwise.
 	 */
-	TIFF_PORTRAYAL_CONSISTENT;
+	TIFF_PORTRAYAL_CONSISTENT,
+
+	/**
+	 * Whether the interactive verification for A.37 orientation (Req 37/A-D) was enabled
+	 * by the tester.
+	 */
+	ORIENTATION_INTERACTIVE_ENABLED,
+
+	/**
+	 * Row 5 (Req 37/A): tester confirmed Map B (orientation=45) appears rotated 45
+	 * degrees CCW relative to Map A (default north-up).
+	 */
+	ORIENTATION_RESULT_ROW5_ROTATION_CCW,
+
+	/**
+	 * Row 7 (Req 37/B): tester confirmed the map with no orientation parameter appears
+	 * visually identical to orientation=0.
+	 */
+	ORIENTATION_RESULT_ROW7_DEFAULT_EQUALS_ZERO,
+
+	/**
+	 * Row 8 (Req 37/C): tester confirmed the rotation pivot is the center of the map
+	 * extent when no bbox is specified.
+	 */
+	ORIENTATION_RESULT_ROW8_PIVOT_CENTER,
+
+	/**
+	 * Row 9 (Req 37/C): tester confirmed the rotation pivot is the geographic center of
+	 * the specified bbox (only applicable when spatial subsetting is supported).
+	 */
+	ORIENTATION_RESULT_ROW9_PIVOT_BBOX_CENTER,
+
+	/**
+	 * Row 11 (Req 37/D): tester confirmed the rotated bbox map has no empty or
+	 * transparent corners (only applicable when spatial subsetting is supported).
+	 */
+	ORIENTATION_RESULT_ROW11_NO_EMPTY_CORNERS;
 
 	/** {@inheritDoc} */
 	@Override
